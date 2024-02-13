@@ -604,13 +604,13 @@
         "city": "Adelaide",
         "country": "Australia",
         "coordinates": {"lat": -34.9285, "long": 138.6007},
-        "timeZone": "Australian Central Standard Time" 
+        "timeZone": "AUS Central Standard Time" 
     },
     {
         "city": "Perth",
         "country": "Australia",
         "coordinates": {"lat": -31.9505, "long": 115.8605},
-        "timeZone": "Australian Western Standard Time"
+        "timeZone": "W. Australia Standard Time"
     },
     {
         "city": "Darwin",
@@ -640,7 +640,7 @@
         "city": "Accra",
         "country": "Ghana",
         "coordinates": {"lat": 5.6037, "long": -0.1870},
-        "timeZone": "Greenwich Mean Time"
+        "timeZone": "Greenwich Standard Time"
     },
     {
         "city": "Suva",
