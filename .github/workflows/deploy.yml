@@ -38,12 +38,10 @@ jobs:
       
       - name: Install dependencies
         run: |
-          cd my-portfolio
           pnpm install
       
       - name: Build
         run: |
-          cd my-portfolio
           pnpm run build
       
       - name: Setup Pages
