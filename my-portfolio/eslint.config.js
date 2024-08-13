@@ -6,8 +6,8 @@ import tseslint from 'typescript-eslint'
 
 export default tseslint.config({
   extends: [js.configs.recommended, ...tseslint.configs.recommended],
-  files: ['**/*.{ts,tsx}'],
-  ignores: ['dist'],
+  files: ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx"],
+  ignores: ['dist', "tailwind.config.js"],
   languageOptions: {
     ecmaVersion: 2020,
     globals: globals.browser,
