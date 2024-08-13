@@ -34,7 +34,7 @@ jobs:
         with:
           node-version: 20
           cache: 'pnpm'
-          cache-dependency-path: './my-portfolio/pnpm-lock.yaml'
+          cache-dependency-path: './pnpm-lock.yaml'
       
       - name: Install dependencies
         run: |
@@ -52,7 +52,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './my-portfolio/dist'
+          path: './dist'
       
       - name: Deploy to GitHub Pages
         id: deployment
