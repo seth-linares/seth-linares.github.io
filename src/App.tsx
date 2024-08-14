@@ -8,7 +8,7 @@ function App() {
   const [count, setCount] = useState(0)
 
   return (
-      <div className="min-h-screen bg-base-100 text-base-content">
+      <div className="bg-base-100 text-base-content">
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col items-center justify-center">
             <div className="flex justify-center space-x-8 mb-8">
