@@ -41,13 +41,13 @@ const ThemeSwitcher = () => {
     useEffect(() => {
         // Get theme from local storage, if none exists, choose "dark"
         const savedTheme = localStorage.getItem("theme") ?? "dark";
-        // take that saved theme and apply it to our HTML element
-        document.documentElement.setAttribute("data-theme", savedTheme);
+        // take that saved theme and apply it to our <body> element
+        document.body.setAttribute("data-theme", savedTheme);
     }, []);
 
     const changeTheme = (theme: string) => {
-        // modify the <HTML> so that we can add the "data-theme" attribute -> <HTML "data-theme"=theme...>
-        document.documentElement.setAttribute("data-theme", theme);
+        // modify the <body> so that we can add the "data-theme" attribute -> <HTML "data-theme"=theme...>
+        document.body.setAttribute("data-theme", theme);
         // store our selected theme into basic local storage for retrieval
         localStorage.setItem("theme", theme);
     }
