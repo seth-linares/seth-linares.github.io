@@ -1,62 +1,59 @@
-import { useEffect } from 'react';
+import useThemeSwitcher from "../hooks/useThemeSwitcher.ts";
+
+const themes: readonly string[] = [
+    "light",
+    "dark",
+    "cupcake",
+    "bumblebee",
+    "emerald",
+    "corporate",
+    "synthwave",
+    "retro",
+    "cyberpunk",
+    "valentine",
+    "halloween",
+    "garden",
+    "forest",
+    "aqua",
+    "lofi",
+    "pastel",
+    "fantasy",
+    "wireframe",
+    "black",
+    "luxury",
+    "dracula",
+    "cmyk",
+    "autumn",
+    "business",
+    "acid",
+    "lemonade",
+    "night",
+    "coffee",
+    "winter",
+    "dim",
+    "nord",
+    "sunset",
+]
+
+const capitalizeFirstLetter = (str: string) => {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
 
 
 const ThemeSwitcher = () => {
-    const themes: string[] = [
-        "light",
-        "dark",
-        "cupcake",
-        "bumblebee",
-        "emerald",
-        "corporate",
-        "synthwave",
-        "retro",
-        "cyberpunk",
-        "valentine",
-        "halloween",
-        "garden",
-        "forest",
-        "aqua",
-        "lofi",
-        "pastel",
-        "fantasy",
-        "wireframe",
-        "black",
-        "luxury",
-        "dracula",
-        "cmyk",
-        "autumn",
-        "business",
-        "acid",
-        "lemonade",
-        "night",
-        "coffee",
-        "winter",
-        "dim",
-        "nord",
-        "sunset",
-    ]
 
-    // This useEffect will run initially, check for saved theme. Allows for theme persistence across reloads using localStorage
-    useEffect(() => {
-        // Get theme from local storage, if none exists, choose "dark"
-        const savedTheme = localStorage.getItem("theme") ?? "dark";
-        // take that saved theme and apply it to our <body> element
-        document.body.setAttribute("data-theme", savedTheme);
-    }, []);
+    const {
+        currentTheme,
+        changeTheme,
+    } = useThemeSwitcher(themes);
 
-    const changeTheme = (theme: string) => {
-        // modify the <body> so that we can add the "data-theme" attribute -> <HTML "data-theme"=theme...>
-        document.body.setAttribute("data-theme", theme);
-        // store our selected theme into basic local storage for retrieval
-        localStorage.setItem("theme", theme);
-    }
 
     return(
         <div>
+            <h2>Currently Selected Theme: {capitalizeFirstLetter(currentTheme)}</h2>
             {themes.map((theme: string) => (
-                <button key={theme} className={"btn btn-primary btn-sm"} onClick={() => changeTheme(theme)}>
-                    {theme}
+                <button key={theme} className={"btn btn-primary btn-sm"} onClick={() => changeTheme(theme)} aria-label={`Switch to ${capitalizeFirstLetter(theme)} theme`}>
+                    {capitalizeFirstLetter(theme)}
                 </button>
             ))}
         </div>
