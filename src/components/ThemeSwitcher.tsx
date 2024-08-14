@@ -1,61 +1,45 @@
-import useThemeSwitcher from "../hooks/useThemeSwitcher.ts";
+import React from 'react';
+import useThemeSwitcher from "../hooks/useThemeSwitcher";
 
-const themes: readonly string[] = [
-    "light",
-    "dark",
-    "cupcake",
-    "bumblebee",
-    "emerald",
-    "corporate",
-    "synthwave",
-    "retro",
-    "cyberpunk",
-    "valentine",
-    "halloween",
-    "garden",
-    "forest",
-    "aqua",
-    "lofi",
-    "pastel",
-    "fantasy",
-    "wireframe",
-    "black",
-    "luxury",
-    "dracula",
-    "cmyk",
-    "autumn",
-    "business",
-    "acid",
-    "lemonade",
-    "night",
-    "coffee",
-    "winter",
-    "dim",
-    "nord",
-    "sunset",
-]
+const themes = [
+    "acid", "aqua", "autumn", "black", "bumblebee", "business", "cmyk",
+    "coffee", "corporate", "cupcake", "cyberpunk", "dark", "dim", "dracula",
+    "emerald", "fantasy", "forest", "garden", "halloween", "lemonade",
+    "light", "lofi", "luxury", "night", "nord", "pastel", "retro", "sunset",
+    "synthwave", "valentine", "winter", "wireframe"
+] as const;
 
 const capitalizeFirstLetter = (str: string) => {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
+const ThemeSwitcher: React.FC = () => {
+    const { currentTheme, changeTheme } = useThemeSwitcher(themes);
 
-const ThemeSwitcher = () => {
-
-    const {
-        currentTheme,
-        changeTheme,
-    } = useThemeSwitcher(themes);
-
-
-    return(
-        <div>
-            <h2>Currently Selected Theme: {capitalizeFirstLetter(currentTheme)}</h2>
-            {themes.map((theme: string) => (
-                <button key={theme} className={"btn btn-primary btn-sm"} onClick={() => changeTheme(theme)} aria-label={`Switch to ${capitalizeFirstLetter(theme)} theme`}>
-                    {capitalizeFirstLetter(theme)}
-                </button>
-            ))}
+    return (
+        <div className="form-control w-full max-w-xs">
+            <h3 className="font-semibold mb-2">
+                Currently Selected Theme: {capitalizeFirstLetter(currentTheme)}
+            </h3>
+            <label className="label" htmlFor="theme-select">
+                <span className="label-text">Choose a theme:</span>
+            </label>
+            <select
+                id="theme-select"
+                className="select select-bordered w-full p-2 text-center"
+                value={currentTheme}
+                onChange={(e) => {
+                    const newTheme = e.target.value;
+                    changeTheme(newTheme as typeof themes[number])
+                }
+            }
+            >
+                {themes.map((theme) => (
+                    <option key={theme} value={theme}>
+                        {capitalizeFirstLetter(theme)}
+                    </option>
+                ))}
+            </select>
         </div>
     );
 }
