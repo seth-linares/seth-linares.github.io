@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { NavigationItem, UseLayoutReturn } from '../types';
+import { NavigationItem, UseLayoutReturn } from '@/types';
 import { useDebounceRAF } from './useDebounce';
 
 export function useLayout(): UseLayoutReturn {

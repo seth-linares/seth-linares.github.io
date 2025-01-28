@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import ReactDOM from 'react-dom';
-import { AnimationState, Section, UseHomeReturn } from '../types';
+import { AnimationState, Section, UseHomeReturn } from '@/types';
 import { useDebounceRAF } from './useDebounce';
 
 export function useHome(): UseHomeReturn {

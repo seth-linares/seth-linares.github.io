@@ -1,7 +1,7 @@
 // src/components/ThemeSwitcher.tsx
 
 import React from 'react';
-import useThemeSwitcher from "../hooks/useThemeSwitcher";
+import useThemeSwitcher from "@/hooks/useThemeSwitcher";
 
 const themes = [
     "acid", "aqua", "autumn", "black", "bumblebee", "business", "cmyk",

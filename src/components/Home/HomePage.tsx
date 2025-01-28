@@ -2,8 +2,8 @@
 
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useHome } from '../../hooks/useHome';
-import { Section } from '../../types';
+import { useHome } from '@/hooks/useHome';
+import { Section } from '@/types';
 
 // Import our section components
 import HeroSection from './sections/HeroSection';
