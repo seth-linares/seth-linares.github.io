@@ -5,8 +5,8 @@ const themes = [
     "acid", "aqua", "autumn", "black", "bumblebee", "business", "cmyk",
     "coffee", "corporate", "cupcake", "cyberpunk", "dark", "dim", "dracula",
     "emerald", "fantasy", "forest", "garden", "halloween", "lemonade",
-    "light", "lofi", "luxury", "night", "nord", "pastel", "retro", "sunset",
-    "synthwave", "valentine", "winter", "wireframe"
+    "light", "lofi", "luxury", "night", "nord", "pastel", "retro", "sunset", 
+    "sweetandmore", "synthwave", "valentine", "winter", "wireframe"
 ] as const;
 
 const capitalizeFirstLetter = (str: string) => {
@@ -26,7 +26,7 @@ const ThemeSwitcher: React.FC = () => {
             </label>
             <select
                 id="theme-select"
-                className="select select-bordered w-full p-2 text-center"
+                className="select select-bordered w-full p-3 my-2 text-center"
                 value={currentTheme}
                 onChange={(e) => {
                     const newTheme = e.target.value;
