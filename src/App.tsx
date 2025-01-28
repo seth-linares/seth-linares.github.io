@@ -7,7 +7,7 @@ function App() {
   const [count, setCount] = useState(0)
 
   return (
-    <div className="h-screen overflow-hidden bg-base-100">
+    <div className="h-screen bg-base-100">
       <div className="h-full max-w-3xl mx-auto p-8 text-center">
         <div className="h-full flex flex-col items-center justify-center">
           <div className="flex justify-center gap-1 mt-16">
