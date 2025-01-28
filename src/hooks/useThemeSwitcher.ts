@@ -1,3 +1,5 @@
+// src/hooks/useThemeSwitcher.ts
+
 import { useEffect, useState } from "react";
 
 export default function useThemeSwitcher<T extends readonly string[]>(themes: T) {

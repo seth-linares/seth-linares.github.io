@@ -1,3 +1,5 @@
+// src/components/ThemeSwitcher.tsx
+
 import React from 'react';
 import useThemeSwitcher from "../hooks/useThemeSwitcher";
 

@@ -1,60 +1,65 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import ThemeSwitcher from './components/ThemeSwitcher'
+// src/App.tsx
+
+import { HashRouter, Routes, Route } from 'react-router-dom';
+import { Suspense, lazy } from 'react';
+import ThemeSwitcher from './components/ThemeSwitcher';
+
+// Lazy load our pages for better initial load performance
+// We use lazy loading since these components might be large and we don't need them immediately
+const Layout = lazy(() => import('./components/Layout'));
+const Home = lazy(() => import('./pages/Home/index'));
+const Projects = lazy(() => import('./pages/Projects/index'));
+const About = lazy(() => import('./pages/About/index'));
+const Contact = lazy(() => import('./pages/Contact/index'));
+
+// Loading component shown while our lazy-loaded components are being fetched
+const LoadingScreen = () => (
+  <div className="h-screen w-full flex items-center justify-center bg-base-100">
+    <div className="loading loading-spinner loading-lg text-primary"></div>
+  </div>
+);
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <div className="h-screen bg-base-100">
-      <div className="h-full max-w-3xl mx-auto p-8 text-center">
-        <div className="h-full flex flex-col items-center justify-center">
-          <div className="flex justify-center gap-1 mt-16">
-            <a href="https://vite.dev" target="_blank">
-              <img 
-                src={viteLogo} 
-                className="h-24 p-6 transition-all hover:drop-shadow-[0_0_2em_rgba(100,108,255,0.667)]"
-                alt="Vite logo" 
-              />
-            </a>
-            <a href="https://react.dev" target="_blank">
-              <img 
-                src={reactLogo} 
-                className="h-24 p-6 animate-[spin_20s_linear_infinite] hover:drop-shadow-[0_0_2em_rgba(97,218,251,0.667)]"
-                alt="React logo" 
-              />
-            </a>
-          </div>
-          
-          <div className="w-full space-y-8 flex flex-col items-center">
-            <h1 className="text-5xl font-bold">Vite + React</h1>
-            
-            <div className="space-y-4">
-              <button 
-                onClick={() => setCount((count) => count + 1)}
-                className="btn btn-primary"
-              >
-                count is {count}
-              </button>
-              <p>
-                Edit <code className="badge badge-neutral">src/App.tsx</code> and save to test HMR
-              </p>
-            </div>
-            
-            <p className="text-base-content/60">
-              Click on the Vite and React logos to learn more
-            </p>
-
-            <div>
-              <h2 className="text-xl font-semibold mb-2">Theme Selection:</h2>
-              <ThemeSwitcher />
-            </div>
-          </div>
-        </div>
+    // HashRouter is used instead of BrowserRouter for GitHub Pages compatibility
+    <HashRouter>
+      {/* Theme switcher is placed outside Routes so it persists across all routes */}
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeSwitcher />
       </div>
-    </div>
-  )
+      
+      {/* Suspense handles the loading state while components are being fetched */}
+      <Suspense fallback={<LoadingScreen />}>
+        <Routes>
+          {/* Layout component will contain shared UI elements like navigation */}
+          <Route path="/" element={<Layout />}>
+            {/* Index route renders the Home component */}
+            <Route index element={<Home />} />
+            
+            {/* Other routes - we'll implement these components later */}
+            <Route path="projects" element={<Projects />} />
+            <Route path="about" element={<About />} />
+            <Route path="contact" element={<Contact />} />
+
+            {/* 404 page - catches any undefined routes */}
+            <Route 
+              path="*" 
+              element={
+                <div className="h-screen flex items-center justify-center">
+                  <div className="text-center">
+                    <h1 className="text-4xl font-bold mb-4">404 - Page Not Found</h1>
+                    <p className="text-base-content/60">
+                      The page you're looking for doesn't exist.
+                    </p>
+                  </div>
+                </div>
+              } 
+            />
+          </Route>
+        </Routes>
+      </Suspense>
+    </HashRouter>
+  );
 }
 
-export default App
+export default App;
