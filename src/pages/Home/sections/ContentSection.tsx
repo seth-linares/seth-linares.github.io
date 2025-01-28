@@ -3,7 +3,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import ReactSymbol from '@/assets/react.svg'
 import StareKitty from '@/assets/stare_kitty.jpg';
 import HuggingEepers from '@/assets/hugging_eepers.jpg';
 import TwoFaceKitty from '@/assets/two_face_kitty.jpg';
