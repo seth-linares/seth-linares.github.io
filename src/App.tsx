@@ -7,10 +7,10 @@ import ThemeSwitcher from './components/ThemeSwitcher';
 // Lazy load our pages for better initial load performance
 // We use lazy loading since these components might be large and we don't need them immediately
 const Layout = lazy(() => import('./components/Layout'));
-const Home = lazy(() => import('./pages/Home/index'));
-const Projects = lazy(() => import('./pages/Projects/index'));
-const About = lazy(() => import('./pages/About/index'));
-const Contact = lazy(() => import('./pages/Contact/index'));
+const Home = lazy(() => import('./components/Home/HomePage'));
+const Projects = lazy(() => import('./components/Projects/ProjectsPage'));
+const About = lazy(() => import('./components/About/AboutPage'));
+const Contact = lazy(() => import('./components/Contact/ContactPage'));
 
 // Loading component shown while our lazy-loaded components are being fetched
 const LoadingScreen = () => (
