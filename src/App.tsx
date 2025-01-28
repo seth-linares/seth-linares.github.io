@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import reactLogo from './assets/react.svg'
-import viteLogo from '../public/vite.svg'
+import viteLogo from './assets/vite.svg'
 import ThemeSwitcher from './components/ThemeSwitcher'
 
 function App() {
