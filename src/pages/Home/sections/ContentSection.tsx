@@ -3,6 +3,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import ReactSymbol from '@/assets/react.svg'
+import StareKitty from '@/assets/stare_kitty.jpg';
+import HuggingEepers from '@/assets/hugging_eepers.jpg';
+import TwoFaceKitty from '@/assets/two_face_kitty.jpg';
+
 
 interface ContentSectionProps {
   isVisible: boolean;
@@ -15,7 +20,7 @@ const contentItems = [
     title: 'Project Alpha',
     description: 'A modern web application built with React and TypeScript',
     category: 'Web Development',
-    image: '/api/placeholder/600/400', // Using placeholder for demo
+    image: StareKitty, // Using placeholder for demo
     path: '/projects/alpha',
     delay: 0
   },
@@ -23,7 +28,7 @@ const contentItems = [
     title: 'Design System',
     description: 'Creating consistent and beautiful user interfaces',
     category: 'UI/UX Design',
-    image: '/api/placeholder/600/400',
+    image: HuggingEepers,
     path: '/projects/design-system',
     delay: 0.1
   },
@@ -31,7 +36,7 @@ const contentItems = [
     title: 'API Integration',
     description: 'Seamless integration with third-party services',
     category: 'Backend Development',
-    image: '/api/placeholder/600/400',
+    image: TwoFaceKitty,
     path: '/projects/api-integration',
     delay: 0.2
   }
@@ -121,7 +126,8 @@ const ContentSection: React.FC<ContentSectionProps> = ({ isVisible, progress }) 
                 <img
                   src={item.image}
                   alt={item.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  // object-contain vs object-cover will change scaling here
+                  className="w-full h-full object-cover p-8 transition-transform duration-500 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-base-200 to-transparent opacity-50" />
               </div>

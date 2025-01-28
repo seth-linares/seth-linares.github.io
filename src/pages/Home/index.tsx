@@ -11,6 +11,9 @@ import NavigationSection from './sections/NavigationSection';
 import ContentSection from './sections/ContentSection';
 
 const Home: React.FC = () => {
+
+    console.log('Home page loaded');
+
   const {
     currentSection,
     sectionRefs,
