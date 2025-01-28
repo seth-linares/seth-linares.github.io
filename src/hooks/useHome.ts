@@ -1,9 +1,14 @@
 // src/hooks/useHome.ts
 
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import ReactDOM from 'react-dom';
 import { AnimationState, Section, UseHomeReturn } from '../types';
+import { useDebounceRAF } from './useDebounce';
 
 export function useHome(): UseHomeReturn {
+  console.group('useHome Hook');
+  console.log('Hook initialized');
+
   // Track the currently visible section
   const [currentSection, setCurrentSection] = useState<Section>('hero');
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -29,34 +34,42 @@ export function useHome(): UseHomeReturn {
     content: { isVisible: false, hasAnimated: false, progress: 0 },
   });
 
-  // Handle scroll events
-  const handleScroll = useCallback(() => {
+  // Handle scroll events with RAF and batched updates
+  const handleScroll = useDebounceRAF(() => {
     const scrollY = window.scrollY;
     const windowHeight = window.innerHeight;
     const documentHeight = document.documentElement.scrollHeight;
     
+    // Calculate all values first
     const progress = Math.min(scrollY / (documentHeight - windowHeight), 1);
-    setScrollProgress(progress);
+    const newAnimationStates = { ...animationStates };
     
     Object.entries(sectionRefs).forEach(([section, ref]) => {
       if (ref.current) {
         const rect = ref.current.getBoundingClientRect();
         const isVisible = rect.top < windowHeight && rect.bottom > 0;
+        const sectionProgress = Math.max(0, Math.min((windowHeight - rect.top) / windowHeight, 1));
         
-        setAnimationStates(prev => ({
-          ...prev,
-          [section]: {
-            ...prev[section as Section],
-            isVisible,
-            progress: Math.max(0, Math.min((windowHeight - rect.top) / windowHeight, 1)),
-          },
-        }));
+        newAnimationStates[section as Section] = {
+          ...newAnimationStates[section as Section],
+          isVisible,
+          progress: sectionProgress,
+        };
       }
     });
-  }, [sectionRefs]); // Include sectionRefs as it's now stable
+
+    // Batch updates
+    ReactDOM.unstable_batchedUpdates(() => {
+      setScrollProgress(progress);
+      setAnimationStates(newAnimationStates);
+    });
+  });
 
   // Set up intersection observer
   useEffect(() => {
+    console.group('Observer Effect');
+    console.log('Setting up intersection observer');
+    
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -85,26 +98,26 @@ export function useHome(): UseHomeReturn {
       }
     });
 
-    return () => observer.disconnect();
+    return () => {
+      console.log('Cleaning up observer');
+      console.groupEnd();
+      observer.disconnect();
+    };
   }, [sectionRefs]); // Include sectionRefs as it's now stable
 
-  // Set up scroll listener
+  // Update scroll listener effect
   useEffect(() => {
-    let ticking = false;
-    
-    const scrollListener = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          handleScroll();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener('scroll', scrollListener);
-    return () => window.removeEventListener('scroll', scrollListener);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
+
+  // Log section changes
+  useEffect(() => {
+    console.group('Section Change');
+    console.log('Current section:', currentSection);
+    console.log('Animation states:', animationStates);
+    console.groupEnd();
+  }, [currentSection, animationStates]);
 
   // Scroll to section
   const scrollToSection = useCallback((section: Section) => {
@@ -114,6 +127,7 @@ export function useHome(): UseHomeReturn {
     });
   }, [sectionRefs]); // Include sectionRefs as it's now stable
 
+  console.groupEnd();
   return {
     currentSection,
     sectionRefs,

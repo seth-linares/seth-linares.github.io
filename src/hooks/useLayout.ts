@@ -3,10 +3,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { NavigationItem, UseLayoutReturn } from '../types';
-
-
+import { useDebounceRAF } from './useDebounce';
 
 export function useLayout(): UseLayoutReturn {
+  console.group('useLayout Hook');
+  console.log('Hook initialized');
+
   // Router hooks
   const location = useLocation();
   const navigate = useNavigate();
@@ -30,41 +32,37 @@ export function useLayout(): UseLayoutReturn {
     { path: '/contact', label: 'Contact' }
   ];
 
-  // Handle scroll events with debouncing for performance
-  const handleScroll = useCallback(() => {
-    // Check if page is scrolled past threshold
+  // Handle scroll events with RAF debouncing
+  const handleScroll = useDebounceRAF(() => {
     const scrolled = window.scrollY > 50;
     setIsScrolled(scrolled);
     
-    // Calculate scroll progress (0 to 1)
     const windowHeight = document.documentElement.scrollHeight - window.innerHeight;
     const progress = Math.min(window.scrollY / windowHeight, 1);
     setScrollProgress(progress);
-  }, []);
+  });
 
   // Update current path when location changes
   useEffect(() => {
+    console.group('Location Change Effect');
+    console.log('Previous path:', currentPath);
+    console.log('New path:', location.pathname);
     setCurrentPath(location.pathname);
     // Close mobile nav when route changes
     setIsNavOpen(false);
-  }, [location]);
+    console.groupEnd();
+  }, [location, currentPath]); // Include currentPath since we use it in the effect
 
   // Set up scroll listener
   useEffect(() => {
-    let ticking = false;
-    
-    const scrollListener = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          handleScroll();
-          ticking = false;
-        });
-        ticking = true;
-      }
+    console.group('Scroll Listener Effect');
+    console.log('Setting up scroll listener');
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      console.log('Cleaning up scroll listener');
+      console.groupEnd();
+      window.removeEventListener('scroll', handleScroll);
     };
-
-    window.addEventListener('scroll', scrollListener);
-    return () => window.removeEventListener('scroll', scrollListener);
   }, [handleScroll]);
 
   // Navigation methods
@@ -86,6 +84,7 @@ export function useLayout(): UseLayoutReturn {
     }, 300); // Match this with your transition duration
   }, [navigate]);
 
+  console.groupEnd();
   return {
     // Navigation state
     isNavOpen,

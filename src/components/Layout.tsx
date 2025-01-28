@@ -1,10 +1,14 @@
 // src/components/Layout.tsx
 
 import { Outlet } from 'react-router-dom';
-import { useLayout } from '../hooks/useLayout';
+import { useLayout } from '@/hooks/useLayout';
 import { AnimatePresence, motion } from 'framer-motion';
+import { useEffect } from 'react';
 
 const Layout = () => {
+  console.group('Layout Component');
+  console.time('Layout render');
+
   const {
     isNavOpen,
     currentPath,
@@ -16,12 +20,23 @@ const Layout = () => {
     navigateToPage
   } = useLayout();
 
+  useEffect(() => {
+    console.group('Layout Effects');
+    console.log('Path changed:', currentPath);
+    console.log('Nav state:', isNavOpen);
+    console.log('Scroll progress:', scrollProgress);
+    console.groupEnd();
+  }, [currentPath, isNavOpen, scrollProgress]);
+
   // Framer Motion variants for page transitions
   const pageVariants = {
     initial: { opacity: 0, y: 20 },
     enter: { opacity: 1, y: 0 },
     exit: { opacity: 0, y: -20 }
   };
+
+  console.timeEnd('Layout render');
+  console.groupEnd();
 
   return (
     <div className="min-h-screen bg-base-100">
