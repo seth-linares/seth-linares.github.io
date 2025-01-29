@@ -1,6 +1,6 @@
 // src/components/Home/HomePage.tsx
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useCallback, memo } from 'react';
 import { motion } from 'motion/react';
 import { useHome } from '@/hooks/useHome';
 import { Section } from '@/types';
@@ -19,17 +19,26 @@ const Home: React.FC = () => {
     scrollToSection
   } = useHome();
 
-  useEffect(() => {
-    console.group('Section Change');
-    console.log('Current section:', currentSection);
-    console.log('Animation states:', animationStates);
-    console.table(Object.entries(animationStates).map(([key, value]) => ({
-      section: key,
-      visible: value.isVisible,
-      progress: value.progress
-    })));
-    console.groupEnd();
+  const renderCount = useRef(0);
+  renderCount.current++;
+
+  console.group(`HomePage Render #${renderCount.current}`);
+
+  // Memoize the section state logging
+  const logSectionState = useCallback(() => {
+    console.log('Section state update:', {
+      current: currentSection,
+      states: Object.entries(animationStates).map(([key, value]) => ({
+        section: key,
+        visible: value.isVisible,
+        progress: value.progress
+      }))
+    });
   }, [currentSection, animationStates]);
+
+  useEffect(() => {
+    logSectionState();
+  }, [currentSection, animationStates, logSectionState]);
 
   // Memoize section variants to prevent recreating on every render
   const sectionVariants = useMemo(() => ({
@@ -52,27 +61,29 @@ const Home: React.FC = () => {
     }
   }), []);
 
-  // Memoize section renders to prevent unnecessary re-renders
-  const heroSection = useMemo(() => (
+  // Wrap section components in useCallback to prevent unnecessary re-renders
+  const renderHeroSection = useCallback(() => (
     <HeroSection 
       isVisible={animationStates.hero.isVisible}
       progress={animationStates.hero.progress}
     />
   ), [animationStates.hero.isVisible, animationStates.hero.progress]);
 
-  const navigationSection = useMemo(() => (
+  const renderNavigationSection = useCallback(() => (
     <NavigationSection 
       isVisible={animationStates.navigation.isVisible}
       progress={animationStates.navigation.progress}
     />
   ), [animationStates.navigation.isVisible, animationStates.navigation.progress]);
 
-  const contentSection = useMemo(() => (
+  const renderContentSection = useCallback(() => (
     <ContentSection 
       isVisible={animationStates.content.isVisible}
       progress={animationStates.content.progress}
     />
   ), [animationStates.content.isVisible, animationStates.content.progress]);
+
+  console.groupEnd();
 
   return (
     <div className="relative">
@@ -100,7 +111,7 @@ const Home: React.FC = () => {
           animate={animationStates.hero.isVisible ? "visible" : "hidden"}
           className="section-container"
         >
-          {heroSection}
+          {renderHeroSection()}
         </motion.div>
 
         {/* Navigation Section */}
@@ -110,7 +121,7 @@ const Home: React.FC = () => {
           animate={animationStates.navigation.isVisible ? "visible" : "hidden"}
           className="section-container"
         >
-          {navigationSection}
+          {renderNavigationSection()}
         </motion.div>
 
         {/* Content Section */}
@@ -120,7 +131,7 @@ const Home: React.FC = () => {
           animate={animationStates.content.isVisible ? "visible" : "hidden"}
           className="section-container"
         >
-          {contentSection}
+          {renderContentSection()}
         </motion.div>
       </motion.main>
 
@@ -141,4 +152,5 @@ const Home: React.FC = () => {
   );
 };
 
-export default Home;
+// Add React.memo to the Home component
+export default memo(Home);
