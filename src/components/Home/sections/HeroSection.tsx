@@ -1,6 +1,6 @@
 // src/components/Home/sections/HeroSection.tsx:
 
-import { useEffect, useMemo, memo, useRef } from 'react';
+import { useEffect, useMemo, memo } from 'react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 
@@ -22,23 +22,18 @@ const propsAreEqual = (
 
 const HeroSection = memo(({ isVisible, progress }: HeroSectionProps) => {
   const navigate = useNavigate();
-  const renderCount = useRef(0);
-  renderCount.current++;
 
-  console.group(`HeroSection Render #${renderCount.current}`);
-  console.log('Props:', { isVisible, progress });
-
+  console.group('HeroSection Component');
+  console.time('Hero render');
+  
   useEffect(() => {
-    console.log(`HeroSection Effect #${renderCount.current}:`, {
-      isVisible,
-      progress
-    });
-    
-    return () => {
-      console.log('HeroSection cleanup');
-    };
+    console.group('Hero Effects');
+    console.log('Visibility:', isVisible);
+    console.log('Progress:', progress);
+    console.groupEnd();
   }, [isVisible, progress]);
 
+  console.timeEnd('Hero render');
   console.groupEnd();
 
   // Memoize animation variants

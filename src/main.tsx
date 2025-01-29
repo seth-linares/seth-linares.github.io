@@ -1,17 +1,12 @@
 // src/main.tsx
 
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
+import { StrictMode } from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
+import App from './App.tsx'
 
-const root = ReactDOM.createRoot(document.getElementById('root')!);
-
-if (process.env.NODE_ENV === 'development') {
-  root.render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
-} else {
-  root.render(<App />);
-}
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)

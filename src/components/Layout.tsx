@@ -3,13 +3,10 @@
 import { Outlet } from 'react-router-dom';
 import { useLayout } from '@/hooks/useLayout';
 import { AnimatePresence, motion } from 'motion/react';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 const Layout = () => {
-  const renderCount = useRef(0);
-  renderCount.current++;
-
-  console.group(`Layout Component Render #${renderCount.current}`);
+  console.group('Layout Component');
   console.time('Layout render');
 
   const {
@@ -24,11 +21,11 @@ const Layout = () => {
   } = useLayout();
 
   useEffect(() => {
-    console.log(`Layout Effect #${renderCount.current} triggered:`, {
-      path: currentPath,
-      nav: isNavOpen,
-      scroll: scrollProgress
-    });
+    console.group('Layout Effects');
+    console.log('Path changed:', currentPath);
+    console.log('Nav state:', isNavOpen);
+    console.log('Scroll progress:', scrollProgress);
+    console.groupEnd();
   }, [currentPath, isNavOpen, scrollProgress]);
 
   // Framer Motion variants for page transitions
