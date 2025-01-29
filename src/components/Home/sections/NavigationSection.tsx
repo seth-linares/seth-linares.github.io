@@ -1,7 +1,7 @@
 // src/components/Home/sections/NavigationSection.tsx
 
 import { useEffect, useMemo, memo } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 
 interface NavigationSectionProps {

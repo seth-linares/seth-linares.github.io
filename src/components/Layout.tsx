@@ -2,7 +2,7 @@
 
 import { Outlet } from 'react-router-dom';
 import { useLayout } from '@/hooks/useLayout';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'motion/react';
 import { useEffect } from 'react';
 
 const Layout = () => {

@@ -1,7 +1,7 @@
 // src/components/Home/sections/ContentSection.tsx
 
 import { useEffect, useMemo, memo } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import StareKitty from '@/assets/stare_kitty.jpg';
 import HuggingEepers from '@/assets/hugging_eepers.jpg';

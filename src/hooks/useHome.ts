@@ -1,31 +1,27 @@
 // src/hooks/useHome.ts
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import ReactDOM from 'react-dom';
+import { useState, useRef, useMemo, useCallback } from 'react';
+import { useScroll, useSpring, useMotionValueEvent } from 'motion/react';
 import { AnimationState, Section, UseHomeReturn } from '@/types';
-import { useDebounceRAF } from './useDebounce';
+import { useThrottleRAF } from './useDebounce';
 
 export function useHome(): UseHomeReturn {
-  console.group('useHome Hook');
-  console.log('Hook initialized');
-
   // Track the currently visible section
   const [currentSection, setCurrentSection] = useState<Section>('hero');
-  const [scrollProgress, setScrollProgress] = useState(0);
   
-  // Create refs first
+  // Create refs for sections
   const heroRef = useRef<HTMLDivElement>(null);
   const navigationRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   
-  // Create the refs object
+  // Memoize refs object to maintain stable reference
   const sectionRefs = useMemo(() => ({
     hero: heroRef,
     navigation: navigationRef,
     content: contentRef,
-  }), []); // Empty dependency array as refs are stable
-  
-  // Animation states for each section
+  }), []);
+
+  // Initialize animation states
   const [animationStates, setAnimationStates] = useState<{
     [K in Section]: AnimationState;
   }>({
@@ -34,105 +30,105 @@ export function useHome(): UseHomeReturn {
     content: { isVisible: false, hasAnimated: false, progress: 0 },
   });
 
-  // Handle scroll events with RAF and batched updates
-  const handleScroll = useDebounceRAF(() => {
-    const scrollY = window.scrollY;
-    const windowHeight = window.innerHeight;
-    const documentHeight = document.documentElement.scrollHeight;
-    
-    // Calculate all values first
-    const progress = Math.min(scrollY / (documentHeight - windowHeight), 1);
-    const newAnimationStates = { ...animationStates };
-    
-    Object.entries(sectionRefs).forEach(([section, ref]) => {
-      if (ref.current) {
-        const rect = ref.current.getBoundingClientRect();
-        const isVisible = rect.top < windowHeight && rect.bottom > 0;
-        const sectionProgress = Math.max(0, Math.min((windowHeight - rect.top) / windowHeight, 1));
-        
-        newAnimationStates[section as Section] = {
-          ...newAnimationStates[section as Section],
-          isVisible,
-          progress: sectionProgress,
-        };
-      }
-    });
-
-    // Batch updates
-    ReactDOM.unstable_batchedUpdates(() => {
-      setScrollProgress(progress);
-      setAnimationStates(newAnimationStates);
-    });
+  // Track overall page scroll
+  const mainScroll = useScroll({
+    offset: ["start start", "end end"]
   });
 
-  // Set up intersection observer
-  useEffect(() => {
-    console.group('Observer Effect');
-    console.log('Setting up intersection observer');
-    
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const section = Object.entries(sectionRefs).find(
-            ([, ref]) => ref.current === entry.target
-          )?.[0] as Section | undefined;
+  // Set up individual section scroll tracking
+  const heroScroll = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"]
+  });
 
-          if (section && entry.isIntersecting) {
-            setCurrentSection(section);
-            setAnimationStates(prev => ({
-              ...prev,
-              [section]: {
-                ...prev[section],
-                hasAnimated: true,
-              },
-            }));
-          }
-        });
-      },
-      { threshold: 0.5 }
-    );
+  const navigationScroll = useScroll({
+    target: navigationRef,
+    offset: ["start end", "end start"]
+  });
 
-    Object.values(sectionRefs).forEach(ref => {
-      if (ref.current) {
-        observer.observe(ref.current);
+  const contentScroll = useScroll({
+    target: contentRef,
+    offset: ["start end", "end start"]
+  });
+
+  // Create a smoothed version of the scroll progress
+  const smoothProgress = useSpring(mainScroll.scrollYProgress, {
+    mass: 0.1,
+    stiffness: 100,
+    damping: 20
+  });
+
+  // Store the current scroll progress value
+  const [currentScrollProgress, setCurrentScrollProgress] = useState(0);
+
+  // Add memoization for scroll handlers
+  const handleSectionChange = useCallback((value: number) => {
+    // Your section change logic
+    console.log('Section scroll change:', value);
+  }, []);
+
+  // Add throttling to scroll handlers for better performance
+  const handleScrollProgress = useThrottleRAF((value: number) => {
+    setCurrentScrollProgress(value);
+  }, 16); // ~ 60fps
+
+  useMotionValueEvent(smoothProgress, "change", handleScrollProgress);
+
+  useMotionValueEvent(mainScroll.scrollYProgress, "change", handleSectionChange);
+
+  // Update animation states based on scroll position
+  useMotionValueEvent(mainScroll.scrollYProgress, "change", () => {
+    const sectionScrollValues = {
+      hero: heroScroll.scrollYProgress.get(),
+      navigation: navigationScroll.scrollYProgress.get(),
+      content: contentScroll.scrollYProgress.get()
+    };
+
+    setAnimationStates(prevStates => {
+      const newStates = { ...prevStates };
+      
+      (Object.entries(sectionScrollValues) as [Section, number][]).forEach(([section, progress]) => {
+        const isVisible = progress > 0 && progress < 1;
+        
+        newStates[section] = {
+          isVisible,
+          progress,
+          hasAnimated: isVisible || prevStates[section].hasAnimated
+        };
+      });
+
+      return newStates;
+    });
+
+    // Update current section based on visibility
+    let maxProgress = -1;
+    let visibleSection: Section = currentSection;
+
+    (Object.entries(sectionScrollValues) as [Section, number][]).forEach(([section, progress]) => {
+      if (progress > maxProgress && progress > 0 && progress < 1) {
+        maxProgress = progress;
+        visibleSection = section;
       }
     });
 
-    return () => {
-      console.log('Cleaning up observer');
-      console.groupEnd();
-      observer.disconnect();
-    };
-  }, [sectionRefs]); // Include sectionRefs as it's now stable
+    if (visibleSection !== currentSection) {
+      setCurrentSection(visibleSection);
+    }
+  });
 
-  // Update scroll listener effect
-  useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
-
-  // Log section changes
-  useEffect(() => {
-    console.group('Section Change');
-    console.log('Current section:', currentSection);
-    console.log('Animation states:', animationStates);
-    console.groupEnd();
-  }, [currentSection, animationStates]);
-
-  // Scroll to section
+  // Scroll to section with smooth behavior
   const scrollToSection = useCallback((section: Section) => {
     sectionRefs[section].current?.scrollIntoView({
       behavior: 'smooth',
       block: 'start',
     });
-  }, [sectionRefs]); // Include sectionRefs as it's now stable
+  }, [sectionRefs]);
 
-  console.groupEnd();
   return {
     currentSection,
     sectionRefs,
     animationStates,
-    scrollProgress,
+    scrollProgress: currentScrollProgress,
     scrollToSection,
   };
 }

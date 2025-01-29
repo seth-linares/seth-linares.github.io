@@ -22,7 +22,7 @@ export interface UseHomeReturn {
   // Current section information
   currentSection: Section;
   sectionRefs: {
-    [K in Section]: RefObject<HTMLDivElement>; // Changed from HTMLElement to HTMLDivElement
+    [K in Section]: RefObject<HTMLDivElement | null>; // Changed from HTMLElement to HTMLDivElement
   };
   
   // Animation states for each section

@@ -6,9 +6,6 @@ import { NavigationItem, UseLayoutReturn } from '@/types';
 import { useDebounceRAF } from './useDebounce';
 
 export function useLayout(): UseLayoutReturn {
-  console.group('useLayout Hook');
-  console.log('Hook initialized');
-
   // Router hooks
   const location = useLocation();
   const navigate = useNavigate();
@@ -44,23 +41,15 @@ export function useLayout(): UseLayoutReturn {
 
   // Update current path when location changes
   useEffect(() => {
-    console.group('Location Change Effect');
-    console.log('Previous path:', currentPath);
-    console.log('New path:', location.pathname);
     setCurrentPath(location.pathname);
     // Close mobile nav when route changes
     setIsNavOpen(false);
-    console.groupEnd();
   }, [location, currentPath]); // Include currentPath since we use it in the effect
 
   // Set up scroll listener
   useEffect(() => {
-    console.group('Scroll Listener Effect');
-    console.log('Setting up scroll listener');
     window.addEventListener('scroll', handleScroll);
     return () => {
-      console.log('Cleaning up scroll listener');
-      console.groupEnd();
       window.removeEventListener('scroll', handleScroll);
     };
   }, [handleScroll]);
@@ -84,7 +73,14 @@ export function useLayout(): UseLayoutReturn {
     }, 300); // Match this with your transition duration
   }, [navigate]);
 
-  console.groupEnd();
+  useEffect(() => {
+    console.log('Path changed:', location.pathname);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    console.log('Scroll state changed:', { isScrolled, scrollProgress });
+  }, [isScrolled, scrollProgress]);
+
   return {
     // Navigation state
     isNavOpen,

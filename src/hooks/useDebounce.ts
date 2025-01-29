@@ -8,7 +8,7 @@ export function useDebounce<Args extends unknown[], Return>(
   callback: (...args: Args) => Return,
   delay: number
 ): (...args: Args) => void {
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const callbackRef = useRef(callback);
 
   // Update callback ref when callback changes
@@ -36,7 +36,7 @@ export function useDebounce<Args extends unknown[], Return>(
 export function useDebounceRAF<Args extends unknown[], Return>(
   callback: (...args: Args) => Return
 ): (...args: Args) => void {
-  const frameRef = useRef<number>();
+  const frameRef = useRef<number | null>(null);
   const callbackRef = useRef(callback);
 
   // Update callback ref when callback changes
@@ -55,5 +55,31 @@ export function useDebounceRAF<Args extends unknown[], Return>(
       });
     },
     []
+  );
+}
+
+// Add throttle with RAF for smooth animations
+export function useThrottleRAF<Args extends unknown[], Return>(
+  callback: (...args: Args) => Return,
+  delay: number
+): (...args: Args) => void {
+  const timeRef = useRef<number>(0);
+  const callbackRef = useRef(callback);
+
+  useEffect(() => {
+    callbackRef.current = callback;
+  }, [callback]);
+
+  return useCallback(
+    (...args: Args) => {
+      const now = performance.now();
+      if (now - timeRef.current >= delay) {
+        timeRef.current = now;
+        requestAnimationFrame(() => {
+          callbackRef.current(...args);
+        });
+      }
+    },
+    [delay]
   );
 }

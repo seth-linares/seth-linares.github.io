@@ -1,7 +1,7 @@
 // src/components/Home/HomePage.tsx
 
-import React, { useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useMemo } from 'react';
+import { motion } from 'motion/react';
 import { useHome } from '@/hooks/useHome';
 import { Section } from '@/types';
 
@@ -11,9 +11,6 @@ import NavigationSection from './sections/NavigationSection';
 import ContentSection from './sections/ContentSection';
 
 const Home: React.FC = () => {
-  console.group('Home Component');
-  console.time('Home render');
-
   const {
     currentSection,
     sectionRefs,
@@ -23,7 +20,7 @@ const Home: React.FC = () => {
   } = useHome();
 
   useEffect(() => {
-    console.group('Home Effects');
+    console.group('Section Change');
     console.log('Current section:', currentSection);
     console.log('Animation states:', animationStates);
     console.table(Object.entries(animationStates).map(([key, value]) => ({
@@ -34,11 +31,8 @@ const Home: React.FC = () => {
     console.groupEnd();
   }, [currentSection, animationStates]);
 
-  console.timeEnd('Home render');
-  console.groupEnd();
-
-  // Animation variants for sections
-  const sectionVariants = {
+  // Memoize section variants to prevent recreating on every render
+  const sectionVariants = useMemo(() => ({
     hidden: { opacity: 0, y: 20 },
     visible: { 
       opacity: 1, 
@@ -56,7 +50,29 @@ const Home: React.FC = () => {
         ease: "easeIn"
       }
     }
-  };
+  }), []);
+
+  // Memoize section renders to prevent unnecessary re-renders
+  const heroSection = useMemo(() => (
+    <HeroSection 
+      isVisible={animationStates.hero.isVisible}
+      progress={animationStates.hero.progress}
+    />
+  ), [animationStates.hero.isVisible, animationStates.hero.progress]);
+
+  const navigationSection = useMemo(() => (
+    <NavigationSection 
+      isVisible={animationStates.navigation.isVisible}
+      progress={animationStates.navigation.progress}
+    />
+  ), [animationStates.navigation.isVisible, animationStates.navigation.progress]);
+
+  const contentSection = useMemo(() => (
+    <ContentSection 
+      isVisible={animationStates.content.isVisible}
+      progress={animationStates.content.progress}
+    />
+  ), [animationStates.content.isVisible, animationStates.content.progress]);
 
   return (
     <div className="relative">
@@ -84,10 +100,7 @@ const Home: React.FC = () => {
           animate={animationStates.hero.isVisible ? "visible" : "hidden"}
           className="section-container"
         >
-          <HeroSection 
-            isVisible={animationStates.hero.isVisible}
-            progress={animationStates.hero.progress}
-          />
+          {heroSection}
         </motion.div>
 
         {/* Navigation Section */}
@@ -97,10 +110,7 @@ const Home: React.FC = () => {
           animate={animationStates.navigation.isVisible ? "visible" : "hidden"}
           className="section-container"
         >
-          <NavigationSection 
-            isVisible={animationStates.navigation.isVisible}
-            progress={animationStates.navigation.progress}
-          />
+          {navigationSection}
         </motion.div>
 
         {/* Content Section */}
@@ -110,10 +120,7 @@ const Home: React.FC = () => {
           animate={animationStates.content.isVisible ? "visible" : "hidden"}
           className="section-container"
         >
-          <ContentSection 
-            isVisible={animationStates.content.isVisible}
-            progress={animationStates.content.progress}
-          />
+          {contentSection}
         </motion.div>
       </motion.main>
 
