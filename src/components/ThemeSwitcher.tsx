@@ -1,9 +1,11 @@
 // src/components/ThemeSwitcher.tsx
 
-import React from 'react';
-import useThemeSwitcher from "@/hooks/useThemeSwitcher";
+import React, { useState } from 'react';
+import { IoColorPaletteOutline } from 'react-icons/io5';
+import { motion, AnimatePresence } from 'motion/react';
+import useThemeSwitcher from '@/hooks/useThemeSwitcher';
 
-const themes = [
+const THEMES = [
     "acid", "aqua", "autumn", "black", "bumblebee", "business", "cmyk",
     "coffee", "corporate", "cupcake", "cyberpunk", "dark", "dim", "dracula",
     "emerald", "fantasy", "forest", "garden", "halloween", "lemonade",
@@ -11,37 +13,47 @@ const themes = [
     "sweetandmore", "synthwave", "valentine", "winter", "wireframe"
 ] as const;
 
-const capitalizeFirstLetter = (str: string) => {
-    return str.charAt(0).toUpperCase() + str.slice(1);
-}
 
 const ThemeSwitcher: React.FC = () => {
-    const { currentTheme, changeTheme } = useThemeSwitcher(themes);
+    const [isOpen, setIsOpen] = useState(false);
+    const { currentTheme, changeTheme } = useThemeSwitcher(THEMES);
 
     return (
-        <div className="form-control w-full max-w-xs">
-            <h3 className="font-semibold mb-2">
-                Currently Selected Theme: {capitalizeFirstLetter(currentTheme)}
-            </h3>
-            <label className="label" htmlFor="theme-select">
-                <span className="label-text">Choose a theme:</span>
-            </label>
-            <select
-                id="theme-select"
-                className="select select-bordered w-full p-3 my-2 text-center"
-                value={currentTheme}
-                onChange={(e) => {
-                    const newTheme = e.target.value;
-                    changeTheme(newTheme as typeof themes[number])
-                }
-            }
+        <div className="relative">
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="btn btn-ghost btn-circle"
+                aria-label="Theme switcher"
             >
-                {themes.map((theme) => (
-                    <option key={theme} value={theme}>
-                        {capitalizeFirstLetter(theme)}
-                    </option>
-                ))}
-            </select>
+                <IoColorPaletteOutline className="w-5 h-5" />
+            </button>
+
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute right-0 mt-2 w-48 rounded-lg bg-base-200 shadow-lg ring-1 ring-black ring-opacity-5 z-50 max-h-[calc(100vh-100px)]"
+                    >
+                        <div className="py-1 overflow-y-auto max-h-[inherit] scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-base-100">
+                            {THEMES.map((theme) => (
+                                <button
+                                    key={theme}
+                                    onClick={() => {
+                                        changeTheme(theme);
+                                        setIsOpen(false);
+                                    }}
+                                    className={`w-full px-4 py-2 text-sm hover:bg-base-300 text-left capitalize
+                                        ${currentTheme === theme ? 'bg-primary/10' : ''}`}
+                                >
+                                    {theme}
+                                </button>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

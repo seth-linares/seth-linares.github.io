@@ -1,16 +1,11 @@
 // src/App.tsx
 
 import { HashRouter, Routes, Route } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
-import ThemeSwitcher from './components/ThemeSwitcher';
-
-// Lazy load our pages for better initial load performance
-// We use lazy loading since these components might be large and we don't need them immediately
-const Layout = lazy(() => import('./components/Layout'));
-const Home = lazy(() => import('./components/Home/HomePage'));
-const Projects = lazy(() => import('./components/Projects/ProjectsPage'));
-const About = lazy(() => import('./components/About/AboutPage'));
-const Contact = lazy(() => import('./components/Contact/ContactPage'));
+import { Suspense } from 'react';
+import Navbar from './components/Navbar';
+import HomePage from './components/HomePage';
+import TokenCounter from './components/token_counter/TokenCounter';
+import FileContextProvider from './components/token_counter/FileContextProvider';
 
 // Loading component shown while our lazy-loaded components are being fetched
 const LoadingScreen = () => (
@@ -19,32 +14,35 @@ const LoadingScreen = () => (
   </div>
 );
 
+// Layout component to wrap all pages
+const Layout = ({ children }: { children: React.ReactNode }) => (
+  <>
+    <Navbar />
+    <main>
+      {children}
+    </main>
+  </>
+);
+
 function App() {
   return (
     // HashRouter is used instead of BrowserRouter for GitHub Pages compatibility
     <HashRouter>
-      {/* Theme switcher is placed outside Routes so it persists across all routes */}
-      <div className="fixed top-4 right-4 z-50">
-        <ThemeSwitcher />
-      </div>
-      
       {/* Suspense handles the loading state while components are being fetched */}
       <Suspense fallback={<LoadingScreen />}>
         <Routes>
-          {/* Layout component will contain shared UI elements like navigation */}
-          <Route path="/" element={<Layout />}>
-            {/* Index route renders the Home component */}
-            <Route index element={<Home />} />
-            
-            {/* Other routes - we'll implement these components later */}
-            <Route path="projects" element={<Projects />} />
-            <Route path="about" element={<About />} />
-            <Route path="contact" element={<Contact />} />
-
-            {/* 404 page - catches any undefined routes */}
-            <Route 
-              path="*" 
-              element={
+          <Route path="/" element={<Layout><HomePage /></Layout>} />
+          <Route path="/token-counter" element={
+            <Layout>
+              <FileContextProvider>
+                <TokenCounter />
+              </FileContextProvider>
+            </Layout>
+          } />
+          <Route 
+            path="*" 
+            element={
+              <Layout>
                 <div className="h-screen flex items-center justify-center">
                   <div className="text-center">
                     <h1 className="text-4xl font-bold mb-4">404 - Page Not Found</h1>
@@ -53,9 +51,9 @@ function App() {
                     </p>
                   </div>
                 </div>
-              } 
-            />
-          </Route>
+              </Layout>
+            } 
+          />
         </Routes>
       </Suspense>
     </HashRouter>
