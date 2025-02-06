@@ -24,13 +24,11 @@ function Navbar() {
           style={{ 
               height: navbarHeight,
               opacity: navbarOpacity,
-              // Move y animation to style object
               y: useTransform(navbarVisibility, 
                 [0, 1], 
                 ['-100%', '0%']
               )
           }}
-          // Remove transition prop since we're using springs
           onAnimationStart={() => {
             console.log('Navbar animation starting:', {
               currentVisibility: navbarVisibility.get()
