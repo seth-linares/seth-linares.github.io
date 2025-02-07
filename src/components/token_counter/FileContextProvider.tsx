@@ -59,7 +59,7 @@ function FileContextProvider({children}: {children: React.ReactNode}) {
 
         // Add separator and user prompt if provided
         if (userPrompt.trim()) {
-            prompt += `---\n\nUser Prompt:\n\n${userPrompt.trim()}\n`;
+            prompt += `---\n\n## User Prompt:\n\n${userPrompt.trim()}\n`;
         }
 
         return prompt.trim();

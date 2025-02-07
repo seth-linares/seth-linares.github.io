@@ -7,6 +7,14 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import FileUploader from './FileUploader';
+import { Suspense, lazy } from 'react';
+
+// Dynamic import of MarkdownRenderer
+const MarkdownRenderer = lazy(() => 
+  import('@/components/token_counter/MarkdownRenderer').then(module => ({
+    default: module.default
+  }))
+);
 
 function TokenCounter() {
     const { fileText } = useFileContext();
@@ -236,27 +244,9 @@ function TokenCounter() {
                                                         </button>
                                                     </div>
                                                 </div>
-                                                <AnimatePresence>
-                                                    {!isPromptMinimized && (
-                                                        <motion.div
-                                                            initial={{ opacity: 0, height: 0 }}
-                                                            animate={{ opacity: 1, height: "auto" }}
-                                                            exit={{ opacity: 0, height: 0 }}
-                                                            className="relative"
-                                                        >
-                                                            <pre 
-                                                                className="whitespace-pre overflow-auto max-h-[500px] bg-base-300 p-4 rounded-lg"
-                                                                style={{
-                                                                    maxWidth: '100%',
-                                                                    overflowX: 'auto',
-                                                                    overflowY: 'auto',
-                                                                }}
-                                                            >
-                                                                <code>{generatedPrompt}</code>
-                                                            </pre>
-                                                        </motion.div>
-                                                    )}
-                                                </AnimatePresence>
+                                                <Suspense fallback={<div className="loading loading-spinner">Loading...</div>}>
+                                                    <MarkdownRenderer content={generatedPrompt} />
+                                                </Suspense>
                                             </div>
                                         </motion.div>
                                     )}

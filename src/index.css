@@ -72,3 +72,149 @@
   border-radius: 3px;
 }
 
+/* Base styles for markdown content */
+.markdown-content {
+  max-width: none;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.markdown-content h1 {
+  @apply text-3xl font-bold my-4;
+}
+
+.markdown-content h2 {
+  @apply text-2xl font-bold my-4;
+}
+
+.markdown-content h3 {
+  @apply text-xl font-bold my-3;
+}
+
+.markdown-content h4 {
+  @apply text-lg font-bold my-3;
+}
+
+.markdown-content h5 {
+  @apply text-base font-bold my-2;
+}
+
+.markdown-content h6 {
+  @apply text-sm font-bold my-2;
+}
+
+.markdown-content p {
+  @apply my-2 leading-relaxed;
+}
+
+.markdown-content ul {
+  @apply list-disc ml-6 my-2;
+}
+
+.markdown-content ol {
+  @apply list-decimal ml-6 my-2;
+}
+
+.markdown-content li {
+  @apply my-1;
+}
+
+.markdown-content a {
+  @apply text-blue-500 hover:text-blue-700 underline;
+  text-underline-offset: 2px;
+}
+
+.markdown-content blockquote {
+  @apply border-l-4 border-gray-300 pl-4 my-4;
+}
+
+.markdown-content table {
+  @apply table-auto border-collapse border border-gray-400 w-full my-4;
+}
+
+.markdown-content th,
+.markdown-content td {
+  @apply border border-gray-400 p-2 text-left;
+}
+
+.markdown-content th {
+  @apply font-bold bg-gray-100;
+}
+
+.markdown-content tbody tr:nth-child(even) {
+  @apply bg-gray-50;
+}
+
+/* Code block styling */
+.markdown-content pre {
+  background-color: #1e1e1e;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin: 1rem 0;
+  overflow-x: auto;
+}
+
+/* Syntax highlighting */
+.hljs-comment {
+  color: hsla(0, 0%, 100%, 0.5);
+}
+
+.hljs-keyword {
+  color: #2e95d3;
+}
+
+.hljs-string {
+  color: #00a67d;
+}
+
+.hljs-function {
+  color: #e9950c;
+}
+
+code,
+pre {
+  font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+}
+
+code.hljs,
+code[class*='language-'],
+pre[class*='language-'] {
+  word-wrap: normal;
+  background: none;
+  color: #fff;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  tab-size: 4;
+  text-align: left;
+  white-space: pre;
+  word-break: normal;
+  word-spacing: normal;
+}
+
+.prose {
+  color: var(--tw-prose-body);
+  max-width: 65ch;
+  font-size: var(--markdown-font-size, var(--font-size-base));
+  line-height: calc(28px * var(--markdown-font-size, var(--font-size-base)) / var(--font-size-base));
+}
+
+.markdown {
+  max-width: none;
+}
+
+.markdown h1,
+.markdown h2 {
+  font-weight: 600;
+}
+
+.markdown h2 {
+  margin-bottom: 1rem;
+  margin-top: 2rem;
+}
+
+.markdown blockquote {
+  border-left-width: 2px;
+  border-color: var(--border-heavy);
+  padding-left: 1rem;
+  line-height: 1rem;
+}

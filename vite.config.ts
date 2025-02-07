@@ -24,4 +24,25 @@ export default defineConfig({
       }
     })
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router-dom'],
+          markdown: [
+            'react-markdown',
+            'remark-gfm',
+            'remark-math',
+            'remark-supersub',
+            'rehype-highlight',
+            'rehype-katex'
+          ],
+          highlighting: ['highlight.js'],
+          motion: ['motion'],
+          icons: ['react-icons']
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
+  },
 })
