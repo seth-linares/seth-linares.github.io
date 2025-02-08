@@ -217,7 +217,7 @@ function TokenCounter() {
                                             animate={{ opacity: 1, height: "auto" }}
                                             exit={{ opacity: 0, height: 0 }}
                                         >
-                                            <div className="card-body">
+                                            <div className="card-body max-h-[400px] overflow-y-auto">
                                                 <div className="flex justify-between items-center">
                                                     <h3 className="text-lg font-semibold">Generated Prompt</h3>
                                                     <div className="flex gap-2">
