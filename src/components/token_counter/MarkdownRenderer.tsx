@@ -1,6 +1,7 @@
 import React, { lazy, Suspense } from 'react';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
+import supersub from 'remark-supersub';
 
 // Lazy load ReactMarkdown only
 const ReactMarkdown = lazy(() => import('react-markdown'));
@@ -19,9 +20,9 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <div className="markdown-content">
+      <div className="prose markdown-content">
         <ReactMarkdown
-          remarkPlugins={[remarkGfm]}
+          remarkPlugins={[[remarkGfm, { singleTilde: false }], supersub]}
           rehypePlugins={[rehypeHighlight]}
           components={{
             code({ className, children, ...props }) {

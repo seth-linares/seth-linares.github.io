@@ -212,7 +212,7 @@ function TokenCounter() {
                                 <AnimatePresence>
                                     {showGeneratedPrompt && (
                                         <motion.div 
-                                            className="card bg-base-200"
+                                            className="card bg-base-300"
                                             initial={{ opacity: 0, height: 0 }}
                                             animate={{ opacity: 1, height: "auto" }}
                                             exit={{ opacity: 0, height: 0 }}
