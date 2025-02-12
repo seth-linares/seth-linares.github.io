@@ -53,7 +53,7 @@ function FileUploader() {
                             <div className="text-sm font-medium mb-2">
                                 Uploaded Files ({files.length}):
                             </div>
-                            <div className="space-y-2">
+                            <div className="space-y-2 max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-base-100">
                                 {files.map((file: File, index: number) => (
                                     <motion.div
                                         key={`${file.name}-${index}`}

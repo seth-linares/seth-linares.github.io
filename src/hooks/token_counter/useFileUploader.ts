@@ -22,19 +22,31 @@ const useFileUploader = () => {
         const existingNames = new Set(currentNames);
         const fileContentMap = new Map<string, string>();
 
-        const contents = await Promise.allSettled(newFiles.map(async file => {
+        const results = await Promise.allSettled(newFiles.map(async file => {
           const content = await readFileAsText(file);
           const uniqueName = generateUniqueName(file, existingNames);
-          fileContentMap.set(uniqueName, content);
-          return content;
+          return { uniqueName, content };
         }));
+
+        // Filter out rejected promises and process successful ones
+        const successfulResults = results
+          .filter((result): result is PromiseFulfilledResult<{uniqueName: string, content: string}> => 
+            result.status === 'fulfilled');
+
+        successfulResults.forEach(result => {
+          fileContentMap.set(result.value.uniqueName, result.value.content);
+        });
+
+        const newCombinedContents = successfulResults
+          .map(result => result.value.content)
+          .filter(content => content) // Remove any undefined/null values
+          .join('\n');
 
         // Create new File objects with unique names.
         const uniqueFiles = Array.from(fileContentMap.entries()).map(([uniqueName, content]) => {
           return new File([content], uniqueName, { type: 'text/plain' });
         });
 
-        const newCombinedContents = contents.join('\n');
         console.log("useFileUploader - Combined file content length:", newCombinedContents.length);
         
         setFiles(prevFiles => [...prevFiles, ...uniqueFiles]);
