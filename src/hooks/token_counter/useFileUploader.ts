@@ -22,7 +22,7 @@ const useFileUploader = () => {
         const existingNames = new Set(currentNames);
         const fileContentMap = new Map<string, string>();
 
-        const contents = await Promise.all(newFiles.map(async file => {
+        const contents = await Promise.allSettled(newFiles.map(async file => {
           const content = await readFileAsText(file);
           const uniqueName = generateUniqueName(file, existingNames);
           fileContentMap.set(uniqueName, content);
