@@ -1,6 +1,5 @@
 // src/components/ThemeSwitcher.tsx
 
-import React, { useState } from 'react';
 import { IoColorPaletteOutline } from 'react-icons/io5';
 import { motion, AnimatePresence } from 'motion/react';
 import useThemeSwitcher from '@/hooks/useThemeSwitcher';
@@ -15,8 +14,7 @@ const THEMES = [
 
 
 const ThemeSwitcher: React.FC = () => {
-    const [isOpen, setIsOpen] = useState(false);
-    const { currentTheme, changeTheme } = useThemeSwitcher(THEMES);
+    const { isOpen, currentTheme, setIsOpen, changeTheme } = useThemeSwitcher(THEMES);
 
     return (
         <div className="relative">
