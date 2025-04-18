@@ -1,3 +1,5 @@
+// src/components/token_counter/MarkdownRenderer.tsx
+
 import React, { lazy, Suspense } from 'react';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';

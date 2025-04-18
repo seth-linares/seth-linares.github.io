@@ -1,3 +1,5 @@
+// src/utils/getLanguageFromExtension.ts
+
 export function getLanguageFromExtension(filename: string): string {
   const ext = filename.split('.').pop()?.toLowerCase();
   

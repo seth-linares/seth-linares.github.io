@@ -1,3 +1,5 @@
+// src/types/AnthropicErrors.ts
+
 import { 
     AnthropicError,
     APIConnectionError,

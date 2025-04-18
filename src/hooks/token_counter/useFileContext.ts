@@ -1,3 +1,5 @@
+// src/hooks/token_counter/useFileContext.ts
+
 import { useContext } from 'react';
 import FileContext from '@/contexts/FileContext';
 

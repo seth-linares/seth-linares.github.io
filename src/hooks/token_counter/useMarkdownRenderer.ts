@@ -1,3 +1,5 @@
+// src/hooks/token_counter/useMarkdownRenderer.ts
+
 import { useEffect, useRef } from 'react';
 import hljs from 'highlight.js';
 

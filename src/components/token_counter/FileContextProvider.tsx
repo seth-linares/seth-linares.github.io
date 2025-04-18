@@ -1,3 +1,5 @@
+// src/components/token_counter/FileContextProvider.tsx
+
 import FileContext from "@/contexts/FileContext";
 import { useState, useEffect, useCallback } from "react";
 import { getLanguageFromExtension } from "@/utils/getLanguageFromExtension";
