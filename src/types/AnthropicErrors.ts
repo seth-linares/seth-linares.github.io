@@ -14,73 +14,49 @@ import {
     UnprocessableEntityError
 } from "@anthropic-ai/sdk";
 
-const ERROR_MESSAGES = {
-    BadRequestError: {
+// Tuple array for error mapping to avoid key duplication
+const ERROR_MAP = [
+    [BadRequestError, {
         message: "Invalid input provided",
         solution: "Please check your prompt format and try again"
-    },
-    AuthenticationError: {
+    }],
+    [AuthenticationError, {
         message: "Authentication failed",
         solution: "Please verify your API key is correct and active"
-    },
-    PermissionDeniedError: {
+    }],
+    [PermissionDeniedError, {
         message: "Access denied",
         solution: "Please ensure your API key has the required permissions"
-    },
-    NotFoundError: {
+    }],
+    [NotFoundError, {
         message: "Resource not found",
         solution: "The requested resource or endpoint is unavailable"
-    },
-    ConflictError: {
+    }],
+    [ConflictError, {
         message: "Request conflict detected",
         solution: "Please try your request again"
-    },
-    UnprocessableEntityError: {
+    }],
+    [UnprocessableEntityError, {
         message: "Unable to process request",
         solution: "Please verify your input meets all requirements"
-    },
-    RateLimitError: {
+    }],
+    [RateLimitError, {
         message: "Rate limit reached",
         solution: "Please wait a moment before trying again"
-    },
-    InternalServerError: {
+    }],
+    [InternalServerError, {
         message: "Server error occurred",
         solution: "This is a temporary issue, please try again later"
-    },
-    APIConnectionTimeoutError: {
+    }],
+    [APIConnectionTimeoutError, {
         message: "Connection timed out",
         solution: "Please check your internet connection and try again"
-    },
-    APIConnectionError: {
+    }],
+    [APIConnectionError, {
         message: "Connection failed",
         solution: "Please verify your internet connection is stable"
-    }
-} as const;
-
-type AnthropicErrorType = 
-    | typeof BadRequestError
-    | typeof AuthenticationError
-    | typeof PermissionDeniedError
-    | typeof NotFoundError
-    | typeof ConflictError
-    | typeof UnprocessableEntityError
-    | typeof RateLimitError
-    | typeof InternalServerError
-    | typeof APIConnectionTimeoutError
-    | typeof APIConnectionError;
-
-const ERROR_CONSTRUCTORS: Record<keyof typeof ERROR_MESSAGES, AnthropicErrorType> = {
-    BadRequestError,
-    AuthenticationError,
-    PermissionDeniedError,
-    NotFoundError,
-    ConflictError,
-    UnprocessableEntityError,
-    RateLimitError,
-    InternalServerError,
-    APIConnectionTimeoutError,
-    APIConnectionError
-};
+    }],
+] as const;
 
 export const formatAnthropicError = (error: AnthropicError): string => {
     console.debug('Anthropic API Error:', {
@@ -89,16 +65,16 @@ export const formatAnthropicError = (error: AnthropicError): string => {
         status: 'status' in error ? error.status : undefined
     });
 
-    const errorType = Object.entries(ERROR_CONSTRUCTORS)
-        .find(([_, constructor]) => error instanceof constructor)?.[0];
-
-    if (errorType) {
-        const { message, solution } = ERROR_MESSAGES[errorType as keyof typeof ERROR_MESSAGES];
-        return `${message}. ${solution}.`;
+    for (const [ErrorClass, { message, solution }] of ERROR_MAP) {
+        if (error instanceof ErrorClass) {
+            return `${message}. ${solution}.`;
+        }
     }
 
     const errorMessage = error.message;
     const hasStatusCode = /^\d{3}\s+/.test(errorMessage);
-    
-    return hasStatusCode ? errorMessage.substring(4) : (errorMessage || "An unexpected error occurred");
+    // Always include the original error message for debugging
+    return hasStatusCode
+        ? errorMessage.substring(4)
+        : (errorMessage || "An unexpected error occurred");
 };
