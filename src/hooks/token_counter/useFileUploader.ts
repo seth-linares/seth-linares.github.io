@@ -9,6 +9,8 @@ const useFileUploader = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  // Set max file size to 10MB (change to 5 * 1024 * 1024 for 5MB)
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
   const handleFileChange = useCallback(async (event: Event) => {
     const newFiles = Array.from((event.target as HTMLInputElement).files || []);
@@ -23,8 +25,24 @@ const useFileUploader = () => {
         const currentNames = new Set(files.map(file => file.name));
         const existingNames = new Set(currentNames);
         const fileContentMap = new Map<string, string>();
+        const validFiles: File[] = [];
+        const skippedFiles: string[] = [];
 
-        const results = await Promise.allSettled(newFiles.map(async file => {
+        for (const file of newFiles) {
+          if (file.size > MAX_FILE_SIZE) {
+            console.warn(`File '${file.name}' skipped: exceeds max size (${MAX_FILE_SIZE} bytes)`);
+            skippedFiles.push(file.name + ' (too large)');
+            continue;
+          }
+          validFiles.push(file);
+        }
+
+        if (skippedFiles.length > 0) {
+          console.info('Skipped files:', skippedFiles);
+        }
+
+        // Batch read and process valid files (allowing duplicate names with unique suffixes)
+        const results = await Promise.allSettled(validFiles.map(async file => {
           const content = await readFileAsText(file);
           const uniqueName = generateUniqueName(file, existingNames);
           return { uniqueName, content };
@@ -51,6 +69,7 @@ const useFileUploader = () => {
 
         console.log("useFileUploader - Combined file content length:", newCombinedContents.length);
         
+        // Batch state updates
         setFiles(prevFiles => [...prevFiles, ...uniqueFiles]);
         setFileContents(prevContents => {
           const newContents = new Map(prevContents);
