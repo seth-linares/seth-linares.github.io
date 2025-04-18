@@ -3,6 +3,7 @@
 import FileContext from "@/contexts/FileContext";
 import { useState, useEffect, useCallback } from "react";
 import { getLanguageFromExtension } from "@/utils/getLanguageFromExtension";
+import { readFileAsText } from "@/utils/fileHelpers";
 
 function FileContextProvider({children}: {children: React.ReactNode}) {
     const [fileText, setFileText] = useState<string>("");
@@ -24,16 +25,10 @@ function FileContextProvider({children}: {children: React.ReactNode}) {
             });
             
             // Update combined fileText based on remaining files in fileContents
-            Promise.all(newFiles.map(file => 
-                new Promise<string>((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = e => resolve(e.target?.result as string || '');
-                    reader.onerror = reject;
-                    reader.readAsText(file);
-                })
-            )).then(contents => {
-                setFileText(contents.join('\n'));
-            });
+            Promise.all(newFiles.map(file => readFileAsText(file)))
+                .then(contents => {
+                    setFileText(contents.join('\n'));
+                });
             
             return newFiles;
         });
