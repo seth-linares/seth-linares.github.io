@@ -1,3 +1,5 @@
+// src/hooks/token_counter/useTokenCounter.ts
+
 import { useCallback, useState, useEffect, useRef } from "react";
 import Anthropic, { AnthropicError } from "@anthropic-ai/sdk";
 import { toast } from "react-toastify";
@@ -17,6 +19,11 @@ function useTokenCounter() {
     const [generatedPrompt, setGeneratedPrompt] = useState<string>('');
     const [showGeneratedPrompt, setShowGeneratedPrompt] = useState(false);
     const [isPromptMinimized, setIsPromptMinimized] = useState(false);
+    const [isSectionLoading, setIsSectionLoading] = useState(true);
+    useEffect(() => {
+        const timer = setTimeout(() => setIsSectionLoading(false), 600); // 600ms for a smooth effect
+        return () => clearTimeout(timer);
+    }, [apiKey]);
 
     const handleGeneratePrompt = useCallback(() => {
         console.log('handleGeneratePrompt called with promptInput:', promptInput);
@@ -125,22 +132,23 @@ function useTokenCounter() {
         }
     }, [client, promptInput, fileText]);
 
-    return { 
+    return {
         promptInput,
+        setPromptInput,
         apiKeyInput,
+        setApiKeyInput,
         apiKey,
         tokenCount,
         generatedPrompt,
         showGeneratedPrompt,
         isPromptMinimized,
-        setPromptInput,
-        setApiKeyInput,
+        setShowGeneratedPrompt,
+        setIsPromptMinimized,
         localSaveApiKey,
         resetApiKey,
         handleSubmitTokens,
         handleGeneratePrompt,
-        setShowGeneratedPrompt,
-        setIsPromptMinimized,
+        isSectionLoading,
     };
 };
 
