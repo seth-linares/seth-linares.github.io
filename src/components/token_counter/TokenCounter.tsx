@@ -2,23 +2,18 @@
 
 import useTokenCounter from '@/hooks/token_counter/useTokenCounter';
 import useFileContext from '@/hooks/token_counter/useFileContext';
-import { FiKey, FiHash, FiRefreshCw, FiMinimize2, FiMaximize2, FiX } from 'react-icons/fi';  // Add these imports
+import { FiHash, FiRefreshCw } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'motion/react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import FileUploader from './FileUploader';
-import { Suspense, lazy } from 'react';
-
-// Dynamic import of MarkdownRenderer
-const MarkdownRenderer = lazy(() => 
-  import('@/components/token_counter/MarkdownRenderer').then(module => ({
-    default: module.default
-  }))
-);
+import ApiKeyForm from './ApiKeyForm';
+import TokenCountDisplay from './TokenCountDisplay';
+import GeneratedPromptDisplay from './GeneratedPromptDisplay';
 
 function TokenCounter() {
     const { fileText } = useFileContext();
-    const { 
+    const {
         promptInput,
         apiKeyInput,
         apiKey,
@@ -31,11 +26,36 @@ function TokenCounter() {
         localSaveApiKey,
         resetApiKey,
         handleSubmitTokens,
-        handleGeneratePrompt,  // <-- This wasn't being used correctly
+        handleGeneratePrompt,
         setShowGeneratedPrompt,
         setIsPromptMinimized,
+        isSectionLoading,
     } = useTokenCounter();
 
+    // Skeleton loader component
+    const SectionSkeleton = () => (
+        <motion.div
+            className="space-y-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+        >
+            {/* Textarea skeleton */}
+            <div className="h-32 bg-base-300 rounded w-full mb-2" />
+            {/* Actions row skeleton */}
+            <div className="flex flex-wrap gap-6 items-start justify-between">
+                {/* Upload button skeleton (left) */}
+                <div className="w-full md:w-1/3 flex gap-2">
+                    <div className="h-12 w-full bg-base-300 rounded" />
+                </div>
+                {/* Action buttons skeleton (right) */}
+                <div className="flex items-center ml-auto gap-2">
+                    <div className="h-12 w-36 bg-base-300 rounded" />
+                    <div className="h-12 w-32 bg-base-300 rounded" />
+                </div>
+            </div>
+        </motion.div>
+    );
 
     return (
         <motion.div 
@@ -79,55 +99,16 @@ function TokenCounter() {
                             </motion.button>
                         )}
                     </div>
-
                     <div className="divider m-0"></div>
-                    
                     <AnimatePresence mode="wait">
-                        {!apiKey ? (
-                            <motion.div
-                                key="api-form"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                className="card bg-base-200 p-6 "
-                            >
-                                <div className="flex items-center gap-3 mb-4">
-                                    <FiKey className="w-6 h-6 text-primary" />
-                                    <h3 className="text-xl font-semibold">Enter your Anthropic API Key</h3>
-                                </div>
-                                <form onSubmit={localSaveApiKey} className="form-control gap-6">
-                                    <div className="flex gap-4">
-                                        <div className="flex-1">
-                                            <div className="relative">
-                                                <input
-                                                    type="password"
-                                                    className="input input-bordered w-full pr-10 transition-all duration-200 focus:input-primary"
-                                                    placeholder="Enter API Key..."
-                                                    value={apiKeyInput}
-                                                    onChange={(e) => setApiKeyInput(e.target.value)}
-                                                />
-                                                <div className="absolute inset-y-0 right-3 flex items-center">
-                                                    <FiKey className="w-4 h-4 text-base-content/50" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <motion.button 
-                                            type="submit" 
-                                            className="btn btn-primary whitespace-nowrap"
-                                            disabled={!apiKeyInput}
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                        >
-                                            Save API Key
-                                        </motion.button>
-                                    </div>
-                                    <div className="text-center mt-2">
-                                        <span className="label-text-alt text-base-content/70">
-                                            Your API key is stored locally and never sent to any server
-                                        </span>
-                                    </div>
-                                </form>
-                            </motion.div>
+                        {isSectionLoading ? (
+                            <SectionSkeleton />
+                        ) : !apiKey ? (
+                            <ApiKeyForm 
+                                apiKeyInput={apiKeyInput}
+                                setApiKeyInput={setApiKeyInput}
+                                localSaveApiKey={localSaveApiKey}
+                            />
                         ) : (
                             <motion.div
                                 key="token-counter"
@@ -156,7 +137,6 @@ function TokenCounter() {
                                     <div className="w-full md:w-1/3">
                                         <FileUploader />
                                     </div>
-                                    
                                     <div className="flex items-center ml-auto gap-2">
                                         <motion.button 
                                             type="button" 
@@ -183,74 +163,16 @@ function TokenCounter() {
                                 </div>
 
                                 {/* Token Count Display */}
-                                <AnimatePresence>
-                                    {tokenCount !== null && (
-                                        <motion.div 
-                                            className="card bg-success text-primary-content"
-                                            initial={{ opacity: 0, scale: 0.9 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            exit={{ opacity: 0, scale: 0.9 }}
-                                        >
-                                            <div className="card-body py-8">
-                                                <div className="flex flex-col items-center justify-center gap-2 text-success-content">
-                                                    <span className="text-2xl font-medium">Total Tokens</span>
-                                                    <motion.span 
-                                                        className="text-6xl font-bold"
-                                                        initial={{ scale: 0.5 }}
-                                                        animate={{ scale: 1 }}
-                                                        transition={{ type: "spring", stiffness: 300 }}
-                                                    >
-                                                        {tokenCount.toLocaleString()}
-                                                    </motion.span>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
+                                <TokenCountDisplay tokenCount={tokenCount} />
 
                                 {/* Generated Prompt Display */}
-                                <AnimatePresence>
-                                    {showGeneratedPrompt && (
-                                        <motion.div 
-                                            className="card bg-base-300"
-                                            initial={{ opacity: 0, height: 0 }}
-                                            animate={{ opacity: 1, height: "auto" }}
-                                            exit={{ opacity: 0, height: 0 }}
-                                        >
-                                            <div className="card-body max-h-[400px] overflow-y-auto">
-                                                <div className="flex justify-between items-center">
-                                                    <h3 className="text-lg font-semibold">Generated Prompt</h3>
-                                                    <div className="flex gap-2">
-                                                        <button 
-                                                            className="btn btn-sm btn-ghost"
-                                                            onClick={() => navigator.clipboard.writeText(generatedPrompt)}
-                                                        >
-                                                            Copy to Clipboard
-                                                        </button>
-                                                        <button
-                                                            className="btn btn-sm btn-ghost"
-                                                            onClick={() => setIsPromptMinimized(!isPromptMinimized)}
-                                                        >
-                                                            {isPromptMinimized ? 
-                                                                <FiMaximize2 className="w-4 h-4" /> : 
-                                                                <FiMinimize2 className="w-4 h-4" />
-                                                            }
-                                                        </button>
-                                                        <button
-                                                            className="btn btn-sm btn-ghost"
-                                                            onClick={() => setShowGeneratedPrompt(false)}
-                                                        >
-                                                            <FiX className="w-4 h-4" />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <Suspense fallback={<div className="loading loading-spinner">Loading...</div>}>
-                                                    <MarkdownRenderer content={generatedPrompt} />
-                                                </Suspense>
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
+                                <GeneratedPromptDisplay
+                                    generatedPrompt={generatedPrompt}
+                                    showGeneratedPrompt={showGeneratedPrompt}
+                                    isPromptMinimized={isPromptMinimized}
+                                    setShowGeneratedPrompt={setShowGeneratedPrompt}
+                                    setIsPromptMinimized={setIsPromptMinimized}
+                                />
                             </motion.div>
                         )}
                     </AnimatePresence>
