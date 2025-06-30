@@ -5,7 +5,7 @@ import { Suspense } from 'react';
 import Navbar from './components/Navbar';
 import HomePage from './components/HomePage';
 import TokenCounter from './components/token_counter/TokenCounter';
-import FileContextProvider from './components/token_counter/FileContextProvider';
+import FileContextProvider from './contexts/FileContextProvider';
 
 // Loading component shown while our lazy-loaded components are being fetched
 const LoadingScreen = () => (

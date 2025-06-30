@@ -1,11 +1,10 @@
-// src/components/token_counter/FileContextProvider.tsx
+// src/hooks/token_counter/useFileContextProvider.ts
 
-import FileContext from "@/contexts/FileContext";
 import { useState, useEffect, useCallback } from "react";
 import { getLanguageFromExtension } from "@/utils/getLanguageFromExtension";
 import { readFileAsText } from "@/utils/fileHelpers";
 
-function FileContextProvider({children}: {children: React.ReactNode}) {
+export const useFileContextProvider = () => {
     const [fileText, setFileText] = useState<string>("");
     const [files, setFiles] = useState<File[]>([]);
     const [fileContents, setFileContents] = useState<Map<string, string>>(new Map());
@@ -66,20 +65,14 @@ function FileContextProvider({children}: {children: React.ReactNode}) {
       console.log("FileContextProvider render - fileText length:", fileText.length, "files count:", files.length);
     }, [fileText, files]);
 
-    return(
-        <FileContext.Provider value={{
-            fileText,
-            files,
-            setFileText,
-            setFiles,
-            removeFile,
-            fileContents,
-            setFileContents,
-            generatePrompt,
-        }}>
-            {children}
-        </FileContext.Provider>
-    );
+    return {
+        fileText,
+        files,
+        setFileText,
+        setFiles,
+        removeFile,
+        fileContents,
+        setFileContents,
+        generatePrompt,
+    };
 }
-
-export default FileContextProvider;
