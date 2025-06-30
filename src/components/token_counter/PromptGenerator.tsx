@@ -1,9 +1,9 @@
 // src/components/TokenCounter.tsx
 
-import useTokenCounter from '@/hooks/token_counter/useTokenCounter';
+import useTokenCounter from '@/hooks/token_counter/usePromptGenerator';
 import useFileContext from '@/hooks/token_counter/useFileContext';
-import { FiHash, FiRefreshCw } from 'react-icons/fi';
-import { motion, AnimatePresence } from 'motion/react';
+import { FiHash, FiRefreshCw, FiKey } from 'react-icons/fi';
+import { motion } from 'motion/react';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import FileUploader from './FileUploader';
@@ -21,41 +21,17 @@ function TokenCounter() {
         generatedPrompt,
         showGeneratedPrompt,
         isPromptMinimized,
+        isApiKeyFormExpanded,
         setPromptInput,
         setApiKeyInput,
+        setIsApiKeyFormExpanded,
         localSaveApiKey,
         resetApiKey,
         handleSubmitTokens,
         handleGeneratePrompt,
         setShowGeneratedPrompt,
         setIsPromptMinimized,
-        isSectionLoading,
     } = useTokenCounter();
-
-    // Skeleton loader component
-    const SectionSkeleton = () => (
-        <motion.div
-            className="space-y-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-        >
-            {/* Textarea skeleton */}
-            <div className="h-32 bg-base-300 rounded w-full mb-2" />
-            {/* Actions row skeleton */}
-            <div className="flex flex-wrap gap-6 items-start justify-between">
-                {/* Upload button skeleton (left) */}
-                <div className="w-full md:w-1/3 flex gap-2">
-                    <div className="h-12 w-full bg-base-300 rounded" />
-                </div>
-                {/* Action buttons skeleton (right) */}
-                <div className="flex items-center ml-auto gap-2">
-                    <div className="h-12 w-36 bg-base-300 rounded" />
-                    <div className="h-12 w-32 bg-base-300 rounded" />
-                </div>
-            </div>
-        </motion.div>
-    );
 
     return (
         <motion.div 
@@ -75,7 +51,7 @@ function TokenCounter() {
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
             >
                 <div className="card-body space-y-6">
-                    {/* Header Area with API Key Change Button */}
+                    {/* Header Area with API Key Button */}
                     <div className="flex items-center justify-between">
                         <motion.h2 
                             className="card-title text-3xl font-bold flex items-center gap-2"
@@ -84,33 +60,31 @@ function TokenCounter() {
                             transition={{ delay: 0.2 }}
                         >
                             <FiHash className="w-8 h-8 text-primary" />
-                            Claude Token Counter
+                            Prompt Builder
                         </motion.h2>
-                        {apiKey && (
-                            <motion.button 
-                                type="button" 
-                                className="btn btn-outline btn-info btn-sm gap-2 hover:scale-105 transition-transform"
-                                onClick={resetApiKey}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                            >
-                                <FiRefreshCw className="w-4 h-4" />
-                                Change API Key
-                            </motion.button>
-                        )}
+                        <motion.button 
+                            type="button" 
+                            className="btn btn-outline btn-info btn-sm gap-2"
+                            onClick={() => apiKey ? resetApiKey() : setIsApiKeyFormExpanded(!isApiKeyFormExpanded)}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                        >
+                            {apiKey ? <FiRefreshCw className="w-4 h-4" /> : <FiKey className="w-4 h-4" />}
+                            {apiKey ? 'Change API Key' : 'Add API Key'}
+                        </motion.button>
                     </div>
                     <div className="divider m-0"></div>
-                    <AnimatePresence mode="wait">
-                        {isSectionLoading ? (
-                            <SectionSkeleton />
-                        ) : !apiKey ? (
-                            <ApiKeyForm 
-                                apiKeyInput={apiKeyInput}
-                                setApiKeyInput={setApiKeyInput}
-                                localSaveApiKey={localSaveApiKey}
-                            />
-                        ) : (
-                            <motion.div
+                    
+                    {/* API Key Form - Collapsible */}
+                    {(!apiKey && isApiKeyFormExpanded) && (
+                        <ApiKeyForm 
+                            apiKeyInput={apiKeyInput}
+                            setApiKeyInput={setApiKeyInput}
+                            localSaveApiKey={localSaveApiKey}
+                        />
+                    )}
+                    
+                    <motion.div
                                 key="token-counter"
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
@@ -124,7 +98,7 @@ function TokenCounter() {
                                             className="textarea textarea-bordered min-h-[200px] text-lg transition-all duration-200 focus:textarea-primary w-full"
                                             value={promptInput}
                                             onChange={(e) => setPromptInput(e.target.value)}
-                                            placeholder="Enter text to count tokens..."
+                                            placeholder="Enter your prompt text..."
                                             initial={{ height: 200 }}
                                             animate={{ height: promptInput ? 300 : 200 }}
                                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -140,14 +114,14 @@ function TokenCounter() {
                                     <div className="flex items-center ml-auto gap-2">
                                         <motion.button 
                                             type="button" 
-                                            className="btn btn-primary gap-2 min-w-[300px]"
+                                            className={`btn gap-2 min-w-[300px] ${!apiKey ? 'btn-disabled' : 'btn-primary'}`}
                                             onClick={handleSubmitTokens}
-                                            disabled={!promptInput && !fileText}
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
+                                            disabled={!apiKey || (!promptInput && !fileText)}
+                                            whileHover={apiKey ? { scale: 1.02 } : {}}
+                                            whileTap={apiKey ? { scale: 0.98 } : {}}
                                         >
                                             <FiHash className="w-5 h-5" />
-                                            Count Tokens
+                                            {!apiKey ? 'Count Tokens (API Key Required)' : 'Count Tokens'}
                                         </motion.button>
                                         <motion.button 
                                             type="button" 
@@ -174,8 +148,6 @@ function TokenCounter() {
                                     setIsPromptMinimized={setIsPromptMinimized}
                                 />
                             </motion.div>
-                        )}
-                    </AnimatePresence>
                 </div>
             </motion.div>
         </motion.div>

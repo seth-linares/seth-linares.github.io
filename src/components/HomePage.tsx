@@ -18,12 +18,12 @@ function HomePage() {
                     <div className="max-w-md">
                         <h1 className="text-5xl font-bold">Welcome</h1>
                         <p className="py-6">
-                            Explore my projects and tools, including a token counter
-                            powered by Claude AI.
+                            Explore my projects and tools, including a prompt builder
+                            powered AI.
                         </p>
                         <div className="flex gap-4 justify-center">
                             <Link to="/token-counter" className="btn btn-primary">
-                                Try Token Counter
+                                Try Prompt Builder
                             </Link>
                             <button 
                                 className="btn btn-outline"
@@ -45,8 +45,8 @@ function HomePage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div className="card bg-base-200 shadow-xl">
                             <div className="card-body">
-                                <h3 className="card-title">Token Counter</h3>
-                                <p>Count tokens using Claude AI's token counting system.</p>
+                                <h3 className="card-title">Prompt Builder</h3>
+                                <p>Build prompts by combining files and text, with optional token counting.</p>
                                 <div className="card-actions justify-end">
                                     <Link to="/token-counter" className="btn btn-primary">
                                         Try It

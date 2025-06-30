@@ -19,8 +19,12 @@ const ApiKeyForm: React.FC<ApiKeyFormProps> = ({ apiKeyInput, setApiKeyInput, lo
   >
     <div className="flex items-center gap-3 mb-4">
       <FiKey className="w-6 h-6 text-primary" />
-      <h3 className="text-xl font-semibold">Enter your Anthropic API Key</h3>
+      <h3 className="text-xl font-semibold">Enter your Anthropic API Key (Optional)</h3>
     </div>
+    <p className="text-sm text-base-content/70 mb-4">
+      You can use the file uploader and prompt generator without an API key. 
+      The API key is only required for token counting.
+    </p>
     <form onSubmit={localSaveApiKey} className="form-control gap-6">
       <div className="flex gap-4">
         <div className="flex-1">

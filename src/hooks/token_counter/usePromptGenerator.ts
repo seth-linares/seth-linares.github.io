@@ -19,11 +19,7 @@ function useTokenCounter() {
     const [generatedPrompt, setGeneratedPrompt] = useState<string>('');
     const [showGeneratedPrompt, setShowGeneratedPrompt] = useState(false);
     const [isPromptMinimized, setIsPromptMinimized] = useState(false);
-    const [isSectionLoading, setIsSectionLoading] = useState(true);
-    useEffect(() => {
-        const timer = setTimeout(() => setIsSectionLoading(false), 600); // 600ms for a smooth effect
-        return () => clearTimeout(timer);
-    }, [apiKey]);
+    const [isApiKeyFormExpanded, setIsApiKeyFormExpanded] = useState(false);
 
     const handleGeneratePrompt = useCallback(() => {
         console.log('handleGeneratePrompt called with promptInput:', promptInput);
@@ -80,6 +76,7 @@ function useTokenCounter() {
         localStorage.setItem('anthropic-api-key', apiKeyInput);
         setApiKey(apiKeyInput);
         setClient(new Anthropic({ apiKey: apiKeyInput, dangerouslyAllowBrowser: true }));
+        setIsApiKeyFormExpanded(false);
     }, [apiKeyInput]);
 
     const resetApiKey = useCallback(() => {
@@ -87,6 +84,7 @@ function useTokenCounter() {
         setApiKey(null);
         setApiKeyInput('');
         setClient(null);
+        setIsApiKeyFormExpanded(true);
     }, []);
 
     const handleSubmitTokens = useCallback(async (e: React.FormEvent) => {
@@ -94,7 +92,7 @@ function useTokenCounter() {
 
         try {
             if (!client) {
-                toast.error('API key not set');
+                toast.error('Please enter your API key to count tokens');
                 return;
             }
             
@@ -142,13 +140,14 @@ function useTokenCounter() {
         generatedPrompt,
         showGeneratedPrompt,
         isPromptMinimized,
+        isApiKeyFormExpanded,
         setShowGeneratedPrompt,
         setIsPromptMinimized,
+        setIsApiKeyFormExpanded,
         localSaveApiKey,
         resetApiKey,
         handleSubmitTokens,
         handleGeneratePrompt,
-        isSectionLoading,
     };
 };
 

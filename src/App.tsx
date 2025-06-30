@@ -4,7 +4,7 @@ import { HashRouter, Routes, Route } from 'react-router-dom';
 import { Suspense } from 'react';
 import Navbar from './components/Navbar';
 import HomePage from './components/HomePage';
-import TokenCounter from './components/token_counter/TokenCounter';
+import TokenCounter from './components/token_counter/PromptGenerator';
 import FileContextProvider from './contexts/FileContextProvider';
 
 // Loading component shown while our lazy-loaded components are being fetched
