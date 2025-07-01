@@ -1,7 +1,6 @@
 // src/hooks/usePageTransition.ts
 
 import { useCallback, useState, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
 import { useAnimate, AnimationScope } from 'motion/react'
 
 interface PageTransitionState {
@@ -24,28 +23,23 @@ function usePageTransition(): PageTransitionState {
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [exitBeforeEnter, setExitBeforeEnter] = useState(true)
   
-  // Get current location for tracking route changes
-  const location = useLocation()
+  // Get current location for tracking route changes (unused but kept for future use)
+  // const location = useLocation()
 
-  // Define our animation sequence
+  // Simplified animation sequence - no longer competing with AnimatePresence
   const startTransition = useCallback(async () => {
     try {
       setIsTransitioning(true)
       
-      // Use a stagger effect for smoother transitions
+      // Simple fade transition that doesn't interfere with component animations
       await animate('main', 
-        { opacity: 0, y: 20 },
-        { duration: 0.2, ease: [0.45, 0, 0.55, 1] }
+        { opacity: 0.8 },
+        { duration: 0.15, ease: 'easeOut' }
       )
       
       await animate('main',
-        { y: 50 },
-        { duration: 0, ease: 'easeOut' }
-      )
-      
-      await animate('main',
-        { opacity: 1, y: 0 },
-        { duration: 0.3, ease: [0.45, 0, 0.55, 1] }
+        { opacity: 1 },
+        { duration: 0.15, ease: 'easeIn' }
       )
     } catch (error) {
       console.error('Transition failed:', error)
@@ -60,10 +54,10 @@ function usePageTransition(): PageTransitionState {
     setExitBeforeEnter(true)
   }, [])
 
-  // Start transition when route changes
-  useEffect(() => {
-    startTransition()
-  }, [location.pathname, startTransition])
+  // Remove automatic transition triggering - let AnimatePresence handle it
+  // useEffect(() => {
+  //   startTransition()
+  // }, [location.pathname, startTransition])
 
   // Cleanup animations when component unmounts
   useEffect(() => {

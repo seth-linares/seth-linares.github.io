@@ -1,7 +1,9 @@
 // src/hooks/useHomePage.ts
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 function useHomePage() {
+    const location = useLocation()
     const [currentSection, setCurrentSection] = useState('main');
 
     const scrollToSection = (sectionId: string) => {
@@ -10,17 +12,21 @@ function useHomePage() {
         element?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    // Animation states
-    const pageAnimationProps = {
-        initial: { opacity: 0 },
-        animate: { opacity: 1 },
-        exit: { opacity: 0 }
-    };
+    // Handle scrolling when navigated from another page
+    useEffect(() => {
+        const state = location.state as { scrollTo?: string } | null
+        if (state?.scrollTo) {
+            // Small delay to ensure DOM is ready
+            const timer = setTimeout(() => {
+                scrollToSection(state.scrollTo!)
+            }, 100)
+            return () => clearTimeout(timer)
+        }
+    }, [location.state])
 
     return {
         currentSection,
-        scrollToSection,
-        pageAnimationProps
+        scrollToSection
     };
 }
 

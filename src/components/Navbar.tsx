@@ -8,14 +8,17 @@ import { IoChevronUpOutline } from "react-icons/io5"; // for pull tab
 import ThemeSwitcher from "./ThemeSwitcher"
 
 function Navbar() {
-  const { navbarHeight, navbarOpacity, navbarVisibility, isMobileMenuOpen, toggleMobileMenu, closeMobileMenu, showNavbar } = useNavbar()
-
-  // Add debug logging
-  console.log('Navbar Render:', {
-    visibility: navbarVisibility.get(),
-    height: navbarHeight.get(),
-    opacity: navbarOpacity.get()
-  })
+  const { 
+    navbarHeight, 
+    navbarOpacity, 
+    navbarVisibility, 
+    isMobileMenuOpen, 
+    toggleMobileMenu, 
+    closeMobileMenu, 
+    showNavbar,
+    isHomePage,
+    navigateToSection 
+  } = useNavbar()
 
     return (
     <>
@@ -29,16 +32,6 @@ function Navbar() {
                 ['-100%', '0%']
               )
           }}
-          onAnimationStart={() => {
-            console.log('Navbar animation starting:', {
-              currentVisibility: navbarVisibility.get()
-            })
-          }}
-          onAnimationComplete={() => {
-            console.log('Navbar animation completed:', {
-              currentVisibility: navbarVisibility.get()
-            })
-          }}
       >
         <nav className="navbar container mx-auto px-4">
           <div className="flex-1">
@@ -49,9 +42,41 @@ function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex flex-none gap-2 items-center">
-            <Link to="/about" className="btn btn-ghost">About</Link>
-            <Link to="/projects" className="btn btn-ghost">Projects</Link>
-            <Link to="/contact" className="btn btn-ghost">Contact</Link>
+            {!isHomePage && (
+              <Link to="/" className="btn btn-ghost">
+                Home
+              </Link>
+            )}
+            <button 
+              onClick={() => navigateToSection('about')}
+              className="btn btn-ghost"
+            >
+              About
+            </button>
+            <button 
+              onClick={() => navigateToSection('projects')}
+              className="btn btn-ghost"
+            >
+              Projects
+            </button>
+            <button 
+              onClick={() => navigateToSection('experience')}
+              className="btn btn-ghost"
+            >
+              Experience
+            </button>
+            <button 
+              onClick={() => navigateToSection('tools')}
+              className="btn btn-ghost"
+            >
+              Tools
+            </button>
+            <button 
+              onClick={() => navigateToSection('contact')}
+              className="btn btn-ghost"
+            >
+              Contact
+            </button>
             <ThemeSwitcher />
           </div>
 
@@ -88,9 +113,41 @@ function Navbar() {
             }}
           >
             <div className="flex flex-col p-4">
-              <Link to="/about" className="btn btn-ghost" onClick={closeMobileMenu}>About</Link>
-              <Link to="/projects" className="btn btn-ghost" onClick={closeMobileMenu}>Projects</Link>
-              <Link to="/contact" className="btn btn-ghost" onClick={closeMobileMenu}>Contact</Link>
+              {!isHomePage && (
+                <Link to="/" className="btn btn-ghost" onClick={closeMobileMenu}>
+                  Home
+                </Link>
+              )}
+              <button 
+                onClick={() => navigateToSection('about')}
+                className="btn btn-ghost"
+              >
+                About
+              </button>
+              <button 
+                onClick={() => navigateToSection('projects')}
+                className="btn btn-ghost"
+              >
+                Projects
+              </button>
+              <button 
+                onClick={() => navigateToSection('experience')}
+                className="btn btn-ghost"
+              >
+                Experience
+              </button>
+              <button 
+                onClick={() => navigateToSection('tools')}
+                className="btn btn-ghost"
+              >
+                Tools
+              </button>
+              <button 
+                onClick={() => navigateToSection('contact')}
+                className="btn btn-ghost"
+              >
+                Contact
+              </button>
             </div>
           </motion.div>
         </nav>
@@ -98,19 +155,28 @@ function Navbar() {
 
       {/* Pull Tab */}
       <motion.button
-        className="fixed top-0 left-1/2 -translate-x-1/2 z-50 bg-base-100/80 backdrop-blur-md shadow-sm rounded-b-lg px-4 py-2"
+        className="fixed -top-2 left-1/2 -translate-x-1/2 z-50 bg-base-100/90 backdrop-blur-md shadow-lg rounded-b-lg px-4 py-2 border border-base-300"
         style={{
-          // Move y animation to style object
           y: useTransform(navbarVisibility,
             [0, 1],
-            ['0%', '-100%']
+            [0, -48] // Move up by the height of the button when navbar is visible
           )
         }}
-        // Remove transition prop since we're using springs
         onClick={showNavbar}
-        aria-label="Show navigation"
+        aria-label="Show navigation bar"
+        aria-describedby="pull-tab-description"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            showNavbar()
+          }
+        }}
       >
         <IoChevronUpOutline className="w-6 h-6" />
+        <span id="pull-tab-description" className="sr-only">
+          Pull down to show the navigation bar
+        </span>
       </motion.button>
     </>
     )

@@ -1,7 +1,7 @@
 // src/hooks/useNavbar.ts
 
-import { useState, useCallback, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { 
   useScroll, 
   useSpring, 
@@ -20,11 +20,16 @@ export interface NavbarState {
     navbarHeight: MotionValue<number>
     navbarOpacity: MotionValue<number>
     navbarVisibility: MotionValue<number>
-    showNavbar: () => void // Add new method to interface
+    showNavbar: () => void
+    // Route-aware navigation
+    isHomePage: boolean
+    navigateToSection: (sectionId: string) => void
 }
 
 export function useNavbar(): NavbarState {
     const location = useLocation()
+    const navigate = useNavigate()
+    const isHomePage = location.pathname === '/'
 
     // Navbar opened manually via chevron
     const [manuallyOpened, setManuallyOpened] = useState(false)
@@ -84,15 +89,19 @@ export function useNavbar(): NavbarState {
             setIsMobileMenuOpen(false)
         }
 
-        if (currentScroll < 100) {
+        // Don't hide navbar near the top of the page
+        if (currentScroll < 150) {
             rawNavbarVisibility.set(1)
             return
         }
         
+        // Require significant velocity to trigger hiding/showing
+        const velocityThreshold = 100
+        
         // If navbar was manually opened, allow it to close on next scroll down
-        if (velocity > 0 && currentScroll > 100) {
+        if (velocity > velocityThreshold && currentScroll > 150) {
             rawNavbarVisibility.set(0)
-        } else if (velocity < 0) {
+        } else if (velocity < -velocityThreshold) {
             rawNavbarVisibility.set(1)
         }
     }, [scrollVelocity, scrollY, rawNavbarVisibility, isMobileMenuOpen, manuallyOpened])
@@ -103,12 +112,50 @@ export function useNavbar(): NavbarState {
         setManuallyOpened(true)
     }, [rawNavbarVisibility])
 
+    // Route-aware navigation handler
+    const navigateToSection = useCallback((sectionId: string) => {
+        if (isHomePage) {
+            // If on home page, scroll to section
+            const element = document.getElementById(sectionId)
+            element?.scrollIntoView({ behavior: 'smooth' })
+        } else {
+            // If on other page, navigate to home page with scroll target
+            navigate('/', { state: { scrollTo: sectionId } })
+        }
+        closeMobileMenu()
+    }, [isHomePage, navigate, closeMobileMenu])
+
+    // Debounced scroll handler
+    const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const lastScrollYRef = useRef(0)
+    
+    const debouncedScrollHandler = useCallback(() => {
+        // Clear existing timeout
+        if (scrollTimeoutRef.current) {
+            clearTimeout(scrollTimeoutRef.current)
+        }
+        
+        // Set new timeout for debounced execution
+        scrollTimeoutRef.current = setTimeout(() => {
+            const currentScrollY = scrollY.get()
+            // Only handle if scroll position has actually changed
+            if (currentScrollY !== lastScrollYRef.current) {
+                handleScrollDirection()
+                lastScrollYRef.current = currentScrollY
+            }
+        }, 10) // 10ms debounce for smooth but performant updates
+    }, [handleScrollDirection, scrollY])
+
     // Effects
     useEffect(() => {
-        const handleScroll = () => handleScrollDirection()
-        window.addEventListener('scroll', handleScroll)
-        return () => window.removeEventListener('scroll', handleScroll)
-    }, [handleScrollDirection])
+        window.addEventListener('scroll', debouncedScrollHandler, { passive: true })
+        return () => {
+            window.removeEventListener('scroll', debouncedScrollHandler)
+            if (scrollTimeoutRef.current) {
+                clearTimeout(scrollTimeoutRef.current)
+            }
+        }
+    }, [debouncedScrollHandler])
 
     useEffect(() => {
         setIsMobileMenuOpen(false)
@@ -122,6 +169,8 @@ export function useNavbar(): NavbarState {
         navbarHeight,
         navbarOpacity,
         navbarVisibility,
-        showNavbar
+        showNavbar,
+        isHomePage,
+        navigateToSection
     }
 }
