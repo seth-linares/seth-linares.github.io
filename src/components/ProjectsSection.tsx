@@ -1,3 +1,5 @@
+// src/components/ProjectsSection.tsx
+
 import { motion } from 'motion/react';
 import useProjectsSection from '@/hooks/useProjectsSection';
 import ProjectModal from './ProjectModal';

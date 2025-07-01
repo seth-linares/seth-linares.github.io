@@ -1,3 +1,5 @@
+// src/hooks/useProjectModal.ts
+
 import { useCallback, useEffect } from 'react';
 import { ProjectSection } from '@/types';
 

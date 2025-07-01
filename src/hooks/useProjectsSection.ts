@@ -1,3 +1,5 @@
+// src/hooks/useProjectsSection.ts
+
 import { useCallback, useState } from 'react';
 import { siteData } from '@/personal-site-data';
 import { ProjectSection } from '@/types';

@@ -1,3 +1,5 @@
+// src/hooks/useSkillsSection.ts
+
 import { useCallback } from 'react';
 import { siteData } from '@/personal-site-data';
 

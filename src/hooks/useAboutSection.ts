@@ -1,3 +1,5 @@
+// src/hooks/useAboutSection.ts
+
 import { siteData } from '@/personal-site-data';
 
 function useAboutSection() {

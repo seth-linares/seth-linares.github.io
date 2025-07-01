@@ -1,3 +1,5 @@
+// src/components/HeroSection.tsx
+
 import { motion } from 'motion/react';
 import useHeroSection from '@/hooks/useHeroSection';
 

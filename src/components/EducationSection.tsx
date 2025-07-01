@@ -1,3 +1,5 @@
+// src/components/EducationSection.tsx
+
 import { motion } from 'motion/react';
 import { ANIMATION_VARIANTS, createStaggeredDelay, createCompoundDelay, VIEWPORT_CONFIG } from '@/utils/animations';
 import { siteData } from '@/personal-site-data';

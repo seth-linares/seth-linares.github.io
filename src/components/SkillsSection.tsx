@@ -1,3 +1,5 @@
+// src/components/SkillsSection.tsx
+
 import { motion } from 'motion/react';
 import useSkillsSection from '@/hooks/useSkillsSection';
 import { ANIMATION_VARIANTS, createStaggeredDelay, createCompoundDelay, VIEWPORT_CONFIG } from '@/utils/animations';

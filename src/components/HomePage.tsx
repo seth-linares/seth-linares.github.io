@@ -1,3 +1,5 @@
+// src/components/HomePage.tsx
+
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
 import HeroSection from './HeroSection';

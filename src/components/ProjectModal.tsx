@@ -1,3 +1,5 @@
+// src/components/ProjectModal.tsx
+
 import { motion, AnimatePresence } from 'motion/react';
 import useProjectModal from '@/hooks/useProjectModal';
 import { ProjectSection } from '@/types';
