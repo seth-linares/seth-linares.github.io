@@ -1,7 +1,7 @@
-// src/components/token_counter/FileUploader.tsx
+// src/components/prompt_generator/FileUploader.tsx
 
-import useFileUploader from "@/hooks/token_counter/useFileUploader";
-import useFileContext from "@/hooks/token_counter/useFileContext";
+import useFileUploader from "@/hooks/prompt_generator/useFileUploader";
+import useFileContext from "@/hooks/prompt_generator/useFileContext";
 import { FiUpload, FiX, FiFile } from "react-icons/fi";
 import { motion, AnimatePresence } from "motion/react";
 

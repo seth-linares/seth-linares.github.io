@@ -1,4 +1,4 @@
-// src/components/token_counter/ApiKeyForm.tsx
+// src/components/prompt_generator/ApiKeyForm.tsx
 
 import { FiKey } from 'react-icons/fi';
 import { motion } from 'motion/react';

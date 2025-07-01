@@ -1,4 +1,4 @@
-// src/hooks/token_counter/useFileContextProvider.ts
+// src/hooks/prompt_generator/useFileContextProvider.ts
 
 import { useState, useEffect, useCallback } from "react";
 import { getLanguageFromExtension } from "@/utils/getLanguageFromExtension";

@@ -1,7 +1,7 @@
-// src/components/token_counter/FileContextProvider.tsx
+// src/components/prompt_generator/FileContextProvider.tsx
 
 import FileContext from "@/contexts/FileContext";
-import { useFileContextProvider } from "@/hooks/token_counter/useFileContextProvider";
+import { useFileContextProvider } from "@/hooks/prompt_generator/useFileContextProvider";
 
 function FileContextProvider({children}: {children: React.ReactNode}) {
     const fileContextValue = useFileContextProvider();

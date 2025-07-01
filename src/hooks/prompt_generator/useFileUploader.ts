@@ -1,4 +1,4 @@
-// src/hooks/token_counter/useFileUploader.ts
+// src/hooks/prompt_generator/useFileUploader.ts
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import useFileContext from './useFileContext';

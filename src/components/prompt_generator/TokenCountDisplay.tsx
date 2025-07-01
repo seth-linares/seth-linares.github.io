@@ -1,4 +1,4 @@
-// src/components/token_counter/TokenCountDisplay.tsx
+// src/components/prompt_generator/TokenCountDisplay.tsx
 
 import { motion, AnimatePresence } from 'motion/react';
 

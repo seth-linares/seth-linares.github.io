@@ -1,4 +1,4 @@
-// src/hooks/token_counter/useTokenCounter.ts
+// src/hooks/prompt_generator/usePromptGenerator.ts
 
 import { useCallback, useState, useEffect, useRef } from "react";
 import Anthropic, { AnthropicError } from "@anthropic-ai/sdk";
@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { formatAnthropicError } from "@/types/AnthropicErrors";
 import useFileContext from "./useFileContext";
 
-function useTokenCounter() {
+function usePromptGenerator() {
 
     const { fileText, generatePrompt } = useFileContext();
     const fileTextRef = useRef(fileText);
@@ -49,12 +49,12 @@ function useTokenCounter() {
     }, [fileText]);
 
     useEffect(() => {
-        console.log("TokenCounter - fileText changed:", fileText);
+        console.log("PromptGenerator - fileText changed:", fileText);
     }, [fileText]);
 
     useEffect(() => {
         if (fileText) {
-            console.log("TokenCounter - Received file text:", {
+            console.log("PromptGenerator - Received file text:", {
                 length: fileText.length,
                 preview: fileText.slice(0, 50) + '...'
             });
@@ -63,7 +63,7 @@ function useTokenCounter() {
 
     useEffect(() => {
         fileTextRef.current = fileText;
-        console.log("TokenCounter - fileText updated:", {
+        console.log("PromptGenerator - fileText updated:", {
             length: fileText?.length,
             preview: fileText?.slice(0, 50)
         });
@@ -151,4 +151,4 @@ function useTokenCounter() {
     };
 };
 
-export default useTokenCounter;
+export default usePromptGenerator;

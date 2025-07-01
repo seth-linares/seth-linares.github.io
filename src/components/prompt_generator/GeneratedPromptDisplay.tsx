@@ -1,13 +1,13 @@
-// src/components/token_counter/GeneratedPromptDisplay.tsx
+// src/components/prompt_generator/GeneratedPromptDisplay.tsx
 
 import { motion, AnimatePresence } from 'motion/react';
 import { Suspense, lazy } from 'react';
 import { FiMaximize2, FiMinimize2, FiX, FiArrowUp, FiArrowDown, FiCopy, FiCheck, FiList, FiCode, FiFileText, FiSettings } from 'react-icons/fi';
 import { SiJavascript, SiTypescript, SiPython, SiMarkdown, SiJson, SiCss3, SiHtml5, SiReact } from 'react-icons/si';
-import { useGeneratedPromptDisplay } from '@/hooks/token_counter/useGeneratedPromptDisplay';
+import { useGeneratedPromptDisplay } from '@/hooks/prompt_generator/useGeneratedPromptDisplay';
 
 const MarkdownRenderer = lazy(() =>
-  import('@/components/token_counter/MarkdownRenderer').then(module => ({
+  import('@/components/prompt_generator/MarkdownRenderer').then(module => ({
     default: module.default
   }))
 );

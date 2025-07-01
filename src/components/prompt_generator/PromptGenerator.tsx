@@ -1,7 +1,7 @@
-// src/components/TokenCounter.tsx
+// src/components/PromptGenerator.tsx
 
-import useTokenCounter from '@/hooks/token_counter/usePromptGenerator';
-import useFileContext from '@/hooks/token_counter/useFileContext';
+import usePromptGenerator from '@/hooks/prompt_generator/usePromptGenerator';
+import useFileContext from '@/hooks/prompt_generator/useFileContext';
 import { FiHash, FiRefreshCw, FiKey } from 'react-icons/fi';
 import { motion } from 'motion/react';
 import { ToastContainer } from 'react-toastify';
@@ -11,7 +11,7 @@ import ApiKeyForm from './ApiKeyForm';
 import TokenCountDisplay from './TokenCountDisplay';
 import GeneratedPromptDisplay from './GeneratedPromptDisplay';
 
-function TokenCounter() {
+function PromptGenerator() {
     const { fileText } = useFileContext();
     const {
         promptInput,
@@ -31,7 +31,7 @@ function TokenCounter() {
         handleGeneratePrompt,
         setShowGeneratedPrompt,
         setIsPromptMinimized,
-    } = useTokenCounter();
+    } = usePromptGenerator();
 
     return (
         <motion.div 
@@ -85,7 +85,7 @@ function TokenCounter() {
                     )}
                     
                     <motion.div
-                                key="token-counter"
+                                key="prompt-generator"
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -20 }}
@@ -154,4 +154,4 @@ function TokenCounter() {
     );
 }
 
-export default TokenCounter;
+export default PromptGenerator;
