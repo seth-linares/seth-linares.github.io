@@ -1,24 +1,17 @@
-// src/components/token_counter/MarkdownRenderer.tsx
-
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useRef } from 'react';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import supersub from 'remark-supersub';
-
-// Lazy load ReactMarkdown only
-const ReactMarkdown = lazy(() => import('react-markdown'));
-
-// Only import the specific highlight.js styles needed
 import 'highlight.js/styles/github-dark.css';
 
-import useMarkdownRenderer from '@/hooks/token_counter/useMarkdownRenderer';
+const ReactMarkdown = lazy(() => import('react-markdown'));
 
 interface MarkdownRendererProps {
   content: string;
 }
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
-  const { codeRef } = useMarkdownRenderer({ content });
+  const codeRef = useRef<HTMLDivElement>(null);
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
@@ -31,7 +24,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
               const match = (className || '').match(/language-(\w+)/);
               return match ? (
                 <pre data-language={match[1]} className="rounded-md bg-black/70 p-2">
-                  <code ref={codeRef} className={`language-${match[1]}`}>
+                  <code className={`language-${match[1]}`} ref={codeRef}>
                     {children}
                   </code>
                 </pre>
