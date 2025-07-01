@@ -2,6 +2,7 @@
 
 import { motion } from 'motion/react';
 import useContactSection from '@/hooks/useContactSection';
+import { ANIMATION_VARIANTS, CARD_VIEWPORT_CONFIG } from '@/utils/animations';
 
 function ContactSection() {
     const { contactData, handleContactClick, getContactIcon } = useContactSection();
@@ -23,13 +24,18 @@ function ContactSection() {
                     </p>
                 </motion.div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                <motion.div 
+                    variants={ANIMATION_VARIANTS.cardContainer}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={CARD_VIEWPORT_CONFIG}
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"
+                >
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.1 }}
-                        viewport={{ once: true }}
-                        className="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                        variants={ANIMATION_VARIANTS.cardItem}
+                        whileHover={ANIMATION_VARIANTS.cardHover}
+                        whileTap={{ scale: 0.98 }}
+                        className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer"
                         onClick={() => handleContactClick('email', contactData.email)}
                     >
                         <div className="card-body items-center text-center p-8">
@@ -44,11 +50,10 @@ function ContactSection() {
                     </motion.div>
 
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.2 }}
-                        viewport={{ once: true }}
-                        className="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                        variants={ANIMATION_VARIANTS.cardItem}
+                        whileHover={ANIMATION_VARIANTS.cardHover}
+                        whileTap={{ scale: 0.98 }}
+                        className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer"
                         onClick={() => handleContactClick('phone', contactData.phone)}
                     >
                         <div className="card-body items-center text-center p-8">
@@ -63,11 +68,10 @@ function ContactSection() {
                     </motion.div>
 
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.3 }}
-                        viewport={{ once: true }}
-                        className="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                        variants={ANIMATION_VARIANTS.cardItem}
+                        whileHover={ANIMATION_VARIANTS.cardHover}
+                        whileTap={{ scale: 0.98 }}
+                        className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer"
                         onClick={() => handleContactClick('linkedin', contactData.linkedin)}
                     >
                         <div className="card-body items-center text-center p-8">
@@ -82,11 +86,10 @@ function ContactSection() {
                     </motion.div>
 
                     <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.4 }}
-                        viewport={{ once: true }}
-                        className="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                        variants={ANIMATION_VARIANTS.cardItem}
+                        whileHover={ANIMATION_VARIANTS.cardHover}
+                        whileTap={{ scale: 0.98 }}
+                        className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer"
                         onClick={() => handleContactClick('github', contactData.github)}
                     >
                         <div className="card-body items-center text-center p-8">
@@ -99,13 +102,12 @@ function ContactSection() {
                             </p>
                         </div>
                     </motion.div>
-                </div>
+                </motion.div>
 
                 <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.5 }}
-                    viewport={{ once: true }}
+                    initial={ANIMATION_VARIANTS.fadeUp.initial}
+                    whileInView={ANIMATION_VARIANTS.fadeUp.animate}
+                    viewport={CARD_VIEWPORT_CONFIG}
                     className="text-center"
                 >
                     <div className="card bg-base-100 shadow-lg max-w-4xl mx-auto">

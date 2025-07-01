@@ -1,7 +1,7 @@
 // src/components/EducationSection.tsx
 
 import { motion } from 'motion/react';
-import { ANIMATION_VARIANTS, createStaggeredDelay, createCompoundDelay, VIEWPORT_CONFIG } from '@/utils/animations';
+import { ANIMATION_VARIANTS, createStaggeredDelay, createCompoundDelay, VIEWPORT_CONFIG, CARD_VIEWPORT_CONFIG } from '@/utils/animations';
 import { siteData } from '@/personal-site-data';
 
 const educationData = siteData.education;
@@ -36,7 +36,8 @@ function EducationSection() {
                                 duration: 0.6,
                                 delay: createStaggeredDelay(index)
                             }}
-                            viewport={VIEWPORT_CONFIG}
+                            whileHover={{ y: -2, transition: { duration: 0.2 } }}
+                            viewport={CARD_VIEWPORT_CONFIG}
                             className="card bg-base-200 shadow-lg hover:shadow-xl transition-shadow duration-300"
                         >
                             <div className="card-body p-8">
@@ -128,7 +129,7 @@ function EducationSection() {
                         ...ANIMATION_VARIANTS.fadeUp.transition,
                         delay: 0.3
                     }}
-                    viewport={VIEWPORT_CONFIG}
+                    viewport={CARD_VIEWPORT_CONFIG}
                     className="mt-12 text-center"
                 >
                     <div className="card bg-base-200 shadow-lg max-w-4xl mx-auto">

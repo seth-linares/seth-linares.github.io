@@ -2,6 +2,7 @@
 
 import { motion } from 'motion/react';
 import useAboutSection from '@/hooks/useAboutSection';
+import { ANIMATION_VARIANTS, CARD_VIEWPORT_CONFIG } from '@/utils/animations';
 
 function AboutSection() {
     const { aboutData, getValueIcon } = useAboutSection();
@@ -60,10 +61,16 @@ function AboutSection() {
                         {aboutData.values.map((value, index) => (
                             <motion.div
                                 key={index}
-                                initial={{ opacity: 0, y: 10 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.4, delay: 0.1 * index }}
-                                viewport={{ once: true }}
+                                initial={ANIMATION_VARIANTS.fadeUpSubtle.initial}
+                                whileInView={{
+                                    ...ANIMATION_VARIANTS.fadeUpSubtle.animate,
+                                    transition: {
+                                        ...ANIMATION_VARIANTS.fadeUpSubtle.transition,
+                                        delay: 0.1 * index
+                                    }
+                                }}
+                                whileHover={{ y: -2, transition: { duration: 0.2 } }}
+                                viewport={CARD_VIEWPORT_CONFIG}
                                 className="card bg-base-200 shadow-sm hover:shadow-md transition-shadow duration-300"
                             >
                                 <div className="card-body p-6">

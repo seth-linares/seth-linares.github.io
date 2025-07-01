@@ -2,7 +2,7 @@
 
 import { motion } from 'motion/react';
 import useSkillsSection from '@/hooks/useSkillsSection';
-import { ANIMATION_VARIANTS, createStaggeredDelay, createCompoundDelay, VIEWPORT_CONFIG } from '@/utils/animations';
+import { ANIMATION_VARIANTS, createStaggeredDelay, createCompoundDelay, VIEWPORT_CONFIG, CARD_VIEWPORT_CONFIG } from '@/utils/animations';
 
 function SkillsSection() {
     const { skillsData, getCategoryIcon } = useSkillsSection();
@@ -33,8 +33,9 @@ function SkillsSection() {
                                 ...ANIMATION_VARIANTS.fadeUp.transition,
                                 delay: createStaggeredDelay(index)
                             }}
-                            viewport={VIEWPORT_CONFIG}
-                            className="card bg-base-100 shadow-lg"
+                            viewport={CARD_VIEWPORT_CONFIG}
+                            whileHover={{ y: -2, transition: { duration: 0.2 } }}
+                            className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300"
                         >
                             <div className="card-body p-8">
                                 <div className="flex items-center gap-4 mb-6">
@@ -85,7 +86,7 @@ function SkillsSection() {
                         ...ANIMATION_VARIANTS.fadeUp.transition,
                         delay: 0.4
                     }}
-                    viewport={VIEWPORT_CONFIG}
+                    viewport={CARD_VIEWPORT_CONFIG}
                     className="mt-12 text-center"
                 >
                     <div className="card bg-base-100 shadow-lg max-w-4xl mx-auto">

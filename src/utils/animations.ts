@@ -34,6 +34,49 @@ export const ANIMATION_VARIANTS = {
     initial: { opacity: 0, scale: 0.8 },
     animate: { opacity: 1, scale: 1 },
     transition: { duration: 0.4 }
+  },
+
+  // Card entry animation optimized for viewport detection
+  cardEntry: {
+    initial: { opacity: 0, y: 30 },
+    animate: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.5
+      }
+    }
+  },
+
+  // Card hover animation for consistent interactive feedback
+  cardHover: {
+    y: -4,
+    transition: {
+      duration: 0.2
+    }
+  },
+
+  // Container animation for staggered card animations
+  cardContainer: {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  },
+
+  // Individual card item for staggered container animations
+  cardItem: {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.5
+      }
+    }
   }
 };
 
@@ -70,14 +113,56 @@ export const VIEWPORT_CONFIG = {
   margin: "-10% 0px -10% 0px" // Trigger slightly before element comes into view
 };
 
+// Optimized viewport configuration for card animations (prevents flickering)
+export const CARD_VIEWPORT_CONFIG = {
+  once: true,      // Prevents re-triggering when scrolling back
+  amount: 0.2,     // Triggers when 20% of card is visible
+  margin: "-50px"  // Start animation 50px before entering viewport
+};
+
+// Type for animation variants that may have different transition structures
+type AnimationVariant = {
+  initial?: object;
+  animate?: object | { transition?: object };
+  transition?: object;
+  [key: string]: unknown;
+};
+
 // Animation variants with delay support
 export const createAnimationWithDelay = (
   variant: keyof typeof ANIMATION_VARIANTS,
   delay: number
-) => ({
-  ...ANIMATION_VARIANTS[variant],
-  transition: {
-    ...ANIMATION_VARIANTS[variant].transition,
-    delay
+) => {
+  const baseVariant = ANIMATION_VARIANTS[variant] as AnimationVariant;
+  
+  // Handle new card variants with nested transition
+  if (baseVariant.animate && typeof baseVariant.animate === 'object' && 
+      'transition' in baseVariant.animate && baseVariant.animate.transition) {
+    const animateObj = baseVariant.animate as { transition: object };
+    return {
+      ...baseVariant,
+      animate: {
+        ...animateObj,
+        transition: {
+          ...animateObj.transition,
+          delay
+        }
+      }
+    };
   }
-});
+  
+  // Handle traditional variants with top-level transition
+  if (baseVariant.transition) {
+    const transitionObj = baseVariant.transition as object;
+    return {
+      ...baseVariant,
+      transition: {
+        ...transitionObj,
+        delay
+      }
+    };
+  }
+  
+  // Fallback for variants without transitions
+  return baseVariant;
+};

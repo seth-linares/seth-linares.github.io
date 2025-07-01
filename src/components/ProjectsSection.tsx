@@ -3,6 +3,7 @@
 import { motion } from 'motion/react';
 import useProjectsSection from '@/hooks/useProjectsSection';
 import ProjectModal from './ProjectModal';
+import { ANIMATION_VARIANTS, CARD_VIEWPORT_CONFIG } from '@/utils/animations';
 
 function ProjectsSection() {
     const { 
@@ -36,11 +37,18 @@ function ProjectsSection() {
                     {projectsData.filter(project => project.featured).map((project, index) => (
                         <motion.div
                             key={project.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: index * 0.1 }}
-                            viewport={{ once: true }}
-                            className="card bg-base-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                            initial={ANIMATION_VARIANTS.cardEntry.initial}
+                            whileInView={{
+                                ...ANIMATION_VARIANTS.cardEntry.animate,
+                                transition: {
+                                    ...ANIMATION_VARIANTS.cardEntry.animate.transition,
+                                    delay: index * 0.1
+                                }
+                            }}
+                            whileHover={ANIMATION_VARIANTS.cardHover}
+                            whileTap={{ scale: 0.98 }}
+                            viewport={CARD_VIEWPORT_CONFIG}
+                            className="card bg-base-200 shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer"
                             onClick={() => handleOpenModal(project)}
                         >
                             <div className="card-body p-8">
@@ -124,10 +132,17 @@ function ProjectsSection() {
                         {projectsData.filter(project => !project.featured).map((project, index) => (
                             <motion.div
                                 key={project.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.4, delay: index * 0.1 }}
-                                viewport={{ once: true }}
+                                initial={ANIMATION_VARIANTS.fadeUpSubtle.initial}
+                                whileInView={{
+                                    ...ANIMATION_VARIANTS.fadeUpSubtle.animate,
+                                    transition: {
+                                        ...ANIMATION_VARIANTS.fadeUpSubtle.transition,
+                                        delay: index * 0.1
+                                    }
+                                }}
+                                whileHover={{ y: -2, transition: { duration: 0.2 } }}
+                                whileTap={{ scale: 0.98 }}
+                                viewport={CARD_VIEWPORT_CONFIG}
                                 className="card bg-base-200 shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer"
                                 onClick={() => handleOpenModal(project)}
                             >

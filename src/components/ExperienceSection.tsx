@@ -2,6 +2,7 @@
 
 import { motion } from 'motion/react';
 import { siteData } from '@/personal-site-data';
+import { ANIMATION_VARIANTS, CARD_VIEWPORT_CONFIG } from '@/utils/animations';
 
 const experienceData = siteData.experience;
 
@@ -24,10 +25,16 @@ function ExperienceSection() {
                     {experienceData.map((experience, index) => (
                         <motion.div
                             key={index}
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: index * 0.1 }}
-                            viewport={{ once: true }}
+                            initial={ANIMATION_VARIANTS.cardEntry.initial}
+                            whileInView={{
+                                ...ANIMATION_VARIANTS.cardEntry.animate,
+                                transition: {
+                                    ...ANIMATION_VARIANTS.cardEntry.animate.transition,
+                                    delay: index * 0.1
+                                }
+                            }}
+                            whileHover={{ y: -2, transition: { duration: 0.2 } }}
+                            viewport={CARD_VIEWPORT_CONFIG}
                             className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300"
                         >
                             <div className="card-body p-8">

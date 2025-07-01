@@ -2,6 +2,7 @@
 
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'motion/react';
+import { ANIMATION_VARIANTS, CARD_VIEWPORT_CONFIG } from '@/utils/animations';
 import HeroSection from './HeroSection';
 import AboutSection from './AboutSection';
 import ExperienceSection from './ExperienceSection';
@@ -44,11 +45,11 @@ function HomePage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6 }}
-                            viewport={{ once: true }}
-                            className="card bg-base-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                            initial={ANIMATION_VARIANTS.cardEntry.initial}
+                            whileInView={ANIMATION_VARIANTS.cardEntry.animate}
+                            whileHover={ANIMATION_VARIANTS.cardHover}
+                            viewport={CARD_VIEWPORT_CONFIG}
+                            className="card bg-base-200 shadow-lg hover:shadow-xl transition-shadow duration-300"
                         >
                             <div className="card-body p-8">
                                 <div className="flex items-center gap-4 mb-4">
