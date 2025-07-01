@@ -4,13 +4,14 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import useFileContext from './useFileContext';
 import { readFileAsText, generateUniqueName } from '@/utils/fileHelpers';
 
+// Set max file size to 10MB (change to 5 * 1024 * 1024 for 5MB)
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
 const useFileUploader = () => {
   const { files, setFileText, setFiles, setFileContents } = useFileContext();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  // Set max file size to 10MB (change to 5 * 1024 * 1024 for 5MB)
-  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
   const handleFileChange = useCallback(async (event: Event) => {
     const newFiles = Array.from((event.target as HTMLInputElement).files || []);
