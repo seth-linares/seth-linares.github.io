@@ -8,23 +8,10 @@ import {
   useTransform, 
   useVelocity, 
   useMotionValue, 
-  MotionValue
 } from 'motion/react'
+import { NavbarState } from '@/types/general_types'
 
-export interface NavbarState {
-    // Mobile menu state
-    isMobileMenuOpen: boolean
-    toggleMobileMenu: () => void
-    closeMobileMenu: () => void
-    // Scroll animation state
-    navbarHeight: MotionValue<number>
-    navbarOpacity: MotionValue<number>
-    navbarVisibility: MotionValue<number>
-    showNavbar: () => void
-    // Route-aware navigation
-    isHomePage: boolean
-    navigateToSection: (sectionId: string) => void
-}
+
 
 export function useNavbar(): NavbarState {
     const location = useLocation()
