@@ -1,6 +1,6 @@
 // siteData.ts - Main data structure for your personal site
 
-import { PersonalSiteData } from "./types";
+import { PersonalSiteData } from "./types/general_types";
 
 export const siteData: PersonalSiteData = {
   hero: {
