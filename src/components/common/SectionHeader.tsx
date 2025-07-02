@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { ANIMATION_VARIANTS, VIEWPORT_CONFIG } from '@/utils/animations';
-import { SectionHeaderProps } from '@/types/general_types';
+import { SectionHeaderProps } from '@/types/components';
 
 
 function SectionHeader({ title, description }: SectionHeaderProps) {

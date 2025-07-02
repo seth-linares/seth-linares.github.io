@@ -5,7 +5,7 @@ import { Suspense, lazy } from 'react';
 import { FiMaximize2, FiMinimize2, FiX, FiArrowUp, FiArrowDown, FiCopy, FiCheck, FiList, FiCode} from 'react-icons/fi';
 import { getFileIconAndStyle, useGeneratedPromptDisplay } from '@/hooks/prompt_generator/useGeneratedPromptDisplay';
 import { ANIMATION_VARIANTS } from '@/utils/animations.ts';
-import { GeneratedPromptDisplayProps } from '@/types/general_types';
+import { GeneratedPromptDisplayProps } from '@/types/components';
 
 const MarkdownRenderer = lazy(() =>
   import('@/components/prompt_generator/MarkdownRenderer').then(module => ({

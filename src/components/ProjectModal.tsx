@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'motion/react';
 import useProjectModal from '@/hooks/useProjectModal';
-import { ProjectModalProps } from '@/types/general_types';
+import { ProjectModalProps } from '@/types/portfolio';
 import { ANIMATION_VARIANTS } from '@/utils/animations';
 import { FaGithub } from 'react-icons/fa';
 import { FiExternalLink } from 'react-icons/fi';

@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { ANIMATION_VARIANTS } from '@/utils/animations';
-import { AnimatedButtonProps } from '@/types/general_types';
+import { AnimatedButtonProps } from '@/types/components';
 
 function AnimatedButton({ 
   children, 

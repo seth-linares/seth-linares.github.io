@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import { siteData } from '@/personal-site-data';
-import { ProjectSection } from '@/types/general_types';
+import { ProjectSection } from '@/types/portfolio';
 import { getProjectCategoryIcon } from '@/utils/iconMaps';
 
 function useProjectsSection() {

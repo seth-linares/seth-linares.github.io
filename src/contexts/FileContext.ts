@@ -1,4 +1,4 @@
-import { FileContextType } from "@/types/general_types";
+import { FileContextType } from "@/types/components";
 import { createContext } from "react";
 
 const FileContext = createContext<FileContextType>({

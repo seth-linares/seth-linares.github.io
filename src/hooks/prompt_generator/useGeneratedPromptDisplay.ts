@@ -1,4 +1,4 @@
-import { FileCheckpoint, UseGeneratedPromptDisplayProps } from '@/types/general_types';
+import { FileCheckpoint, UseGeneratedPromptDisplayProps } from '@/types/components';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { FiFileText, FiSettings } from 'react-icons/fi';
 import { SiCss3, SiHtml5, SiJavascript, SiJson, SiMarkdown, SiPython, SiReact, SiTypescript } from 'react-icons/si';

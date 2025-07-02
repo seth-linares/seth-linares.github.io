@@ -1,7 +1,7 @@
 // src/hooks/useProjectModal.ts
 
 import { useCallback, useEffect } from 'react';
-import { ProjectSection, UseProjectModalProps } from '@/types/general_types';
+import { ProjectSection, UseProjectModalProps } from '@/types/portfolio';
 import { getProjectCategoryIcon } from '@/utils/iconMaps';
 
 

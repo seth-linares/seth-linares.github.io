@@ -2,17 +2,9 @@
 
 import React from 'react';
 import { motion } from 'motion/react';
-import { ProjectSection } from '@/types/general_types';
+import { CompactProjectCardProps } from '@/types/portfolio';
 import { ANIMATION_VARIANTS, CARD_VIEWPORT_CONFIG } from '@/utils/animations';
 import AnimatedButton from '@/components/common/AnimatedButton';
-
-interface CompactProjectCardProps {
-  project: ProjectSection;
-  index: number;
-  onOpenModal: (project: ProjectSection) => void;
-  onProjectLink: (url: string) => void;
-  getCategoryIcon: (category: string) => string;
-}
 
 function CompactProjectCard({ 
   project, 

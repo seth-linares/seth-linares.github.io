@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { ANIMATION_VARIANTS, CARD_VIEWPORT_CONFIG } from '@/utils/animations';
-import { AnimatedCardProps } from '@/types/general_types';
+import { AnimatedCardProps } from '@/types/components';
 
 function AnimatedCard({ 
   children, 

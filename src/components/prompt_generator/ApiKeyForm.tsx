@@ -2,7 +2,7 @@
 
 import { FiKey } from 'react-icons/fi';
 import { motion } from 'motion/react';
-import { ApiKeyFormProps } from '@/types/general_types';
+import { ApiKeyFormProps } from '@/types/components';
 import AnimatedButton from '@/components/common/AnimatedButton';
 
 

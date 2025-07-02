@@ -1,17 +1,11 @@
 // src/components/projects/FeaturedProjectCard.tsx
 
 import React from 'react';
-import { ProjectSection } from '@/types/general_types';
+import { FeaturedProjectCardProps } from '@/types/portfolio';
 import AnimatedCard from '@/components/common/AnimatedCard';
 import AnimatedButton from '@/components/common/AnimatedButton';
 
-interface FeaturedProjectCardProps {
-  project: ProjectSection;
-  index: number;
-  onOpenModal: (project: ProjectSection) => void;
-  onProjectLink: (url: string) => void;
-  getCategoryIcon: (category: string) => string;
-}
+
 
 function FeaturedProjectCard({ 
   project, 
