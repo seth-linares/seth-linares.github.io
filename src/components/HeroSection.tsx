@@ -2,6 +2,8 @@
 
 import { motion } from 'motion/react';
 import useHeroSection from '@/hooks/useHeroSection';
+import { ANIMATION_VARIANTS } from '@/utils/animations';
+import AnimatedButton from '@/components/common/AnimatedButton';
 
 function HeroSection() {
     const { heroData, handleCtaClick, handleResumeDownload } = useHeroSection();
@@ -17,7 +19,7 @@ function HeroSection() {
                 <div className="space-y-8">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                        animate={ANIMATION_VARIANTS.scaleIn.animate}
                         transition={{ delay: 0.2, duration: 0.6 }}
                         className="avatar"
                     >
@@ -52,24 +54,27 @@ function HeroSection() {
                         transition={{ delay: 0.6, duration: 0.6 }}
                         className="flex flex-col sm:flex-row gap-4 justify-center"
                     >
-                        <button 
+                        <AnimatedButton 
                             onClick={() => handleCtaClick(heroData.cta.primary.link)}
-                            className="btn btn-primary btn-lg"
+                            variant="primary"
+                            size="lg"
                         >
                             {heroData.cta.primary.text}
-                        </button>
-                        <button 
+                        </AnimatedButton>
+                        <AnimatedButton 
                             onClick={handleResumeDownload}
-                            className="btn btn-secondary btn-lg"
+                            variant="secondary"
+                            size="lg"
                         >
                             📄 Download Resume
-                        </button>
-                        <button 
+                        </AnimatedButton>
+                        <AnimatedButton 
                             onClick={() => handleCtaClick(heroData.cta.secondary.link)}
-                            className="btn btn-outline btn-lg"
+                            variant="outline"
+                            size="lg"
                         >
                             {heroData.cta.secondary.text}
-                        </button>
+                        </AnimatedButton>
                     </motion.div>
                 </div>
             </div>

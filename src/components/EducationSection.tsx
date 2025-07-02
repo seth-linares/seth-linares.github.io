@@ -3,6 +3,7 @@
 import { motion } from 'motion/react';
 import { ANIMATION_VARIANTS, createStaggeredDelay, createCompoundDelay, VIEWPORT_CONFIG, CARD_VIEWPORT_CONFIG } from '@/utils/animations';
 import { siteData } from '@/personal-site-data';
+import SectionHeader from '@/components/common/SectionHeader';
 
 const educationData = siteData.education;
 
@@ -10,18 +11,10 @@ function EducationSection() {
     return (
         <section id="education" className="py-20 bg-base-100">
             <div className="container mx-auto px-4 max-w-6xl">
-                <motion.div
-                    {...ANIMATION_VARIANTS.fadeUp}
-                    whileInView={ANIMATION_VARIANTS.fadeUp.animate}
-                    viewport={VIEWPORT_CONFIG}
-                    className="text-center mb-16"
-                >
-                    <h2 className="text-4xl font-bold text-base-content mb-4">Education</h2>
-                    <div className="w-24 h-1 bg-primary mx-auto mb-4"></div>
-                    <p className="text-lg text-base-content/70 max-w-2xl mx-auto">
-                        Academic foundation and continuous learning journey
-                    </p>
-                </motion.div>
+                <SectionHeader 
+                    title="Education" 
+                    description="Academic foundation and continuous learning journey" 
+                />
 
                 <div className="space-y-8">
                     {educationData.map((education, index) => (
@@ -36,7 +29,7 @@ function EducationSection() {
                                 duration: 0.6,
                                 delay: createStaggeredDelay(index)
                             }}
-                            whileHover={{ y: -2, transition: { duration: 0.2 } }}
+                            whileHover={ANIMATION_VARIANTS.buttonHover}
                             viewport={CARD_VIEWPORT_CONFIG}
                             className="card bg-base-200 shadow-lg hover:shadow-xl transition-shadow duration-300"
                         >

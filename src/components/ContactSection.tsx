@@ -3,6 +3,7 @@
 import { motion } from 'motion/react';
 import useContactSection from '@/hooks/useContactSection';
 import { ANIMATION_VARIANTS, CARD_VIEWPORT_CONFIG } from '@/utils/animations';
+import SectionHeader from '@/components/common/SectionHeader';
 
 function ContactSection() {
     const { contactData, handleContactClick, getContactIcon } = useContactSection();
@@ -10,19 +11,10 @@ function ContactSection() {
     return (
         <section id="contact" className="py-20 bg-base-200">
             <div className="container mx-auto px-4 max-w-6xl">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                    viewport={{ once: true }}
-                    className="text-center mb-16"
-                >
-                    <h2 className="text-4xl font-bold text-base-content mb-4">Get In Touch</h2>
-                    <div className="w-24 h-1 bg-primary mx-auto mb-4"></div>
-                    <p className="text-lg text-base-content/70 max-w-2xl mx-auto">
-                        Let's connect and discuss opportunities, projects, or just have a great conversation about technology
-                    </p>
-                </motion.div>
+                <SectionHeader 
+                    title="Get In Touch" 
+                    description="Let's connect and discuss opportunities, projects, or just have a great conversation about technology" 
+                />
 
                 <motion.div 
                     variants={ANIMATION_VARIANTS.cardContainer}
@@ -33,8 +25,8 @@ function ContactSection() {
                 >
                     <motion.div
                         variants={ANIMATION_VARIANTS.cardItem}
-                        whileHover={ANIMATION_VARIANTS.cardHover}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={ANIMATION_VARIANTS.buttonHover}
+                        whileTap={ANIMATION_VARIANTS.buttonTap}
                         className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer"
                         onClick={() => handleContactClick('email', contactData.email)}
                     >
@@ -51,8 +43,8 @@ function ContactSection() {
 
                     <motion.div
                         variants={ANIMATION_VARIANTS.cardItem}
-                        whileHover={ANIMATION_VARIANTS.cardHover}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={ANIMATION_VARIANTS.buttonHover}
+                        whileTap={ANIMATION_VARIANTS.buttonTap}
                         className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer"
                         onClick={() => handleContactClick('phone', contactData.phone)}
                     >
@@ -69,8 +61,8 @@ function ContactSection() {
 
                     <motion.div
                         variants={ANIMATION_VARIANTS.cardItem}
-                        whileHover={ANIMATION_VARIANTS.cardHover}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={ANIMATION_VARIANTS.buttonHover}
+                        whileTap={ANIMATION_VARIANTS.buttonTap}
                         className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer"
                         onClick={() => handleContactClick('linkedin', contactData.linkedin)}
                     >
@@ -87,8 +79,8 @@ function ContactSection() {
 
                     <motion.div
                         variants={ANIMATION_VARIANTS.cardItem}
-                        whileHover={ANIMATION_VARIANTS.cardHover}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={ANIMATION_VARIANTS.buttonHover}
+                        whileTap={ANIMATION_VARIANTS.buttonTap}
                         className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer"
                         onClick={() => handleContactClick('github', contactData.github)}
                     >

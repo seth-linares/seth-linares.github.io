@@ -1,41 +1,23 @@
 // src/components/ExperienceSection.tsx
 
 import { motion } from 'motion/react';
-import { siteData } from '@/personal-site-data';
-import { ANIMATION_VARIANTS, CARD_VIEWPORT_CONFIG } from '@/utils/animations';
-
-const experienceData = siteData.experience;
+import useExperienceSection from '@/hooks/useExperienceSection';
+import SectionHeader from '@/components/common/SectionHeader';
+import AnimatedCard from '@/components/common/AnimatedCard';
 
 function ExperienceSection() {
+    const { experienceData } = useExperienceSection();
     return (
         <section id="experience" className="py-20 bg-base-200">
             <div className="container mx-auto px-4 max-w-6xl">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                    viewport={{ once: true }}
-                    className="text-center mb-16"
-                >
-                    <h2 className="text-4xl font-bold text-base-content mb-4">Professional Experience</h2>
-                    <div className="w-24 h-1 bg-primary mx-auto"></div>
-                </motion.div>
+                <SectionHeader title="Professional Experience" />
 
                 <div className="space-y-8">
                     {experienceData.map((experience, index) => (
-                        <motion.div
+                        <AnimatedCard
                             key={index}
-                            initial={ANIMATION_VARIANTS.cardEntry.initial}
-                            whileInView={{
-                                ...ANIMATION_VARIANTS.cardEntry.animate,
-                                transition: {
-                                    ...ANIMATION_VARIANTS.cardEntry.animate.transition,
-                                    delay: index * 0.1
-                                }
-                            }}
-                            whileHover={{ y: -2, transition: { duration: 0.2 } }}
-                            viewport={CARD_VIEWPORT_CONFIG}
-                            className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                            index={index}
+                            className="bg-base-100"
                         >
                             <div className="card-body p-8">
                                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
@@ -101,7 +83,7 @@ function ExperienceSection() {
                                     </div>
                                 </div>
                             </div>
-                        </motion.div>
+                        </AnimatedCard>
                     ))}
                 </div>
             </div>

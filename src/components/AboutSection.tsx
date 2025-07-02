@@ -2,7 +2,8 @@
 
 import { motion } from 'motion/react';
 import useAboutSection from '@/hooks/useAboutSection';
-import { ANIMATION_VARIANTS, CARD_VIEWPORT_CONFIG } from '@/utils/animations';
+import { ANIMATION_VARIANTS, CARD_VIEWPORT_CONFIG, createStaggeredDelay } from '@/utils/animations';
+import SectionHeader from '@/components/common/SectionHeader';
 
 function AboutSection() {
     const { aboutData, getValueIcon } = useAboutSection();
@@ -10,23 +11,19 @@ function AboutSection() {
     return (
         <section id="about" className="py-20 bg-base-100">
             <div className="container mx-auto px-4 max-w-6xl">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                    viewport={{ once: true }}
-                    className="text-center mb-16"
-                >
-                    <h2 className="text-4xl font-bold text-base-content mb-4">About Me</h2>
-                    <div className="w-24 h-1 bg-primary mx-auto"></div>
-                </motion.div>
+                <SectionHeader title="About Me" />
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                     <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.6, delay: 0.2 }}
-                        viewport={{ once: true }}
+                        {...ANIMATION_VARIANTS.slideLeft}
+                        whileInView={{
+                            ...ANIMATION_VARIANTS.slideLeft.animate,
+                            transition: {
+                                ...ANIMATION_VARIANTS.slideLeft.transition,
+                                delay: 0.2
+                            }
+                        }}
+                        viewport={CARD_VIEWPORT_CONFIG}
                     >
                         <p className="text-lg text-base-content/80 leading-relaxed mb-8">
                             {aboutData.summary}
@@ -37,10 +34,15 @@ function AboutSection() {
                             {aboutData.highlights.map((highlight, index) => (
                                 <motion.div
                                     key={index}
-                                    initial={{ opacity: 0, x: -10 }}
-                                    whileInView={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.4, delay: 0.1 * index }}
-                                    viewport={{ once: true }}
+                                    {...ANIMATION_VARIANTS.fadeUpSubtle}
+                                    whileInView={{
+                                        ...ANIMATION_VARIANTS.fadeUpSubtle.animate,
+                                        transition: {
+                                            ...ANIMATION_VARIANTS.fadeUpSubtle.transition,
+                                            delay: createStaggeredDelay(index, 0.3)
+                                        }
+                                    }}
+                                    viewport={CARD_VIEWPORT_CONFIG}
                                     className="flex items-start gap-3"
                                 >
                                     <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
@@ -51,10 +53,15 @@ function AboutSection() {
                     </motion.div>
 
                     <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        whileInView={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.6, delay: 0.4 }}
-                        viewport={{ once: true }}
+                        {...ANIMATION_VARIANTS.slideRight}
+                        whileInView={{
+                            ...ANIMATION_VARIANTS.slideRight.animate,
+                            transition: {
+                                ...ANIMATION_VARIANTS.slideRight.transition,
+                                delay: 0.4
+                            }
+                        }}
+                        viewport={CARD_VIEWPORT_CONFIG}
                         className="space-y-6"
                     >
                         <h3 className="text-2xl font-semibold text-base-content mb-6">Core Values</h3>
@@ -69,7 +76,10 @@ function AboutSection() {
                                         delay: 0.1 * index
                                     }
                                 }}
-                                whileHover={{ y: -2, transition: { duration: 0.2 } }}
+                                whileHover={{
+                                    ...ANIMATION_VARIANTS.buttonHover,
+                                    y: -2,
+                                }}
                                 viewport={CARD_VIEWPORT_CONFIG}
                                 className="card bg-base-200 shadow-sm hover:shadow-md transition-shadow duration-300"
                             >
