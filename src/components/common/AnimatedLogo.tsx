@@ -41,7 +41,7 @@ function AnimatedLogo({ isHovered, onHoverStart, onHoverEnd, className = "" }: A
             ease: "easeOut"
           }}
         />
-        
+        {/* Is it working? */}
         <motion.img
           src="/orange-cat.svg"
           alt="Seth Linares Logo"
