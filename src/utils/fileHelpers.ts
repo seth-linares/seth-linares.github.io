@@ -5,7 +5,6 @@ export const readFileAsText = (file: File): Promise<string> => {
     const reader = new FileReader();
     reader.onload = event => {
       if (!event.target?.result) {
-        console.log('Failed to read file');
         reject(new Error('Failed to read file'));
         return;
       }
