@@ -1,13 +1,9 @@
 // src/hooks/useProjectModal.ts
 
 import { useCallback, useEffect } from 'react';
-import { ProjectSection } from '@/types';
+import { ProjectSection, UseProjectModalProps } from '@/types/general_types';
+import { getProjectCategoryIcon } from '@/utils/iconMaps';
 
-interface UseProjectModalProps {
-    project: ProjectSection | null;
-    isOpen: boolean;
-    onClose: () => void;
-}
 
 function useProjectModal({ isOpen, onClose }: UseProjectModalProps) {
     const handleBackdropClick = useCallback(() => {
@@ -19,13 +15,7 @@ function useProjectModal({ isOpen, onClose }: UseProjectModalProps) {
     }, []);
 
     const getCategoryIcon = useCallback((category: ProjectSection['category']) => {
-        const icons = {
-            security: '🔒',
-            tools: '🛠️',
-            ai: '🤖',
-            education: '📚'
-        };
-        return icons[category] || '💼';
+        return getProjectCategoryIcon(category);
     }, []);
 
     // Handle keyboard navigation

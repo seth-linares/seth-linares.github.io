@@ -2,7 +2,8 @@
 
 import { useCallback, useState } from 'react';
 import { siteData } from '@/personal-site-data';
-import { ProjectSection } from '@/types';
+import { ProjectSection } from '@/types/general_types';
+import { getProjectCategoryIcon } from '@/utils/iconMaps';
 
 function useProjectsSection() {
     const projectsData = siteData.projects;
@@ -24,16 +25,7 @@ function useProjectsSection() {
     }, []);
 
     const getCategoryIcon = useCallback((category: string): string => {
-        const categoryIcons: Record<string, string> = {
-            security: '🔒',
-            education: '📚',
-            tools: '🛠️',
-            ai: '🤖',
-            web: '🌐',
-            mobile: '📱',
-            desktop: '💻'
-        };
-        return categoryIcons[category] || '⭐';
+        return getProjectCategoryIcon(category);
     }, []);
 
     return {
