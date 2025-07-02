@@ -2,21 +2,13 @@
 
 import { useCallback } from 'react';
 import { siteData } from '@/personal-site-data';
+import { getSkillCategoryIcon } from '@/utils/iconMaps';
 
 function useSkillsSection() {
     const skillsData = siteData.skills;
 
     const getCategoryIcon = useCallback((categoryName: string): string => {
-        const categoryIcons: Record<string, string> = {
-            'Languages': '💻',
-            'Web Technologies': '🌐',
-            'Tools & Infrastructure': '🔧',
-            'Specializations': '⚡',
-            'Frameworks': '🏗️',
-            'Databases': '📊',
-            'Cloud & DevOps': '☁️'
-        };
-        return categoryIcons[categoryName] || '🔧';
+        return getSkillCategoryIcon(categoryName);
     }, []);
 
     return {

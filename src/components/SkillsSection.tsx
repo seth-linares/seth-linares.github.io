@@ -3,6 +3,7 @@
 import { motion } from 'motion/react';
 import useSkillsSection from '@/hooks/useSkillsSection';
 import { ANIMATION_VARIANTS, createStaggeredDelay, createCompoundDelay, VIEWPORT_CONFIG, CARD_VIEWPORT_CONFIG } from '@/utils/animations';
+import SectionHeader from '@/components/common/SectionHeader';
 
 function SkillsSection() {
     const { skillsData, getCategoryIcon } = useSkillsSection();
@@ -10,18 +11,10 @@ function SkillsSection() {
     return (
         <section id="skills" className="py-20 bg-base-200">
             <div className="container mx-auto px-4 max-w-6xl">
-                <motion.div
-                    {...ANIMATION_VARIANTS.fadeUp}
-                    whileInView={ANIMATION_VARIANTS.fadeUp.animate}
-                    viewport={VIEWPORT_CONFIG}
-                    className="text-center mb-16"
-                >
-                    <h2 className="text-4xl font-bold text-base-content mb-4">Technical Skills</h2>
-                    <div className="w-24 h-1 bg-primary mx-auto mb-4"></div>
-                    <p className="text-lg text-base-content/70 max-w-2xl mx-auto">
-                        A comprehensive overview of my technical expertise across various domains
-                    </p>
-                </motion.div>
+                <SectionHeader 
+                    title="Technical Skills" 
+                    description="A comprehensive overview of my technical expertise across various domains" 
+                />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {skillsData.categories.map((category, index) => (
