@@ -1,5 +1,7 @@
 // Animation constants and utilities for consistent animations across components
 
+import { Transition } from "motion/react";
+
 export const ANIMATION_VARIANTS = {
   // Standard fade-up animation for section headers and main content
   fadeUp: {
@@ -77,6 +79,16 @@ export const ANIMATION_VARIANTS = {
         duration: 0.5
       }
     }
+  },
+
+  // For buttons and interactive elements
+  buttonHover: {
+    scale: 1.05,
+    transition: { duration: 0.2, ease: "easeOut" } as Transition
+  },
+  buttonTap: {
+    scale: 0.95,
+    transition: { duration: 0.1, ease: "easeIn" } as Transition
   }
 };
 
@@ -165,4 +177,34 @@ export const createAnimationWithDelay = (
   
   // Fallback for variants without transitions
   return baseVariant;
+};
+
+// Simplified utility for consistent animation prop patterns
+export const getAnimationProps = (
+  variant: keyof typeof ANIMATION_VARIANTS, 
+  delay?: number,
+  viewport = CARD_VIEWPORT_CONFIG
+) => {
+  const baseVariant = ANIMATION_VARIANTS[variant] as AnimationVariant;
+  
+  if (!delay) {
+    return {
+      initial: baseVariant.initial,
+      whileInView: baseVariant.animate,
+      transition: baseVariant.transition,
+      viewport
+    };
+  }
+
+  return {
+    initial: baseVariant.initial,
+    whileInView: {
+      ...baseVariant.animate,
+      transition: {
+        ...baseVariant.transition,
+        delay
+      }
+    },
+    viewport
+  };
 };
