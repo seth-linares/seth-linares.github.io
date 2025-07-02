@@ -43,7 +43,7 @@ function AnimatedLogo({ isHovered, onHoverStart, onHoverEnd, className = "" }: A
         />
         
         <motion.img
-          src="/alt-cat.svg"
+          src="/orange-cat.svg"
           alt="Seth Linares Logo"
           className="w-8 h-8 relative z-10"
           animate={{
