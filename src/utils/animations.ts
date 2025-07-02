@@ -1,4 +1,4 @@
-// Animation constants and utilities for consistent animations across components
+// src/utils/animations.ts
 
 import { Transition } from "motion/react";
 
@@ -89,6 +89,77 @@ export const ANIMATION_VARIANTS = {
   buttonTap: {
     scale: 0.95,
     transition: { duration: 0.1, ease: "easeIn" } as Transition
+  },
+
+  // NAVBAR SPECIFIC ANIMATIONS
+  navbarShow: {
+    initial: { y: "-100%" },
+    animate: { y: 0 },
+    exit: { y: "-100%" },
+    transition: { 
+      type: "spring", 
+      stiffness: 300, 
+      damping: 30 
+    }
+  },
+
+  navbarHide: {
+    initial: { y: 0 },
+    animate: { y: "-100%" },
+    transition: { 
+      type: "spring", 
+      stiffness: 300, 
+      damping: 30 
+    }
+  },
+
+  navButtonActive: {
+    scale: 1,
+    backgroundColor: "rgba(124, 58, 237, 0.1)",
+    transition: { duration: 0.2 }
+  },
+
+  navButtonInactive: {
+    scale: 1,
+    backgroundColor: "transparent",
+    transition: { duration: 0.2 }
+  },
+
+  pullTabBounce: {
+    animate: {
+      y: [0, -4, 0],
+      transition: {
+        duration: 2,
+        repeat: Infinity,
+        repeatType: "reverse" as const,
+        ease: "easeInOut"
+      }
+    }
+  },
+
+  mobileMenuOpen: {
+    initial: { height: 0, opacity: 0 },
+    animate: { height: "auto", opacity: 1 },
+    exit: { height: 0, opacity: 0 },
+    transition: {
+      height: { duration: 0.3, ease: [0.32, 0.72, 0, 1] },
+      opacity: { duration: 0.2, ease: "easeOut" }
+    }
+  },
+
+  mobileMenuItems: {
+    closed: {
+      transition: { 
+        staggerChildren: 0.05, 
+        staggerDirection: -1 
+      }
+    },
+    open: {
+      transition: { 
+        staggerChildren: 0.1, 
+        delayChildren: 0.1 
+      }
+    }
   }
 };
 
@@ -99,7 +170,10 @@ export const ANIMATION_TIMING = {
   // Maximum delay to prevent excessively long waits
   MAX_DELAY: 1.5,
   // Quick delay for micro-animations
-  MICRO_DELAY: 0.05
+  MICRO_DELAY: 0.05,
+  // Navbar-specific timings
+  NAVBAR_TRANSITION: 0.3,
+  SCROLL_DEBOUNCE: 50
 };
 
 // Utility functions for consistent animation patterns
@@ -130,6 +204,12 @@ export const CARD_VIEWPORT_CONFIG = {
   once: true,      // Prevents re-triggering when scrolling back
   amount: 0.2,     // Triggers when 20% of card is visible
   margin: "-50px"  // Start animation 50px before entering viewport
+};
+
+// Navbar-specific viewport configuration
+export const NAVBAR_VIEWPORT_CONFIG = {
+  amount: 0.3,     // Trigger when 30% is visible
+  margin: "-80px 0px -20% 0px" // Account for navbar height
 };
 
 // Type for animation variants that may have different transition structures
@@ -208,3 +288,21 @@ export const getAnimationProps = (
     viewport
   };
 };
+
+// Navbar-specific animation helpers
+export const getNavbarAnimationProps = (isVisible: boolean) => ({
+  initial: false,
+  animate: isVisible ? "visible" : "hidden",
+  variants: {
+    visible: ANIMATION_VARIANTS.navbarShow.animate,
+    hidden: ANIMATION_VARIANTS.navbarHide.animate
+  },
+  transition: ANIMATION_VARIANTS.navbarShow.transition
+});
+
+export const getMobileMenuAnimationProps = () => ({
+  initial: ANIMATION_VARIANTS.mobileMenuOpen.initial,
+  animate: ANIMATION_VARIANTS.mobileMenuOpen.animate,
+  exit: ANIMATION_VARIANTS.mobileMenuOpen.exit,
+  transition: ANIMATION_VARIANTS.mobileMenuOpen.transition
+});
