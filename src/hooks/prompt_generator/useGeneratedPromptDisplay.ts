@@ -1,15 +1,40 @@
+import { FileCheckpoint, UseGeneratedPromptDisplayProps } from '@/types/general_types';
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { FiFileText, FiSettings } from 'react-icons/fi';
+import { SiCss3, SiHtml5, SiJavascript, SiJson, SiMarkdown, SiPython, SiReact, SiTypescript } from 'react-icons/si';
 
-interface FileCheckpoint {
-  fileName: string;
-  position: number;
-}
 
-interface UseGeneratedPromptDisplayProps {
-  generatedPrompt: string;
-  showGeneratedPrompt: boolean;
-  isPromptMinimized: boolean;
-}
+
+// get file icon and badge style based on extension
+export const getFileIconAndStyle = (fileName: string) => {
+  const ext = fileName.toLowerCase().split('.').pop();
+  
+  switch (ext) {
+    case 'js':
+      return { icon: SiJavascript, badgeClass: 'badge-warning' };
+    case 'ts':
+    case 'tsx':
+      return { icon: SiTypescript, badgeClass: 'badge-info' };
+    case 'jsx':
+      return { icon: SiReact, badgeClass: 'badge-accent' };
+    case 'py':
+      return { icon: SiPython, badgeClass: 'badge-success' };
+    case 'md':
+      return { icon: SiMarkdown, badgeClass: 'badge-neutral' };
+    case 'json':
+      return { icon: SiJson, badgeClass: 'badge-warning' };
+    case 'css':
+      return { icon: SiCss3, badgeClass: 'badge-info' };
+    case 'html':
+      return { icon: SiHtml5, badgeClass: 'badge-error' };
+    case 'config':
+    case 'conf':
+    case 'env':
+      return { icon: FiSettings, badgeClass: 'badge-secondary' };
+    default:
+      return { icon: FiFileText, badgeClass: 'badge-ghost' };
+  }
+};
 
 export const useGeneratedPromptDisplay = ({
   generatedPrompt,

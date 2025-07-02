@@ -1,6 +1,6 @@
 // src/hooks/prompt_generator/useFileContextProvider.ts
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { getLanguageFromExtension } from "@/utils/getLanguageFromExtension";
 import { readFileAsText } from "@/utils/fileHelpers";
 
@@ -33,25 +33,24 @@ export const useFileContextProvider = () => {
         });
     }, [files]);
 
+    // Memoize the active file names to avoid recalculating on every generatePrompt call
+    const activeFileNames = useMemo(() => new Set(files.map(f => f.name)), [files]);
+
+    // Memoize the filtered file contents to avoid recalculating
+    const activeFileContents = useMemo(() => 
+        Array.from(fileContents.entries())
+            .filter(([fileName]) => activeFileNames.has(fileName)),
+        [fileContents, activeFileNames]
+    );
+
     const generatePrompt = useCallback((userPrompt: string) => {
         let prompt = '';
         
-        console.log('Generating prompt with:', {
-            fileContentsSize: fileContents.size,
-            fileNames: Array.from(fileContents.keys()),
-            filesLength: files.length
+        // Add file contents with code fence blocks using memoized filtered contents
+        activeFileContents.forEach(([fileName, content]) => {
+            const language = getLanguageFromExtension(fileName);
+            prompt += `## \`${fileName}\`\n\n\`\`\`\`${language}\n${content}\n\`\`\`\`\n\n`;
         });
-        
-        // Ensure we only include contents for files that still exist
-        const activeFileNames = new Set(files.map(f => f.name));
-        
-        // Add file contents with code fence blocks
-        Array.from(fileContents.entries())
-            .filter(([fileName]) => activeFileNames.has(fileName))
-            .forEach(([fileName, content]) => {
-                const language = getLanguageFromExtension(fileName);
-                prompt += `## \`${fileName}\`\n\n\`\`\`\`${language}\n${content}\n\`\`\`\`\n\n`;
-            });
 
         // Add separator and user prompt if provided
         if (userPrompt.trim()) {
@@ -59,11 +58,8 @@ export const useFileContextProvider = () => {
         }
 
         return prompt.trim();
-    }, [fileContents, files]);
+    }, [activeFileContents]);
 
-    useEffect(() => {
-      console.log("FileContextProvider render - fileText length:", fileText.length, "files count:", files.length);
-    }, [fileText, files]);
 
     return {
         fileText,

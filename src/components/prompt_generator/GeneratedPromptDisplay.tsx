@@ -2,9 +2,10 @@
 
 import { motion, AnimatePresence } from 'motion/react';
 import { Suspense, lazy } from 'react';
-import { FiMaximize2, FiMinimize2, FiX, FiArrowUp, FiArrowDown, FiCopy, FiCheck, FiList, FiCode, FiFileText, FiSettings } from 'react-icons/fi';
-import { SiJavascript, SiTypescript, SiPython, SiMarkdown, SiJson, SiCss3, SiHtml5, SiReact } from 'react-icons/si';
-import { useGeneratedPromptDisplay } from '@/hooks/prompt_generator/useGeneratedPromptDisplay';
+import { FiMaximize2, FiMinimize2, FiX, FiArrowUp, FiArrowDown, FiCopy, FiCheck, FiList, FiCode} from 'react-icons/fi';
+import { getFileIconAndStyle, useGeneratedPromptDisplay } from '@/hooks/prompt_generator/useGeneratedPromptDisplay';
+import { ANIMATION_VARIANTS } from '@/utils/animations.ts';
+import { GeneratedPromptDisplayProps } from '@/types/general_types';
 
 const MarkdownRenderer = lazy(() =>
   import('@/components/prompt_generator/MarkdownRenderer').then(module => ({
@@ -12,44 +13,6 @@ const MarkdownRenderer = lazy(() =>
   }))
 );
 
-interface GeneratedPromptDisplayProps {
-  generatedPrompt: string;
-  showGeneratedPrompt: boolean;
-  isPromptMinimized: boolean;
-  setShowGeneratedPrompt: (val: boolean) => void;
-  setIsPromptMinimized: (val: boolean) => void;
-}
-
-// Helper function to get file icon and badge style based on extension
-const getFileIconAndStyle = (fileName: string) => {
-  const ext = fileName.toLowerCase().split('.').pop();
-  
-  switch (ext) {
-    case 'js':
-      return { icon: SiJavascript, badgeClass: 'badge-warning' };
-    case 'ts':
-    case 'tsx':
-      return { icon: SiTypescript, badgeClass: 'badge-info' };
-    case 'jsx':
-      return { icon: SiReact, badgeClass: 'badge-accent' };
-    case 'py':
-      return { icon: SiPython, badgeClass: 'badge-success' };
-    case 'md':
-      return { icon: SiMarkdown, badgeClass: 'badge-neutral' };
-    case 'json':
-      return { icon: SiJson, badgeClass: 'badge-warning' };
-    case 'css':
-      return { icon: SiCss3, badgeClass: 'badge-info' };
-    case 'html':
-      return { icon: SiHtml5, badgeClass: 'badge-error' };
-    case 'config':
-    case 'conf':
-    case 'env':
-      return { icon: FiSettings, badgeClass: 'badge-secondary' };
-    default:
-      return { icon: FiFileText, badgeClass: 'badge-ghost' };
-  }
-};
 
 const GeneratedPromptDisplay: React.FC<GeneratedPromptDisplayProps> = ({
   generatedPrompt,
@@ -96,8 +59,8 @@ const GeneratedPromptDisplay: React.FC<GeneratedPromptDisplayProps> = ({
                 <div className="flex flex-wrap gap-2">
                   {fileCheckpoints.length > 0 && (
                     <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                      whileHover={ANIMATION_VARIANTS.buttonHover}
+                      whileTap={ANIMATION_VARIANTS.buttonTap}
                       className={`
                         btn btn-sm transition-all duration-200 relative overflow-hidden
                         ${showFileNav 
@@ -189,11 +152,8 @@ const GeneratedPromptDisplay: React.FC<GeneratedPromptDisplayProps> = ({
                                   initial={{ opacity: 0, y: 10 }}
                                   animate={{ opacity: 1, y: 0 }}
                                   transition={{ delay: index * 0.05, duration: 0.2 }}
-                                  whileHover={{ 
-                                    scale: 1.005,
-                                    transition: { duration: 0.1 }
-                                  }}
-                                  whileTap={{ scale: 0.995 }}
+                                  whileHover={ANIMATION_VARIANTS.buttonHover}
+                                  whileTap={ANIMATION_VARIANTS.buttonTap}
                                   className="btn btn-ghost btn-sm justify-start h-auto p-2 group"
                                   onClick={() => scrollToFile(checkpoint.fileName)}
                                   title={checkpoint.fileName}
@@ -248,7 +208,7 @@ const GeneratedPromptDisplay: React.FC<GeneratedPromptDisplayProps> = ({
                       {canScrollUp && (
                         <motion.button
                           initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
+                          animate={ANIMATION_VARIANTS.scaleIn.animate}
                           exit={{ opacity: 0, scale: 0.8 }}
                           className="btn btn-sm btn-circle btn-ghost bg-base-100/80 hover:bg-base-100 shadow-md"
                           onClick={scrollToTop}
@@ -262,7 +222,7 @@ const GeneratedPromptDisplay: React.FC<GeneratedPromptDisplayProps> = ({
                       {canScrollDown && (
                         <motion.button
                           initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{ opacity: 1, scale: 1 }}
+                          animate={ANIMATION_VARIANTS.scaleIn.animate}
                           exit={{ opacity: 0, scale: 0.8 }}
                           className="btn btn-sm btn-circle btn-ghost bg-base-100/80 hover:bg-base-100 shadow-md"
                           onClick={scrollToBottom}

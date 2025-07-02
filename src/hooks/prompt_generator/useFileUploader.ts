@@ -15,7 +15,6 @@ const useFileUploader = () => {
 
   const handleFileChange = useCallback(async (event: Event) => {
     const newFiles = Array.from((event.target as HTMLInputElement).files || []);
-    console.log("useFileUploader - Files selected:", newFiles.map(file => file.name));
     
     if (newFiles.length > 0) {
       try {
@@ -68,7 +67,6 @@ const useFileUploader = () => {
           return new File([content], uniqueName, { type: 'text/plain' });
         });
 
-        console.log("useFileUploader - Combined file content length:", newCombinedContents.length);
         
         // Batch state updates
         setFiles(prevFiles => [...prevFiles, ...uniqueFiles]);

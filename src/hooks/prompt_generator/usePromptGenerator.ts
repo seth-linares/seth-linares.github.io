@@ -22,9 +22,7 @@ function usePromptGenerator() {
     const [isApiKeyFormExpanded, setIsApiKeyFormExpanded] = useState(false);
 
     const handleGeneratePrompt = useCallback(() => {
-        console.log('handleGeneratePrompt called with promptInput:', promptInput);
         const prompt = generatePrompt(promptInput);
-        console.log('Generated prompt:', { length: prompt.length, preview: prompt.slice(0, 100) + '...' });
         setGeneratedPrompt(prompt);
         setShowGeneratedPrompt(true);
     }, [promptInput, generatePrompt]);
@@ -44,29 +42,9 @@ function usePromptGenerator() {
         }
     }, []);
 
-    useEffect(() => {
-        console.log('Current file text in context:', fileText);
-    }, [fileText]);
-
-    useEffect(() => {
-        console.log("PromptGenerator - fileText changed:", fileText);
-    }, [fileText]);
-
-    useEffect(() => {
-        if (fileText) {
-            console.log("PromptGenerator - Received file text:", {
-                length: fileText.length,
-                preview: fileText.slice(0, 50) + '...'
-            });
-        }
-    }, [fileText]);
 
     useEffect(() => {
         fileTextRef.current = fileText;
-        console.log("PromptGenerator - fileText updated:", {
-            length: fileText?.length,
-            preview: fileText?.slice(0, 50)
-        });
     }, [fileText]);
 
     const localSaveApiKey = useCallback((e: React.FormEvent) => {
@@ -97,12 +75,6 @@ function usePromptGenerator() {
             }
             
             const combinedText = `${promptInput}${fileText ? '\n' + fileText : ''}`.trim();
-            
-            console.log("Submitting with:", {
-                promptLength: promptInput.length,
-                fileTextLength: fileText.length,
-                combinedLength: combinedText.length
-            });
 
             if (!combinedText) {
                 toast.error('No text to count');

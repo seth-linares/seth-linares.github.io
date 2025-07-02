@@ -4,6 +4,8 @@ import useFileUploader from "@/hooks/prompt_generator/useFileUploader";
 import useFileContext from "@/hooks/prompt_generator/useFileContext";
 import { FiUpload, FiX, FiFile } from "react-icons/fi";
 import { motion, AnimatePresence } from "motion/react";
+import { ANIMATION_VARIANTS } from "@/utils/animations";
+import AnimatedButton from "@/components/common/AnimatedButton";
 
 function FileUploader() {
     const { files, removeFile } = useFileContext();
@@ -18,26 +20,23 @@ function FileUploader() {
     return (
         <div className="space-y-4">
             <div className="flex gap-2">
-                <motion.button
+                <AnimatedButton
                     type="button"
-                    className="btn btn-secondary flex-1 gap-2"
+                    className="flex-1 gap-2"
                     onClick={selectFiles}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    variant="secondary"
                 >
                     <FiUpload className="w-5 h-5" />
                     Upload Files
-                </motion.button>
+                </AnimatedButton>
                 {files.length > 0 && (
-                    <motion.button
+                    <AnimatedButton
                         type="button"
-                        className="btn btn-error btn-square"
+                        className="btn-square btn-error"
                         onClick={reset}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
                     >
                         <FiX className="w-5 h-5" />
-                    </motion.button>
+                    </AnimatedButton>
                 )}
             </div>
 
@@ -68,8 +67,8 @@ function FileUploader() {
                                         <motion.button
                                             initial={{ opacity: 0.5 }}
                                             animate={{ opacity: 0.5 }}
-                                            whileHover={{ scale: 1.1, opacity: 1 }}
-                                            whileTap={{ scale: 0.9 }}
+                                            whileHover={ANIMATION_VARIANTS.buttonHover}
+                                            whileTap={ANIMATION_VARIANTS.buttonTap}
                                             transition={{ duration: 0.1 }}
                                             className="btn btn-accent btn-xs btn-soft"
                                             onClick={() => removeFile(index)}

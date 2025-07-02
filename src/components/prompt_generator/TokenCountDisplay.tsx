@@ -1,5 +1,6 @@
 // src/components/prompt_generator/TokenCountDisplay.tsx
 
+import { ANIMATION_VARIANTS } from '@/utils/animations';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface TokenCountDisplayProps {
@@ -12,7 +13,7 @@ const TokenCountDisplay: React.FC<TokenCountDisplayProps> = ({ tokenCount }) => 
       <motion.div
         className="card bg-success text-primary-content"
         initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
+        animate={ANIMATION_VARIANTS.scaleIn.animate}
         exit={{ opacity: 0, scale: 0.9 }}
       >
         <div className="card-body py-8">

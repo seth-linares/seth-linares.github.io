@@ -2,12 +2,9 @@
 
 import { FiKey } from 'react-icons/fi';
 import { motion } from 'motion/react';
+import { ApiKeyFormProps } from '@/types/general_types';
+import AnimatedButton from '@/components/common/AnimatedButton';
 
-interface ApiKeyFormProps {
-  apiKeyInput: string;
-  setApiKeyInput: (val: string) => void;
-  localSaveApiKey: (e: React.FormEvent) => void;
-}
 
 const ApiKeyForm: React.FC<ApiKeyFormProps> = ({ apiKeyInput, setApiKeyInput, localSaveApiKey }) => (
   <motion.div
@@ -41,15 +38,14 @@ const ApiKeyForm: React.FC<ApiKeyFormProps> = ({ apiKeyInput, setApiKeyInput, lo
             </div>
           </div>
         </div>
-        <motion.button
+        <AnimatedButton
           type="submit"
-          className="btn btn-primary whitespace-nowrap"
+          className="whitespace-nowrap"
           disabled={!apiKeyInput}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
+          variant="primary"
         >
           Save API Key
-        </motion.button>
+        </AnimatedButton>
       </div>
       <div className="text-center mt-2">
         <span className="label-text-alt text-base-content/70">
