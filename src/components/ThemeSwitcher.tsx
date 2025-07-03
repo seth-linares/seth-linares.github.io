@@ -32,7 +32,7 @@ const ThemeSwitcher: React.FC = () => {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="absolute right-0 mt-2 w-48 rounded-lg bg-base-200 shadow-lg ring-1 ring-black ring-opacity-5 z-50 max-h-[calc(100vh-100px)]"
+                        className="absolute right-0 mt-2 w-48 rounded-lg bg-base-200 shadow-lg ring-1 ring-black ring-opacity-5 z-50 max-h-[calc(50vh-100px)]"
                     >
                         <div className="py-1 overflow-y-auto max-h-[inherit] scrollbar-thin scrollbar-thumb-base-300 scrollbar-track-base-100">
                             {THEMES.map((theme) => (
