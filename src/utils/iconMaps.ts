@@ -3,9 +3,9 @@
 
 // Icon maps for different domains
 export const VALUE_ICONS: Record<string, string> = {
-  shield: '🛡️',
-  cpu: '⚡',
-  heart: '❤️',
+  shield: '/icons/security-safe-shield.svg',
+  cpu: '/icons/lightning.svg',
+  heart: '/icons/heart-love.svg',
   code: '💻',
   security: '🔒',
   performance: '⚡',

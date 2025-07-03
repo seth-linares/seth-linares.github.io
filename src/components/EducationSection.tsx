@@ -38,7 +38,7 @@ function EducationSection() {
                                     <div className="flex-1 mb-6 lg:mb-0">
                                         <div className="flex items-center gap-4 mb-4">
                                             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                                                <span className="text-2xl">🎓</span>
+                                                <img src="/icons/graduation-cap.svg" alt="Graduation cap" className="w-8 h-8" />
                                             </div>
                                             <div>
                                                 <h3 className="text-2xl font-bold text-base-content mb-1">

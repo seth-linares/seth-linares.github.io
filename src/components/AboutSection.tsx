@@ -86,7 +86,7 @@ function AboutSection() {
                                 <div className="card-body p-6">
                                     <div className="flex items-center gap-4 mb-3">
                                         <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                                            <span className="text-2xl">{getValueIcon(value.icon)}</span>
+                                            <img src={getValueIcon(value.icon)} alt={value.title} className="w-8 h-8" />
                                         </div>
                                         <h4 className="text-xl font-semibold text-base-content">
                                             {value.title}

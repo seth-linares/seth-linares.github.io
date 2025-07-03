@@ -32,7 +32,7 @@ function ContactSection() {
                     >
                         <div className="card-body items-center text-center p-8">
                             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                                <span className="text-3xl">{getContactIcon('email')}</span>
+                                <img src={getContactIcon('email')} alt="Email" className="w-8 h-8" />
                             </div>
                             <h3 className="text-lg font-bold text-base-content mb-2">Email</h3>
                             <p className="text-base-content/70 text-sm break-all">
@@ -50,7 +50,7 @@ function ContactSection() {
                     >
                         <div className="card-body items-center text-center p-8">
                             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                                <span className="text-3xl">{getContactIcon('phone')}</span>
+                                <img src={getContactIcon('phone')} alt="Phone" className="w-8 h-8 ml-4" />
                             </div>
                             <h3 className="text-lg font-bold text-base-content mb-2">Phone</h3>
                             <p className="text-base-content/70 text-sm">
@@ -68,7 +68,7 @@ function ContactSection() {
                     >
                         <div className="card-body items-center text-center p-8">
                             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                                <span className="text-3xl">{getContactIcon('linkedin')}</span>
+                                <img src={getContactIcon('linkedin')} alt="LinkedIn" className="w-8 h-8" />
                             </div>
                             <h3 className="text-lg font-bold text-base-content mb-2">LinkedIn</h3>
                             <p className="text-base-content/70 text-sm">
@@ -86,7 +86,7 @@ function ContactSection() {
                     >
                         <div className="card-body items-center text-center p-8">
                             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                                <span className="text-3xl">{getContactIcon('github')}</span>
+                                <img src={getContactIcon('github')} alt="github" className="w-8 h-8" />
                             </div>
                             <h3 className="text-lg font-bold text-base-content mb-2">GitHub</h3>
                             <p className="text-base-content/70 text-sm">

@@ -25,10 +25,10 @@ function useContactSection() {
 
     const getContactIcon = useCallback((type: string): string => {
         const iconMap: Record<string, string> = {
-            email: '📧',
-            phone: '📱',
-            linkedin: '💼',
-            github: '🐱',
+            email: '/icons/email.svg',
+            phone: '/icons/phone.svg',
+            linkedin: '/icons/linkedin.svg',
+            github: '/icons/github-icon.svg',
             website: '🌐',
             twitter: '🐦'
         };
