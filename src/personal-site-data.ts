@@ -87,7 +87,7 @@ export const siteData: PersonalSiteData = {
       description: "An interactive learning platform that combines code execution, AI coaching, and personalized feedback for programming education",
       technologies: ["C#", "ASP.NET", "NextJS", "PostgreSQL", "Docker", "OpenAI API", "Judge0"],
       links: {
-        github: "https://github.com/seth-linares/CodeCoach"
+        github: "https://github.com/seth-linares/Code_Coach"
       },
       highlights: [
         "Reduced code execution latency by 40% with optimized Judge0 integration",
