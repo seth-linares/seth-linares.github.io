@@ -2,7 +2,7 @@
 
 import type { CodeSectionProps } from "@/types/regex";
 import CopyButton from "@/components/common/CopyButton";
-import { useCodeHighlighting } from "@/hooks/regex_playground/useCodeHighlighting";
+import { useCodeHighlighting, type SupportedLanguage } from "@/hooks/regex_playground/useCodeHighlighting";
 
 function CodeSection({
   title = "Code Generation",
@@ -25,7 +25,7 @@ function CodeSection({
             <select
               className="select select-sm select-bordered"
               value={language}
-              onChange={(e) => setLanguage(e.target.value as any)}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setLanguage(e.target.value as SupportedLanguage)}
               aria-label="Select language for code generation"
             >
               <option value="javascript">JavaScript</option>

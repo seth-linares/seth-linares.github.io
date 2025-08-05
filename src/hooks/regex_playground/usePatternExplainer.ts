@@ -17,8 +17,9 @@ export function usePatternExplainer(pattern: string) {
       const parsed = parseRegexPattern(pattern);
       setTokens(parsed);
       setError(null);
-    } catch (e: any) {
-      setError(e?.message ?? "Failed to parse pattern");
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : "Failed to parse pattern";
+      setError(errorMessage);
       setTokens([]);
     }
   }, [pattern]);

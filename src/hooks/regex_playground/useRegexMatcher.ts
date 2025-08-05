@@ -67,11 +67,11 @@ export const useRegexMatcher = (pattern: string, flags: RegexFlags, testStrings:
     if (!debouncedPattern) return null;
     try {
       return new RegExp(debouncedPattern, flagsStr);
-    } catch (e: any) {
-      setError(e?.message ?? 'Invalid pattern');
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'Invalid pattern';
+      setError(errorMessage);
       return null;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedPattern, flagsStr]);
 
   useEffect(() => {
@@ -112,7 +112,7 @@ export const useRegexMatcher = (pattern: string, flags: RegexFlags, testStrings:
       try {
         // For non-global/non-sticky regex, exec() does not advance across the string.
         // We'll detect global-like behavior and handle iteration accordingly.
-        const isGlobalLike = (local as RegExp).global || (local as any).sticky === true;
+        const isGlobalLike = (local as RegExp).global || ('sticky' in local && (local as RegExp & { sticky: boolean }).sticky === true);
 
         const startTime = Date.now();
         while ((m = local.exec(safeText)) !== null) {
@@ -122,7 +122,7 @@ export const useRegexMatcher = (pattern: string, flags: RegexFlags, testStrings:
             break;
           }
           // m is non-null inside this loop
-          const mm = m as RegExpExecArray & { groups?: Record<string, string>; indices?: any };
+          const mm = m as RegExpExecArray & { groups?: Record<string, string>; indices?: number[][] };
           const fullMatch = mm[0] ?? '';
           const start = mm.index;
           const end = start + fullMatch.length;
@@ -170,8 +170,9 @@ export const useRegexMatcher = (pattern: string, flags: RegexFlags, testStrings:
             }
           }
         }
-      } catch (e: any) {
-        setError(e?.message ?? 'Error while executing regex');
+      } catch (e: unknown) {
+        const errorMessage = e instanceof Error ? e.message : 'Error while executing regex';
+        setError(errorMessage);
         out.length = 0;
         break;
       }
@@ -207,7 +208,7 @@ export const useRegexMatcher = (pattern: string, flags: RegexFlags, testStrings:
     } else if (activeGlobalIndex >= total) {
       setActiveGlobalIndex(total - 1);
     }
-  }, [results]);
+  }, [results, activeGlobalIndex]);
 
   return { matches: results, error, activeGlobalIndex, setActiveGlobalIndex, globalIndexMap };
 };

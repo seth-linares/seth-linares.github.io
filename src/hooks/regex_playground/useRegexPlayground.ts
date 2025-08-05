@@ -11,14 +11,17 @@ import type {
 } from '@/types/regex';
 import { defaultFlags } from '@/types/regex';
 import { useRegexMatcher } from './useRegexMatcher';
+import { parseHashParams, updateHashParams } from '@/utils/hashRouterUrl';
 
-function parseHashParams(): Partial<RegexPlaygroundState> {
-  const hash = typeof window !== 'undefined' ? window.location.hash.slice(1) : '';
-  const params = new URLSearchParams(hash);
+function parseInitialState(): Partial<RegexPlaygroundState> {
+  const hash = typeof window !== 'undefined' ? window.location.hash : '';
+  const params = parseHashParams(hash);
+  
   const pattern = params.get('pattern') ?? '';
   const flagsStr = params.get('flags') ?? '';
   const testsParam = params.getAll('test');
-  const testStrings = testsParam.length ? testsParam : (params.get('tests') ? (params.get('tests') as string).split('\n') : []);
+  const testStrings = testsParam.length ? testsParam : [''];
+  
   const flags: RegexFlags = {
     g: flagsStr.includes('g'),
     i: flagsStr.includes('i'),
@@ -27,11 +30,8 @@ function parseHashParams(): Partial<RegexPlaygroundState> {
     u: flagsStr.includes('u'),
     y: flagsStr.includes('y'),
   };
-  return {
-    pattern,
-    flags,
-    testStrings,
-  } as Partial<RegexPlaygroundState>;
+  
+  return { pattern, flags, testStrings };
 }
 
 function flagsToString(flags: RegexFlags): string {
@@ -55,16 +55,17 @@ function useDebounce<T>(value: T, delay = 300): T {
 }
 
 export function useRegexPlayground() {
-  const initFromHash = parseHashParams();
-  const [pattern, setPattern] = useState(initFromHash.pattern ?? '');
-  const [flags, setFlags] = useState<RegexFlags>(initFromHash.flags ?? defaultFlags);
+  const [pattern, setPattern] = useState('');
+  const [flags, setFlags] = useState<RegexFlags>(defaultFlags);
   const [flavor, setFlavor] = useState<RegexFlavor>('javascript');
-  const [testStrings, setTestStrings] = useState<string[]>(initFromHash.testStrings ?? ['']);
+  const [testStrings, setTestStrings] = useState<string[]>(['']);
   const [explanation, setExplanation] = useState<PatternExplanation | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activePatternId, setActivePatternId] = useState<string | null>(null);
   // Internal active match tracking (SSR-safe, deterministic)
   const [activeMatchIndex, setActiveMatchIndex] = useState<number>(-1);
+  // Initialization state to prevent race conditions
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const debouncedPattern = useDebounce(pattern, 300);
   const debouncedFlags = useDebounce(flags, 300);
@@ -76,43 +77,76 @@ export function useRegexPlayground() {
     setError(matchError);
   }, [matchError]);
 
-  // Sync URL hash parameters
+  // Sync URL hash parameters while preserving route
   useEffect(() => {
+    if (!isInitialized) return;
+    
     const params = new URLSearchParams();
     if (debouncedPattern) params.set('pattern', debouncedPattern);
     const f = flagsToString(debouncedFlags);
     if (f) params.set('flags', f);
     debouncedTests.forEach((t) => params.append('test', t));
-    const newHash = params.toString();
-    if (typeof window !== 'undefined') {
-      const current = window.location.hash.startsWith('#') ? window.location.hash.slice(1) : window.location.hash;
-      if (current !== newHash) {
-        window.history.replaceState(null, '', `#${newHash}`);
+    
+    updateHashParams(params);
+  }, [debouncedPattern, debouncedFlags, debouncedTests, isInitialized]);
+
+  // Initialize state from URL params or localStorage
+  useEffect(() => {
+    if (isInitialized) return;
+    
+    // First priority: URL parameters
+    const urlState = parseInitialState();
+    const hasUrlParams = urlState.pattern || (urlState.testStrings && urlState.testStrings.length > 1) || 
+                        (urlState.flags && Object.values(urlState.flags).some(v => v !== defaultFlags[Object.keys(urlState.flags!)[Object.values(urlState.flags!).indexOf(v)] as keyof RegexFlags]));
+    
+    if (hasUrlParams) {
+      if (urlState.pattern !== undefined) setPattern(urlState.pattern);
+      if (urlState.flags) setFlags(urlState.flags);
+      if (urlState.testStrings) setTestStrings(urlState.testStrings);
+    } else {
+      // Second priority: localStorage
+      try {
+        const saved = localStorage.getItem('regex_playground_state');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (typeof parsed.pattern === 'string') setPattern(parsed.pattern);
+          if (parsed.flags) setFlags(parsed.flags);
+          if (typeof parsed.flavor === 'string') setFlavor(parsed.flavor);
+          if (Array.isArray(parsed.testStrings)) setTestStrings(parsed.testStrings);
+        }
+      } catch (error) {
+        console.warn('Failed to load regex playground state from localStorage:', error);
       }
     }
-  }, [debouncedPattern, debouncedFlags, debouncedTests]);
+    
+    setIsInitialized(true);
+  }, [isInitialized]);
+
+  // Handle browser back/forward navigation
+  useEffect(() => {
+    const handleHashChange = () => {
+      if (!isInitialized) return;
+      
+      const newState = parseInitialState();
+      if (newState.pattern !== undefined) setPattern(newState.pattern);
+      if (newState.flags) setFlags(newState.flags);
+      if (newState.testStrings) setTestStrings(newState.testStrings);
+    };
+    
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [isInitialized]);
 
   // Local storage persistence
   useEffect(() => {
+    if (!isInitialized) return;
+    
     try {
       localStorage.setItem('regex_playground_state', JSON.stringify({ pattern, flags, flavor, testStrings }));
-    } catch {}
-  }, [pattern, flags, flavor, testStrings]);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('regex_playground_state');
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (typeof parsed.pattern === 'string') setPattern(parsed.pattern);
-        if (parsed.flags) setFlags(parsed.flags);
-        if (typeof parsed.flavor === 'string') setFlavor(parsed.flavor);
-        if (Array.isArray(parsed.testStrings)) setTestStrings(parsed.testStrings);
-      }
-    } catch {}
-    // run once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    } catch (error) {
+      console.warn('Failed to save regex playground state to localStorage:', error);
+    }
+  }, [pattern, flags, flavor, testStrings, isInitialized]);
 
   const toggleFlag = useCallback((k: keyof RegexFlags) => {
     setFlags((prev) => ({ ...prev, [k]: !prev[k] }));
