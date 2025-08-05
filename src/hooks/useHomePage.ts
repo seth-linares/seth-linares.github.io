@@ -39,6 +39,16 @@ function useHomePage() {
                 technologies: ['React', 'TypeScript', 'Anthropic API'],
                 link: '/prompt-generator',
                 linkText: 'Try It Now'
+            },
+            {
+                id: 'regex-playground',
+                icon: '🧩',
+                title: 'Regex Playground',
+                subtitle: 'Interactive Regex Testing Tool',
+                description: 'Test, learn, and debug regular expressions with real-time matching, multiple test strings, and a handy pattern library.',
+                technologies: ['React', 'TypeScript', 'Tailwind', 'DaisyUI'],
+                link: '/regex-playground',
+                linkText: 'Open Playground'
             }
         ]
     };
@@ -52,5 +62,3 @@ function useHomePage() {
 }
 
 export default useHomePage;
-
-

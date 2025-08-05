@@ -7,6 +7,7 @@ import Navbar from './components/Navbar';
 import HomePage from './components/HomePage';
 import PromptGenerator from './components/prompt_generator/PromptGenerator';
 import FileContextProvider from './contexts/FileContextProvider';
+import RegexPlayground from './components/regex_playground/RegexPlayground';
 
 // Loading component shown while our lazy-loaded components are being fetched
 const LoadingScreen = () => (
@@ -32,7 +33,9 @@ const AnimatedRoutes = () => {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
+        {/* Path to home page */}
         <Route path="/" element={<Layout><HomePage /></Layout>} />
+        {/* Path to Prompt generator */}
         <Route path="/prompt-generator" element={
           <Layout>
             <FileContextProvider>
@@ -40,6 +43,13 @@ const AnimatedRoutes = () => {
             </FileContextProvider>
           </Layout>
         } />
+        {/* Path to Prompt generator */}
+        <Route path="/regex-playground" element={
+          <Layout>
+            <RegexPlayground />
+          </Layout>
+        } />
+        {/* Anything else == the page does not exist */}
         <Route 
           path="*" 
           element={
