@@ -70,14 +70,6 @@ export interface LibraryUsePayload {
   flags?: Partial<RegexFlags>;
 };
 
-export interface RegexFlags {
-  g: boolean; // global
-  i: boolean; // ignore case
-  m: boolean; // multiline
-  s: boolean; // dotAll
-  u: boolean; // unicode
-  y: boolean; // sticky
-}
 
 export interface MatchGroup {
   name?: string;
@@ -100,14 +92,7 @@ export interface MatchResult {
   truncated: boolean; // indicates we hit max matches cap
 }
 
-export interface PatternToken {
-  type: string;
-  value: string;
-  start: number;
-  end: number;
-  description?: string;
-  children?: PatternToken[];
-}
+
 
 export interface PatternExplanation {
   ast: PatternToken[];
@@ -150,3 +135,51 @@ export const defaultFlags: RegexFlags = {
   u: false,
   y: false,
 };
+
+
+// regexParser types
+
+export interface PatternToken {
+  type: string;
+  value: string;
+  start: number;
+  end: number;
+  description?: string;
+  children?: PatternToken[];
+}
+
+export interface RegexFlags {
+  g: boolean; // global
+  i: boolean; // ignore case
+  m: boolean; // multiline
+  s: boolean; // dotAll
+  u: boolean; // unicode
+  y: boolean; // sticky
+}
+
+export interface CharacterClassResult {
+  value: string;
+  end: number;
+  description: string;
+}
+
+export interface EscapeResult {
+  value: string;
+  end: number;
+  description: string;
+}
+
+export interface GroupResult {
+  value: string;
+  end: number;
+  description: string;
+  groupType: string;
+  groupName?: string;
+  children: PatternToken[];
+}
+
+export interface QuantifierResult {
+  value: string;
+  end: number;
+  description: string;
+}
