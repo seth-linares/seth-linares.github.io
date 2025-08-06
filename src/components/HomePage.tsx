@@ -45,7 +45,7 @@ function HomePage() {
                                 <div className="card-body p-8">
                                     <div className="flex items-center gap-4 mb-4">
                                         <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                                            <span className="text-2xl">{tool.icon}</span>
+                                            <img src={tool.icon} alt={`${tool.title} icon`} className="w-8 h-8" />
                                         </div>
                                         <div>
                                             <h3 className="text-xl font-bold text-base-content">{tool.title}</h3>

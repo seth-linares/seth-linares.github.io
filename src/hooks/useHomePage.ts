@@ -32,7 +32,7 @@ function useHomePage() {
         tools: [
             {
                 id: 'prompt-builder',
-                icon: '🤖',
+                icon: '/icons/prompt-builder.svg',
                 title: 'Prompt Builder',
                 subtitle: 'AI Prompt Engineering Tool',
                 description: 'Build prompts by combining files and text with optional token counting. Perfect for LLM prompt engineering and context management.',
@@ -42,7 +42,7 @@ function useHomePage() {
             },
             {
                 id: 'regex-playground',
-                icon: '🧩',
+                icon: '/icons/regex-playground.svg',
                 title: 'Regex Playground',
                 subtitle: 'Interactive Regex Testing Tool',
                 description: 'Test, learn, and debug regular expressions with real-time matching, multiple test strings, and a handy pattern library.',
