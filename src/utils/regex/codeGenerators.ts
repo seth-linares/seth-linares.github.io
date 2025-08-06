@@ -57,3 +57,81 @@ public class RegexExample {
     }
 }`;
 };
+
+export const generateCSharpCode = (options: CodeGenOptions): string => {
+  const { pattern, flags, testVarName = "text" } = options;
+  const escaped = pattern.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+
+  const regexOptions: string[] = [];
+  if (flags.i) regexOptions.push('RegexOptions.IgnoreCase');
+  if (flags.m) regexOptions.push('RegexOptions.Multiline');
+  if (flags.s) regexOptions.push('RegexOptions.Singleline');
+  // Note: Global flag 'g' doesn't have direct equivalent in C# RegexOptions
+  // JavaScript's sticky 'y' and unicode 'u' flags also don't have direct equivalents
+
+  const optionsString = regexOptions.length > 0 
+    ? `, ${regexOptions.join(' | ')}`
+    : '';
+
+  return `using System;
+using System.Text.RegularExpressions;
+
+class Program
+{
+    static void Main()
+    {
+        string pattern = "${escaped}";
+        string ${testVarName} = "your text here";
+
+        Regex regex = new Regex(pattern${optionsString});
+        MatchCollection matches = regex.Matches(${testVarName});
+
+        foreach (Match match in matches)
+        {
+            Console.WriteLine($"Match: {match.Value} at {match.Index}-{match.Index + match.Length}");
+            
+            // Print groups if any
+            for (int i = 1; i < match.Groups.Count; i++)
+            {
+                Console.WriteLine($"  Group {i}: {match.Groups[i].Value}");
+            }
+        }
+    }
+}`;
+};
+
+export const generateTypeScriptCode = (options: CodeGenOptions): string => {
+  const { pattern, flags, testVarName = "text" } = options;
+  const escaped = pattern.replace(/\\/g, "\\\\").replace(/`/g, "\\`");
+
+  let flagsStr = "";
+  if (flags.g) flagsStr += "g";
+  if (flags.i) flagsStr += "i";
+  if (flags.m) flagsStr += "m";
+  if (flags.s) flagsStr += "s";
+  if (flags.u) flagsStr += "u";
+  if (flags.y) flagsStr += "y";
+
+  return `interface MatchResult {
+  full: string;
+  index: number;
+  groups: (string | undefined)[];
+}
+
+const pattern: RegExp = new RegExp(\`${escaped}\`, \`${flagsStr}\`);
+const ${testVarName}: string = 'your text here';
+const matches: MatchResult[] = [];
+
+let match: RegExpExecArray | null;
+while ((match = pattern.exec(${testVarName})) !== null) {
+  if (match.index === pattern.lastIndex) pattern.lastIndex++;
+  
+  matches.push({
+    full: match[0],
+    index: match.index,
+    groups: match.slice(1)
+  });
+}
+
+console.log(matches);`;
+};
