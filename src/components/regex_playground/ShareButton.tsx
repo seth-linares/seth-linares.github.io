@@ -112,7 +112,7 @@ function ShareButton({ shareUrl, onShare, className = '' }: ShareButtonProps) {
       
       {/* Tooltip */}
       {isHovered && !copied && (
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs bg-base-content text-base-100 rounded shadow-lg whitespace-nowrap animate-in fade-in duration-200">
+        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs bg-base-content text-base-100 rounded shadow-lg whitespace-nowrap animate-in fade-in duration-200 z-[60]">
           Click to copy link
           <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-base-content"></div>
         </div>

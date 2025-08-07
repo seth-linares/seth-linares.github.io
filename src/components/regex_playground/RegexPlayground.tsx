@@ -10,8 +10,6 @@ import PatternExplainer from '@/components/regex_playground/PatternExplainer';
 import ShareButton from '@/components/regex_playground/ShareButton';
 import { usePatternExplainer } from '@/hooks/regex_playground/usePatternExplainer';
 import { useKeyboardShortcuts } from '@/hooks/regex_playground/useKeyboardShortcuts';
-import { useMemo } from 'react';
-import { createShareableUrl } from '@/utils/hashRouterUrl';
 
 
 function RegexPlayground() {
@@ -19,6 +17,7 @@ function RegexPlayground() {
     state,
     allMatches,
     activeMatchIndex,
+    shareUrl,
     setPattern,
     toggleFlag,
     setTestStringAt,
@@ -31,28 +30,6 @@ function RegexPlayground() {
     goNext,
   } = useRegexPlayground();
   const { tokens } = usePatternExplainer(state.pattern);
-  
-  // Generate shareable URL
-  const shareUrl = useMemo(() => {
-    if (typeof window === 'undefined') return '';
-    
-    const params = new URLSearchParams();
-    if (state.pattern) params.set('pattern', state.pattern);
-    
-    const flagsString = [
-      state.flags.g ? 'g' : '',
-      state.flags.i ? 'i' : '',
-      state.flags.m ? 'm' : '',
-      state.flags.s ? 's' : '',
-      state.flags.u ? 'u' : '',
-      state.flags.y ? 'y' : '',
-    ].join('');
-    if (flagsString) params.set('flags', flagsString);
-    
-    state.testStrings.forEach((test) => params.append('test', test));
-    
-    return createShareableUrl(params, '/regex-playground');
-  }, [state.pattern, state.flags, state.testStrings]);
   
   // Keyboard shortcuts
   useKeyboardShortcuts({
@@ -91,7 +68,7 @@ function RegexPlayground() {
                   console.log('Regex pattern shared:', state.pattern);
                 }}
               />
-              <div className="tooltip" data-tip="Reset inputs">
+              <div className="tooltip tooltip-top z-[60]" data-tip="Reset inputs">
                 <button
                   className="btn btn-ghost btn-sm hover:shadow-md transition-all"
                   onClick={() => {

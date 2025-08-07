@@ -12,6 +12,7 @@ import type {
 import { defaultFlags } from '@/types/regex';
 import { useRegexMatcher } from './useRegexMatcher';
 import { parseHashParams, updateHashParams } from '@/utils/hashRouterUrl';
+import { createShareableUrl } from '@/utils/hashRouterUrl';
 
 function parseInitialState(): Partial<RegexPlaygroundState> {
   const hash = typeof window !== 'undefined' ? window.location.hash : '';
@@ -54,6 +55,8 @@ function useDebounce<T>(value: T, delay = 300): T {
   return debounced;
 }
 
+
+
 export function useRegexPlayground() {
   const [pattern, setPattern] = useState('');
   const [flags, setFlags] = useState<RegexFlags>(defaultFlags);
@@ -73,10 +76,17 @@ export function useRegexPlayground() {
 
   const { matches, error: matchError } = useRegexMatcher(debouncedPattern, debouncedFlags, debouncedTests);
 
+  // Scroll to top when component mounts to fix annoying bug where
+  // the scroll position is maintained depending on where you load into the 
+  // tool.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     setError(matchError);
   }, [matchError]);
-
+  
   // Sync URL hash parameters while preserving route
   useEffect(() => {
     if (!isInitialized) return;
@@ -193,6 +203,29 @@ export function useRegexPlayground() {
     };
   }, [activePatternId, error, explanation, flavor, flags, matches, pattern, testStrings]);
 
+  // Generate shareable URL
+  const shareUrl = useMemo(() => {
+    if (typeof window === 'undefined') return '';
+    
+    const params = new URLSearchParams();
+    if (state.pattern) params.set('pattern', state.pattern);
+    
+    const flagsString = [
+      state.flags.g ? 'g' : '',
+      state.flags.i ? 'i' : '',
+      state.flags.m ? 'm' : '',
+      state.flags.s ? 's' : '',
+      state.flags.u ? 'u' : '',
+      state.flags.y ? 'y' : '',
+    ].join('');
+    if (flagsString) params.set('flags', flagsString);
+    
+    state.testStrings.forEach((test) => params.append('test', test));
+    
+    return createShareableUrl(params, '/regex-playground');
+  }, [state.pattern, state.flags, state.testStrings]);
+
+
   // Simple JS-only code generator for MVP
   const generateJsSnippet = useCallback(
     (opts?: Partial<CodeGenOptions>) => {
@@ -275,6 +308,7 @@ export function useRegexPlayground() {
     state,
     allMatches,
     activeMatchIndex,
+    shareUrl,
     setPattern,
     setFlags,
     setFlavor,
