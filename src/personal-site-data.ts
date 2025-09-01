@@ -55,7 +55,7 @@ export const siteData: PersonalSiteData = {
         "Designed scalable data pipeline supporting 12+ sensor types with automated processing",
         "Implemented secure multi-tenant architecture with 3-level role-based access control"
       ],
-      technologies: ["Python", "JavaScript", "TypeScript", "Docker", "Kubernetes", "Redis", "TimescaleDB", "ChirpStack"]
+      technologies: ["C#", "ASP.NET", "PostgreSQL", "React", "Docker", "Kubernetes", "Redis", "TimescaleDB", "ChirpStack"]
     }
   ],
 
