@@ -9,6 +9,35 @@ import type {
 } from "@/types/regex";
 
 /**
+ * Checks if a character class inner content contains actual ranges (e.g., a-z)
+ * Excludes escaped hyphens (\-) and hyphens at start/end (which are literal)
+ */
+function hasCharacterRange(inner: string): boolean {
+  // Empty or single char can't have ranges
+  if (inner.length < 3) return false;
+
+  // Check for actual range pattern: char-char where hyphen is not escaped
+  // and not at start or end position
+  for (let i = 1; i < inner.length - 1; i++) {
+    if (inner[i] === '-') {
+      // Check if the hyphen is escaped (preceded by backslash)
+      // Need to handle multiple backslashes: \\\- vs \\-
+      let backslashCount = 0;
+      let j = i - 1;
+      while (j >= 0 && inner[j] === '\\') {
+        backslashCount++;
+        j--;
+      }
+      // If odd number of backslashes, the hyphen is escaped
+      if (backslashCount % 2 === 0) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
  * Parses a character class starting at the given position.
  * Handles edge cases like []], [^]], [\d\w], [-a], [a-].
  */
@@ -68,7 +97,7 @@ function parseCharacterClass(pattern: string, start: number): CharacterClassResu
   // Add more specific description based on content
   if (inner.includes("\\d") || inner.includes("\\w") || inner.includes("\\s")) {
     description += " (includes escape sequences)";
-  } else if (inner.includes("-") && inner.length > 2) {
+  } else if (hasCharacterRange(inner)) {
     description += " (includes ranges)";
   }
   
@@ -126,7 +155,7 @@ function parseEscapeSequence(pattern: string, start: number): EscapeResult | nul
   
   // Hexadecimal escapes \xNN
   if (next === "x") {
-    if (start + 3 < pattern.length) {
+    if (start + 4 <= pattern.length) {
       const hex = pattern.slice(start + 2, start + 4);
       if (/^[0-9A-Fa-f]{2}$/.test(hex)) {
         const charCode = parseInt(hex, 16);
@@ -159,7 +188,7 @@ function parseEscapeSequence(pattern: string, start: number): EscapeResult | nul
   if (next === "u") {
     if (start + 2 < pattern.length && pattern[start + 2] === "{") {
       // Extended Unicode escapes \u{NNNNNN} - handled later
-    } else if (start + 5 < pattern.length) {
+    } else if (start + 6 <= pattern.length) {
       const unicode = pattern.slice(start + 2, start + 6);
       if (/^[0-9A-Fa-f]{4}$/.test(unicode)) {
         const charCode = parseInt(unicode, 16);
@@ -692,9 +721,9 @@ function enhanceDescriptions(tokens: PatternToken[], flags?: RegexFlags): Patter
           enhancedDescription = 'Word boundary (start of string/word)';
         } else if (nextToken?.type === 'anchor' && nextToken.value === '$') {
           enhancedDescription = 'Word boundary (end of word/string)';
-        } else if (nextToken?.type === 'escape' && /\\[wdA-Z]/.test(nextToken.value)) {
+        } else if (nextToken?.type === 'escape' && /\\[wdDWsS]/.test(nextToken.value)) {
           enhancedDescription = 'Word boundary (start of word)';
-        } else if (prevToken?.type === 'escape' && /\\[wdA-Z]/.test(prevToken.value)) {
+        } else if (prevToken?.type === 'escape' && /\\[wdDWsS]/.test(prevToken.value)) {
           enhancedDescription = 'Word boundary (end of word)';
         }
       }

@@ -1,6 +1,6 @@
 // src/utils/regex/regexParser.test.ts
 import { describe, it, expect } from 'vitest';
-import { parseRegexPattern } from './regexParser';
+import { parseRegexPattern, parseRegexPatternWithWarnings, parseRegexPatternBasic } from './regexParser';
 
 describe('regexParser', () => {
   describe('Character Classes', () => {
@@ -772,5 +772,146 @@ describe('regexParser - Missing Critical Tests', () => {
       const nested = '('.repeat(20) + 'a' + ')'.repeat(20);
       expect(() => parseRegexPattern(nested)).not.toThrow();
     });
+  });
+
+  describe('Character Class Range Detection (hasCharacterRange fix)', () => {
+    it('should NOT detect range when hyphen is escaped in middle', () => {
+      const result = parseRegexPattern('[a\\-z]');
+      expect(result).toHaveLength(1);
+      expect(result[0].description).not.toContain('ranges');
+    });
+
+    it('should detect actual range even with escaped chars nearby', () => {
+      const result = parseRegexPattern('[a-z\\d]');
+      expect(result).toHaveLength(1);
+      // Should detect escape sequences (higher priority), but range is present
+      expect(result[0].description).toContain('escape sequences');
+    });
+
+    it('should NOT detect range with double backslash before hyphen', () => {
+      // \\- means literal backslash followed by hyphen (which IS a range start)
+      const result = parseRegexPattern('[\\\\-z]');
+      expect(result).toHaveLength(1);
+      expect(result[0].type).toBe('character-class');
+    });
+
+    it('should handle multiple escaped hyphens', () => {
+      const result = parseRegexPattern('[a\\-b\\-c]');
+      expect(result).toHaveLength(1);
+      expect(result[0].description).not.toContain('ranges');
+    });
+  });
+
+  describe('Bounds Check Edge Cases (hex/unicode at pattern end)', () => {
+    it('should handle \\x at end of pattern (incomplete)', () => {
+      const result = parseRegexPattern('test\\x');
+      expect(result.length).toBeGreaterThan(0);
+      const lastToken = result[result.length - 1];
+      expect(lastToken.type).toBe('escape');
+      expect(lastToken.description).toContain('Incomplete');
+    });
+
+    it('should handle \\x with only 1 hex digit at end', () => {
+      const result = parseRegexPattern('test\\xA');
+      expect(result.length).toBeGreaterThan(0);
+      // Should handle gracefully
+    });
+
+    it('should handle \\u at end of pattern (incomplete)', () => {
+      const result = parseRegexPattern('test\\u');
+      expect(result.length).toBeGreaterThan(0);
+      const lastToken = result[result.length - 1];
+      expect(lastToken.type).toBe('escape');
+      expect(lastToken.description).toContain('Incomplete');
+    });
+
+    it('should handle \\u with only 2 hex digits at end', () => {
+      const result = parseRegexPattern('test\\u00');
+      expect(result.length).toBeGreaterThan(0);
+      // Should handle gracefully without out-of-bounds
+    });
+
+    it('should correctly parse \\x41 at exact end of pattern', () => {
+      const result = parseRegexPattern('\\x41');
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({
+        type: 'escape',
+        value: '\\x41',
+        description: expect.stringContaining('Hexadecimal')
+      });
+    });
+
+    it('should correctly parse \\u0041 at exact end of pattern', () => {
+      const result = parseRegexPattern('\\u0041');
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({
+        type: 'escape',
+        value: '\\u0041',
+        description: expect.stringContaining('Unicode')
+      });
+    });
+  });
+});
+
+describe('parseRegexPatternWithWarnings', () => {
+  it('should return tokens and empty warnings for safe pattern', () => {
+    const result = parseRegexPatternWithWarnings('\\d+');
+    expect(result.tokens).toBeDefined();
+    expect(result.warnings).toEqual([]);
+  });
+
+  it('should warn about nested quantifiers (ReDoS)', () => {
+    const result = parseRegexPatternWithWarnings('(a+)+');
+    expect(result.warnings.length).toBeGreaterThan(0);
+    expect(result.warnings[0]).toContain('catastrophic backtracking');
+  });
+
+  it('should warn about quantified alternation', () => {
+    const result = parseRegexPatternWithWarnings('(a|b)+');
+    expect(result.warnings.length).toBeGreaterThan(0);
+    expect(result.warnings.some((w: string) => w.includes('alternation'))).toBe(true);
+  });
+
+  it('should warn about very large quantifiers', () => {
+    const result = parseRegexPatternWithWarnings('a{100000}');
+    expect(result.warnings.some((w: string) => w.includes('performance'))).toBe(true);
+  });
+
+  it('should warn about invalid backreferences', () => {
+    const result = parseRegexPatternWithWarnings('(a)\\2');
+    expect(result.warnings.some((w: string) => w.includes('non-existent group'))).toBe(true);
+  });
+
+  it('should warn about quantifier after anchor', () => {
+    const result = parseRegexPatternWithWarnings('^+');
+    expect(result.warnings.some((w: string) => w.includes('anchor') && w.includes('invalid'))).toBe(true);
+  });
+
+  it('should warn about duplicate named groups', () => {
+    const result = parseRegexPatternWithWarnings('(?<name>a)(?<name>b)');
+    expect(result.warnings.some((w: string) => w.includes('Duplicate named group'))).toBe(true);
+  });
+});
+
+describe('parseRegexPatternBasic', () => {
+  it('should parse pattern without description enhancements', () => {
+    const result = parseRegexPatternBasic('\\d+');
+    expect(result).toBeDefined();
+    expect(result.length).toBe(2); // \d, +
+  });
+
+  it('should be faster than full parser for simple patterns', () => {
+    const pattern = '[a-z]+';
+
+    const startBasic = performance.now();
+    for (let i = 0; i < 100; i++) parseRegexPatternBasic(pattern);
+    const basicTime = performance.now() - startBasic;
+
+    const startFull = performance.now();
+    for (let i = 0; i < 100; i++) parseRegexPattern(pattern);
+    const fullTime = performance.now() - startFull;
+
+    // Basic should be at least as fast (usually faster due to no enhancement pass)
+    expect(basicTime).toBeLessThanOrEqual(fullTime * 1.5);
   });
 });

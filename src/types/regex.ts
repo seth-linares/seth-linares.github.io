@@ -136,6 +136,19 @@ export const defaultFlags: RegexFlags = {
   y: false,
 };
 
+/**
+ * Converts RegexFlags object to a string representation (e.g., "gi")
+ */
+export function flagsToString(flags: RegexFlags): string {
+  return [
+    flags.g ? 'g' : '',
+    flags.i ? 'i' : '',
+    flags.m ? 'm' : '',
+    flags.s ? 's' : '',
+    flags.u ? 'u' : '',
+    flags.y ? 'y' : '',
+  ].join('');
+}
 
 // regexParser types
 

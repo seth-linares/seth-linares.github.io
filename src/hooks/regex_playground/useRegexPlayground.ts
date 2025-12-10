@@ -9,20 +9,21 @@ import type {
   RegexFlavor,
   RegexPlaygroundState,
 } from '@/types/regex';
-import { defaultFlags } from '@/types/regex';
+import { defaultFlags, flagsToString } from '@/types/regex';
 import { useRegexMatcher } from './useRegexMatcher';
+import { useDebouncedValue } from './useDebouncedValue';
 import { parseHashParams, updateHashParams } from '@/utils/hashRouterUrl';
 import { createShareableUrl } from '@/utils/hashRouterUrl';
 
 function parseInitialState(): Partial<RegexPlaygroundState> {
   const hash = typeof window !== 'undefined' ? window.location.hash : '';
   const params = parseHashParams(hash);
-  
+
   const pattern = params.get('pattern') ?? '';
   const flagsStr = params.get('flags') ?? '';
   const testsParam = params.getAll('test');
   const testStrings = testsParam.length ? testsParam : [''];
-  
+
   const flags: RegexFlags = {
     g: flagsStr.includes('g'),
     i: flagsStr.includes('i'),
@@ -31,31 +32,18 @@ function parseInitialState(): Partial<RegexPlaygroundState> {
     u: flagsStr.includes('u'),
     y: flagsStr.includes('y'),
   };
-  
+
   return { pattern, flags, testStrings };
 }
 
-function flagsToString(flags: RegexFlags): string {
-  return [
-    flags.g ? 'g' : '',
-    flags.i ? 'i' : '',
-    flags.m ? 'm' : '',
-    flags.s ? 's' : '',
-    flags.u ? 'u' : '',
-    flags.y ? 'y' : '',
-  ].join('');
+/**
+ * Check if flags differ from default values
+ */
+function hasNonDefaultFlags(flags: RegexFlags): boolean {
+  return (Object.keys(flags) as (keyof RegexFlags)[]).some(
+    key => flags[key] !== defaultFlags[key]
+  );
 }
-
-function useDebounce<T>(value: T, delay = 300): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const id = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(id);
-  }, [value, delay]);
-  return debounced;
-}
-
-
 
 export function useRegexPlayground() {
   const [pattern, setPattern] = useState('');
@@ -70,9 +58,9 @@ export function useRegexPlayground() {
   // Initialization state to prevent race conditions
   const [isInitialized, setIsInitialized] = useState(false);
 
-  const debouncedPattern = useDebounce(pattern, 300);
-  const debouncedFlags = useDebounce(flags, 300);
-  const debouncedTests = useDebounce(testStrings, 300);
+  const debouncedPattern = useDebouncedValue(pattern, 300);
+  const debouncedFlags = useDebouncedValue(flags, 300);
+  const debouncedTests = useDebouncedValue(testStrings, 300);
 
   const { matches, error: matchError } = useRegexMatcher(debouncedPattern, debouncedFlags, debouncedTests);
 
@@ -106,8 +94,9 @@ export function useRegexPlayground() {
     
     // First priority: URL parameters
     const urlState = parseInitialState();
-    const hasUrlParams = urlState.pattern || (urlState.testStrings && urlState.testStrings.length > 1) || 
-                        (urlState.flags && Object.values(urlState.flags).some(v => v !== defaultFlags[Object.keys(urlState.flags!)[Object.values(urlState.flags!).indexOf(v)] as keyof RegexFlags]));
+    const hasUrlParams = urlState.pattern ||
+                        (urlState.testStrings && urlState.testStrings.length > 1) ||
+                        (urlState.flags && hasNonDefaultFlags(urlState.flags));
     
     if (hasUrlParams) {
       if (urlState.pattern !== undefined) setPattern(urlState.pattern);

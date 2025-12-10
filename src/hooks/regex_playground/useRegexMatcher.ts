@@ -1,7 +1,8 @@
 // src/hooks/regex_playground/useRegexMatcher.ts
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { MatchResult, RegexFlags, SingleMatch } from '@/types/regex';
+import { flagsToString } from '@/types/regex';
 
 const REGEX_TIMEOUT_MS = 1000; // 1 second timeout
 const MAX_INPUT_LENGTH = 10000; // 10k chars max
@@ -20,31 +21,8 @@ function isPotentiallyDangerous(pattern: string): boolean {
   }
 }
 
-/**
- * Debounce helper
- */
-function useDebounce<T>(value: T, delay = 300): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const id = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(id);
-  }, [value, delay]);
-  return debounced;
-}
-
 const MAX_MATCHES_PER_STRING = 1000; // safety cap
 const MAX_CHARS_PER_STRING = 200_000; // safety cap against catastrophic inputs
-
-function flagsToString(flags: RegexFlags): string {
-  return [
-    flags.g ? 'g' : '',
-    flags.i ? 'i' : '',
-    flags.m ? 'm' : '',
-    flags.s ? 's' : '',
-    flags.u ? 'u' : '',
-    flags.y ? 'y' : '',
-  ].join('');
-}
 
 export function safeSubstring(input: string, maxLen: number): { text: string; truncated: boolean } {
   if (input.length <= maxLen) return { text: input, truncated: false };
@@ -168,34 +146,30 @@ function executeRegexMatching(
 }
 
 export const useRegexMatcher = (pattern: string, flags: RegexFlags, testStrings: string[]) => {
-  const [activeGlobalIndex, setActiveGlobalIndex] = useState<number>(0);
-
-  const debouncedPattern = useDebounce(pattern, 300);
-  const debouncedTests = useDebounce(testStrings, 300);
   const flagsStr = useMemo(() => flagsToString(flags), [flags]);
 
   const { regex, regexError } = useMemo(() => {
-    if (!debouncedPattern) return { regex: null, regexError: null };
+    if (!pattern) return { regex: null, regexError: null };
     try {
-      return { regex: new RegExp(debouncedPattern, flagsStr), regexError: null };
+      return { regex: new RegExp(pattern, flagsStr), regexError: null };
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : 'Invalid pattern';
       return { regex: null, regexError: errorMessage };
     }
-  }, [debouncedPattern, flagsStr]);
+  }, [pattern, flagsStr]);
 
   const { results, executionError, dangerWarning } = useMemo(() => {
-    if (!debouncedPattern || !regex) {
+    if (!pattern || !regex) {
       return { results: [] as MatchResult[], executionError: null, dangerWarning: null };
     }
 
-    const dangerWarning = isPotentiallyDangerous(debouncedPattern)
+    const dangerWarning = isPotentiallyDangerous(pattern)
       ? 'Warning: This pattern may cause performance issues'
       : null;
 
-    const { results, executionError } = executeRegexMatching(regex, debouncedTests);
+    const { results, executionError } = executeRegexMatching(regex, testStrings);
     return { results, executionError, dangerWarning };
-  }, [debouncedPattern, debouncedTests, regex]);
+  }, [pattern, testStrings, regex]);
 
   const globalIndexMap = useMemo(() => {
     const map: Record<string, number> = {};
@@ -215,19 +189,12 @@ export const useRegexMatcher = (pattern: string, flags: RegexFlags, testStrings:
     [results]
   );
 
-  const clampedActiveIndex = totalMatches === 0
-    ? 0
-    : activeGlobalIndex >= totalMatches
-      ? totalMatches - 1
-      : activeGlobalIndex;
-
   const error = regexError ?? executionError ?? dangerWarning;
 
   return {
     matches: results,
     error,
-    activeGlobalIndex: clampedActiveIndex,
-    setActiveGlobalIndex,
+    totalMatches,
     globalIndexMap
   };
 };

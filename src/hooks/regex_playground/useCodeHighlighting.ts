@@ -1,6 +1,6 @@
 // src/hooks/regex_playground/useCodeHighlighting.ts
 
-import { useState, useEffect, useRef, RefObject } from 'react';
+import { useState, useEffect, useRef, useMemo, RefObject } from 'react';
 import type { RegexFlags } from '@/types/regex';
 import { generatePythonCode, generateJavaCode, generateCSharpCode, generateTypeScriptCode } from '@/utils/regex/codeGenerators';
 import hljs from 'highlight.js/lib/core';
@@ -41,7 +41,7 @@ export function useCodeHighlighting({
   const [language, setLanguage] = useState<SupportedLanguage>('javascript');
   const codeRef = useRef<HTMLElement>(null);
 
-  const getCode = () => {
+  const displayCode = useMemo(() => {
     switch (language) {
       case 'python':
         return generatePythonCode({ pattern, flags });
@@ -54,9 +54,7 @@ export function useCodeHighlighting({
       default:
         return code;
     }
-  };
-
-  const displayCode = getCode();
+  }, [language, pattern, flags, code]);
 
   // Apply syntax highlighting when code or language changes
   useEffect(() => {
