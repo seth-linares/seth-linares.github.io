@@ -56,14 +56,11 @@ export function useCodeHighlighting({
     }
   }, [language, pattern, flags, code]);
 
-  // Apply syntax highlighting when code or language changes
   useEffect(() => {
     if (codeRef.current && displayCode) {
-      // Remove existing highlighting classes
       codeRef.current.className = `language-${language}`;
       codeRef.current.removeAttribute('data-highlighted');
       
-      // Apply highlight.js
       hljs.highlightElement(codeRef.current);
     }
   }, [displayCode, language]);

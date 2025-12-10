@@ -50,7 +50,7 @@ function CompactProjectCard({
           <div className="space-y-2 mb-4">
             {project.highlights.slice(0, 2).map((highlight, highlightIndex) => (
               <div key={highlightIndex} className="flex items-start gap-2">
-                <div className="w-1 h-1 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                <div className="w-1 h-1 bg-primary rounded-full mt-2 shrink-0"></div>
                 <p className="text-xs text-base-content/60">{highlight}</p>
               </div>
             ))}

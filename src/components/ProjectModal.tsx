@@ -103,7 +103,7 @@ function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
                                                         transition={{ delay: index * 0.1, duration: 0.4 }}
                                                         className="flex items-start gap-3 p-4 bg-base-200 rounded-lg"
                                                     >
-                                                        <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                                                        <div className="w-2 h-2 bg-primary rounded-full mt-2 shrink-0"></div>
                                                         <p className="text-base-content/80">{highlight}</p>
                                                     </motion.div>
                                                 ))}

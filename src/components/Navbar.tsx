@@ -43,7 +43,7 @@ function NavButton({ label, isActive, isHovered, onClick, onHoverStart, onHoverE
       <span 
         className={`relative z-10 ${
           isActive 
-            ? 'bg-gradient-to-r from-violet-500 to-blue-500 bg-clip-text text-transparent' 
+            ? 'bg-linear-to-r from-violet-500 to-blue-500 bg-clip-text text-transparent' 
             : 'text-base-content'
         }`}
       >
@@ -54,7 +54,7 @@ function NavButton({ label, isActive, isHovered, onClick, onHoverStart, onHoverE
       <AnimatePresence>
         {isActive && (
           <motion.div
-            className="absolute -bottom-1 left-1/2 w-1 h-1 bg-gradient-to-r from-violet-500 to-blue-500 rounded-full"
+            className="absolute -bottom-1 left-1/2 w-1 h-1 bg-linear-to-r from-violet-500 to-blue-500 rounded-full"
             initial={{ opacity: 0, scale: 0, x: "-50%" }}
             animate={{ opacity: 1, scale: 1, x: "-50%" }}
             exit={{ opacity: 0, scale: 0, x: "-50%" }}
@@ -116,7 +116,7 @@ function Navbar() {
         {/* Scroll Progress Indicator */}
         {isHomePage && (
           <motion.div
-            className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-violet-500 to-blue-500"
+            className="absolute bottom-0 left-0 h-0.5 bg-linear-to-r from-violet-500 to-blue-500"
             initial={{ width: 0 }}
             animate={{ 
               width: `${Math.min(scrollProgress * 100, 100)}%`,
@@ -247,7 +247,7 @@ function Navbar() {
                         {item.label}
                         {activeSection === item.id && (
                           <motion.div
-                            className="absolute left-0 top-1/2 w-1 h-8 bg-gradient-to-b from-violet-500 to-blue-500 rounded-r-full"
+                            className="absolute left-0 top-1/2 w-1 h-8 bg-linear-to-b from-violet-500 to-blue-500 rounded-r-full"
                             initial={{ opacity: 0, scale: 0.5 }}
                             animate={{ opacity: 1, scale: 1 }}
                             style={{ y: "-50%" }}
@@ -283,7 +283,7 @@ function Navbar() {
             >
               {/* Gradient background on hover */}
               <motion.div
-                className="absolute inset-0 bg-gradient-to-r from-violet-500/10 to-blue-500/10 rounded-b-xl"
+                className="absolute inset-0 bg-linear-to-r from-violet-500/10 to-blue-500/10 rounded-b-xl"
                 initial={{ opacity: 0 }}
                 whileHover={{ opacity: 1 }}
                 transition={{ duration: 0.3 }}

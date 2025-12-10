@@ -66,7 +66,7 @@ function EducationSection() {
                                                     viewport={VIEWPORT_CONFIG}
                                                     className="flex items-start gap-3"
                                                 >
-                                                    <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                                                    <div className="w-2 h-2 bg-primary rounded-full mt-2 shrink-0"></div>
                                                     <p className="text-base-content/80">{highlight}</p>
                                                 </motion.div>
                                             ))}
