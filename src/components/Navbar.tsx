@@ -28,13 +28,13 @@ function NavButton({ label, isActive, isHovered, onClick, onHoverStart, onHoverE
         className="absolute inset-0 rounded-lg"
         initial={false}
         animate={{
-          backgroundColor: isActive 
+          backgroundColor: isActive
             ? "rgba(124, 58, 237, 0.1)"
-            : isHovered 
+            : isHovered
               ? "rgba(156, 163, 175, 0.1)"
-              : "transparent",
+              : "rgba(0, 0, 0, 0)",
           borderWidth: isActive ? 1 : 0,
-          borderColor: isActive ? "rgba(124, 58, 237, 0.3)" : "transparent",
+          borderColor: isActive ? "rgba(124, 58, 237, 0.3)" : "rgba(0, 0, 0, 0)",
         }}
         transition={{ duration: 0.2, ease: "easeOut" }}
       />

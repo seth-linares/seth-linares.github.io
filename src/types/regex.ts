@@ -68,6 +68,7 @@ export interface VisualMatch {
 export interface LibraryUsePayload {
   pattern: string;
   flags?: Partial<RegexFlags>;
+  testString?: string;
 };
 
 
@@ -118,7 +119,13 @@ export interface LibraryPattern {
   flags?: Partial<RegexFlags>;
   description?: string;
   category: 'validation' | 'extraction' | 'formatting' | 'misc';
-  examples?: string[];
+  /** Example strings that match this pattern */
+  examples?: {
+    matches: string[];
+    doesNotMatch?: string[];
+  };
+  /** Default test string to populate when pattern is selected */
+  testString?: string;
 }
 
 export interface CodeGenOptions {

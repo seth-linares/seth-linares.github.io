@@ -18,6 +18,9 @@ hljs.registerLanguage('java', java);
 hljs.registerLanguage('csharp', csharp);
 hljs.registerLanguage('typescript', typescript);
 
+// Suppress security warning for generated code (not user-executed content)
+hljs.configure({ ignoreUnescapedHTML: true });
+
 export type SupportedLanguage = 'javascript' | 'python' | 'java' | 'csharp' | 'typescript';
 
 interface UseCodeHighlightingOptions {

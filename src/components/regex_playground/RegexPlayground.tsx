@@ -137,10 +137,14 @@ function RegexPlayground() {
             <div className="lg:sticky lg:top-24 flex flex-col gap-6">
             {/* Pattern Library */}
             <PatternLibrary
-              onUsePattern={({ pattern, flags }: { pattern: string; flags?: Partial<import('@/types/regex').RegexFlags> }) => {
+              onUsePattern={({ pattern, flags, testString }) => {
                 setPattern(pattern);
                 if (flags) {
                   setFlags((prev) => ({ ...prev, ...flags }));
+                }
+                // Set the test string if provided by the pattern library
+                if (testString) {
+                  setTestStringAt(0, testString);
                 }
                 setActivePatternId(pattern);
               }}
@@ -155,10 +159,6 @@ function RegexPlayground() {
                     <div className="flex justify-between items-center">
                       <span>Focus Pattern</span>
                       <kbd className="kbd kbd-xs">Ctrl+/</kbd>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span>Copy JS Code</span>
-                      <kbd className="kbd kbd-xs">Ctrl+C</kbd>
                     </div>
                     <div className="flex justify-between items-center">
                       <span>Navigate Matches</span>

@@ -30,10 +30,11 @@ function AnimatedLogo({ isHovered, onHoverStart, onHoverEnd, className = "" }: A
       >
         <motion.div
           className="absolute inset-0 rounded-full"
+          style={{
+            background: "linear-gradient(45deg, rgba(124, 58, 237, 0.2), rgba(59, 130, 246, 0.2))",
+          }}
           animate={{
-            background: isHovered 
-              ? "linear-gradient(45deg, rgba(124, 58, 237, 0.2), rgba(59, 130, 246, 0.2))" 
-              : "transparent",
+            opacity: isHovered ? 1 : 0,
             scale: isHovered ? 1.3 : 1,
           }}
           transition={{
@@ -71,15 +72,12 @@ function AnimatedLogo({ isHovered, onHoverStart, onHoverEnd, className = "" }: A
 
       {/* Animated Text */}
       <motion.span
-        className="text-xl font-semibold"
-        animate={{
-          background: isHovered
-            ? "linear-gradient(45deg, #7c3aed, #3b82f6)"
-            : "transparent",
-          backgroundClip: isHovered ? "text" : "unset",
-          color: isHovered ? "transparent" : "inherit",
+        className="text-xl font-semibold transition-colors duration-300"
+        style={{
+          color: isHovered ? "transparent" : undefined,
+          background: isHovered ? "linear-gradient(45deg, #7c3aed, #3b82f6)" : undefined,
+          backgroundClip: isHovered ? "text" : undefined,
         }}
-        transition={{ duration: 0.3 }}
       >
         Seth Linares
       </motion.span>

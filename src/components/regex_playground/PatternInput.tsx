@@ -2,16 +2,61 @@
 import type { FlagToggleProps, PatternInputProps, RegexFlags } from '@/types/regex';
 import { useDebouncedValue } from '@/hooks/regex_playground/useDebouncedValue';
 
-function FlagToggle({ 
-  k, 
-  active, 
-  onToggle 
+// Enhanced flag descriptions with beginner-friendly explanations
+const FLAG_HELP: Record<keyof RegexFlags, { name: string; desc: string; example: string }> = {
+  g: {
+    name: 'Global',
+    desc: 'Find ALL matches, not just the first one',
+    example: '"cat" in "cat cat cat" finds 3 matches',
+  },
+  i: {
+    name: 'Ignore Case',
+    desc: 'Uppercase and lowercase are treated the same',
+    example: '"cat" matches "Cat", "CAT", "cAt"',
+  },
+  m: {
+    name: 'Multiline',
+    desc: '^ and $ match each line, not just start/end of text',
+    example: 'For text with multiple lines',
+  },
+  s: {
+    name: 'DotAll',
+    desc: 'The . also matches newline characters',
+    example: 'For patterns that span multiple lines',
+  },
+  u: {
+    name: 'Unicode',
+    desc: 'Full Unicode support for special characters',
+    example: 'For emoji, accented letters, etc.',
+  },
+  y: {
+    name: 'Sticky',
+    desc: 'Match only at the exact position (advanced)',
+    example: 'Used in parsers and tokenizers',
+  },
+};
+
+function FlagToggle({
+  k,
+  active,
+  onToggle
 }: FlagToggleProps) {
   const label = '/' + k;
+  const help = FLAG_HELP[k];
+  const tooltipText = `${help.name}: ${help.desc}\n${help.example}`;
+
   return (
-    <button type="button" className={`btn btn-sm ${active ? 'btn-primary' : 'btn-ghost'}`} onClick={onToggle} aria-pressed={active} aria-label={`Toggle ${k} flag`}>
-      <span className="badge">{label}</span>
-    </button>
+    <div className="tooltip tooltip-bottom" data-tip={tooltipText}>
+      <button
+        type="button"
+        className={`btn btn-sm ${active ? 'btn-primary' : 'btn-ghost'}`}
+        onClick={onToggle}
+        aria-pressed={active}
+        aria-label={`${help.name} flag (${k}): ${help.desc}`}
+      >
+        <span className="badge">{label}</span>
+      </button>
+    </div>
   );
 }
 
@@ -54,7 +99,7 @@ function PatternInput({
           )}
         </div>
         <div className="text-xs text-base-content/60 mt-1">
-          Flags: g = global, i = ignore case, m = multiline, s = dotAll, u = unicode, y = sticky
+          Hover over flags for details. Most patterns just need <span className="font-medium">g</span> (global) enabled.
         </div>
       </div>
     </div>

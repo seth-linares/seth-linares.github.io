@@ -121,7 +121,7 @@ export const ANIMATION_VARIANTS = {
 
   navButtonInactive: {
     scale: 1,
-    backgroundColor: "transparent",
+    backgroundColor: "rgba(0, 0, 0, 0)",
     transition: { duration: 0.2 }
   },
 

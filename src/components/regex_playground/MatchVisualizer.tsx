@@ -2,7 +2,7 @@
 
 import { MatchVisualizerProps } from "@/types/regex";
 import { useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 
 function MatchVisualizer({
   testStrings,
@@ -57,23 +57,21 @@ function MatchVisualizer({
                 );
               }
               parts.push(
-                <AnimatePresence mode="wait">
-                  <motion.span
-                    key={`m-${idx}-${m.start}`}
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    ref={isActive ? activeRef : null}
-                    className={
-                      "px-1 rounded transition-colors duration-300 " +
-                      (isActive
-                        ? "bg-success/40 text-success-content ring-2 ring-success-content/70 ring-offset-2 ring-offset-base-200"
-                        : "bg-success/20 text-success-content")
-                    }
-                  >
-                    {src.slice(m.start, m.end)}
-                  </motion.span>
-                </AnimatePresence>
+                <motion.span
+                  key={`m-${res.testStringIndex}-${idx}-${m.start}`}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  ref={isActive ? activeRef : null}
+                  className={
+                    "px-1 rounded transition-colors duration-300 " +
+                    (isActive
+                      ? "bg-secondary text-success-content ring-2 ring-success-content/70 ring-offset-2 ring-offset-base-200"
+                      : "bg-success text-success-content")
+                  }
+                >
+                  {src.slice(m.start, m.end)}
+                </motion.span>
               );
               cursor = m.end;
             });
