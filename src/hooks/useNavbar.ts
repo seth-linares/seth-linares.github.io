@@ -39,6 +39,7 @@ export function useNavbar(): NavbarState {
   const scrollDirection = useRef<'up' | 'down' | null>(null)
   const sectionObserver = useRef<IntersectionObserver | null>(null)
   const visibleSections = useRef<Map<string, number>>(new Map())
+  const [prevPathname, setPrevPathname] = useState(location.pathname)
 
   // Scroll animation setup
   const { scrollY, scrollYProgress } = useScroll()
@@ -250,6 +251,11 @@ export function useNavbar(): NavbarState {
     }
   }, [updateNavbarVisibility])
 
+  if (prevPathname !== location.pathname) {
+    setPrevPathname(location.pathname)
+    if (isMobileMenuOpen) setIsMobileMenuOpen(false)
+  }
+
   // Setup section observer
   useEffect(() => {
     if (isHomePage) {
@@ -260,14 +266,8 @@ export function useNavbar(): NavbarState {
       }
     } else {
       cleanupSectionObserver()
-      setActiveSection(null)
     }
   }, [isHomePage, setupSectionObserver, cleanupSectionObserver])
-
-  // Close mobile menu on route change
-  useEffect(() => {
-    setIsMobileMenuOpen(false)
-  }, [location.pathname])
 
   return {
     isMobileMenuOpen,
@@ -275,7 +275,7 @@ export function useNavbar(): NavbarState {
     navbarOpacity,
     navbarVisibility,
     isHomePage,
-    activeSection,
+    activeSection: isHomePage ? activeSection : null,
     hoveredItem,
     isLogoHovered,
     pullTabHintShown,

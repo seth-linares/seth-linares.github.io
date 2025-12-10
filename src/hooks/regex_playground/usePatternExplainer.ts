@@ -1,26 +1,16 @@
 // src/hooks/regex_playground/usePatternExplainer.ts
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import type { PatternToken, RegexFlags } from "@/types/regex";
 import { parseRegexPattern } from "@/utils/regex/regexParser";
 
 export function usePatternExplainer(pattern: string, flags?: Partial<RegexFlags>) {
-  const [tokens, setTokens] = useState<PatternToken[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!pattern) {
-      setTokens([]);
-      setError(null);
-      return;
-    }
+  const { tokens, error } = useMemo(() => {
+    if (!pattern) return { tokens: [] as PatternToken[], error: null };
     try {
-      const parsed = parseRegexPattern(pattern, flags);
-      setTokens(parsed);
-      setError(null);
+      return { tokens: parseRegexPattern(pattern, flags), error: null };
     } catch (e: unknown) {
-      const errorMessage = e instanceof Error ? e.message : "Failed to parse pattern";
-      setError(errorMessage);
-      setTokens([]);
+      const msg = e instanceof Error ? e.message : "Failed to parse pattern";
+      return { tokens: [] as PatternToken[], error: msg };
     }
   }, [pattern, flags]);
 

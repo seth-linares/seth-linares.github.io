@@ -26,7 +26,7 @@ function PatternInput({
   const showLoading = pattern !== debouncedPattern;
 
   return (
-    <div className="card bg-gradient-to-br from-base-200 to-base-300 shadow-xl backdrop-blur-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+    <div className="card bg-linear-to-br from-base-200 to-base-300 shadow-xl backdrop-blur-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
       <div className="card-body">
         <div className="flex items-center justify-between gap-2">
           <h2 className="card-title text-primary">Pattern Editor</h2>

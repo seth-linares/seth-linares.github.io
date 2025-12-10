@@ -6,13 +6,12 @@ import type { MatchResult, RegexFlags, SingleMatch } from '@/types/regex';
 const REGEX_TIMEOUT_MS = 1000; // 1 second timeout
 const MAX_INPUT_LENGTH = 10000; // 10k chars max
 
-// Simple ReDoS detection for common patterns
+// Conservative ReDoS detection - only flags patterns that are DEFINITELY dangerous
 function isPotentiallyDangerous(pattern: string): boolean {
   const dangerous = [
-    /(\w+\+)+/,     // Nested quantifiers
-    /(\w+\*)+/,     // Nested quantifiers
-    /(.*)*$/,       // Catastrophic backtracking
-    /(\w+){10,}/,   // Large repetitions
+    /\([^)]*[+*]\)\s*[+*]/,           // Nested quantifiers: (x+)+ or (x*)*
+    /\([^)]*[+*]\)\s*\{[0-9,]+\}/,    // Nested with range: (x+){2,}
+    /\(\.\*\)\s*[+*]/,                 // Explicit (.*)+
   ];
   try {
     return dangerous.some((d) => d.test(pattern));
@@ -52,144 +51,153 @@ export function safeSubstring(input: string, maxLen: number): { text: string; tr
   return { text: input.slice(0, maxLen), truncated: true };
 }
 
+function executeRegexMatching(
+  regex: RegExp,
+  debouncedTests: string[]
+): { results: MatchResult[]; executionError: string | null } {
+  const out: MatchResult[] = [];
+  let executionError: string | null = null;
+
+  for (let i = 0; i < debouncedTests.length; i++) {
+    const original = debouncedTests[i] ?? '';
+    const { text: limitedInput, truncated: textTruncatedByGlobalCap } = safeSubstring(original, MAX_CHARS_PER_STRING);
+
+    // Limit input length for safety feature (Phase 4)
+    const safeText = limitedInput.length > MAX_INPUT_LENGTH
+      ? limitedInput.slice(0, MAX_INPUT_LENGTH)
+      : limitedInput;
+    const lengthTruncated = limitedInput.length > MAX_INPUT_LENGTH;
+
+    // Clone a new regex for each test string because lastIndex changes with /g or /y
+    const local = new RegExp(regex.source, regex.flags);
+    const matches: SingleMatch[] = [];
+    let count = 0;
+    let m: RegExpExecArray | null;
+
+    try {
+      // For non-global/non-sticky regex, exec() does not advance across the string.
+      // We'll detect global-like behavior and handle iteration accordingly.
+      const isGlobalLike = (local as RegExp).global || ('sticky' in local && (local as RegExp & { sticky: boolean }).sticky === true);
+
+      const startTime = Date.now();
+      let iterations = 0;
+      const MAX_ITERATIONS = 10000;
+
+      while ((m = local.exec(safeText)) !== null) {
+        iterations++;
+        if (iterations > MAX_ITERATIONS) {
+          executionError = 'Too many iterations - pattern may cause infinite loop';
+          break;
+        }
+        // Check timeout
+        if (Date.now() - startTime > REGEX_TIMEOUT_MS) {
+          executionError = 'Pattern execution timeout - pattern may be too complex';
+          break;
+        }
+        // m is non-null inside this loop
+        const mm = m as RegExpExecArray & { groups?: Record<string, string>; indices?: number[][] };
+        const fullMatch = mm[0] ?? '';
+        const start = mm.index;
+        const end = start + fullMatch.length;
+
+        const groups = Array.from({ length: Math.max(0, mm.length - 1) }, (_, gi) => {
+          const val = mm[gi + 1] ?? '';
+          let name: string | undefined;
+          if (mm.groups) {
+            for (const [groupName, groupValue] of Object.entries(mm.groups)) {
+              if (groupValue === val) {
+                name = groupName;
+                break;
+              }
+            }
+          }
+          const hasIndices = typeof mm.indices === 'object' && !!mm.indices;
+          const grpStart = hasIndices && mm.indices?.[gi + 1] ? mm.indices[gi + 1][0] : -1;
+          const grpEnd = hasIndices && mm.indices?.[gi + 1] ? mm.indices[gi + 1][1] : -1;
+          return {
+            name,
+            value: val,
+            start: grpStart,
+            end: grpEnd,
+          };
+        });
+
+        matches.push({
+          fullMatch,
+          start,
+          end,
+          groups,
+        });
+
+        count++;
+        if (count >= MAX_MATCHES_PER_STRING) break;
+
+        // If the regex is NOT global or sticky, stop after the first match.
+        // exec() without /g or /y will always return the first match and then null on subsequent calls,
+        // but lastIndex manipulation has no effect. To be safe, break explicitly.
+        if (!isGlobalLike) {
+          break;
+        }
+
+        // Safety against zero-length infinite loops: advance lastIndex on zero-length or stagnant matches
+        if (mm[0] === '' || local.lastIndex === mm.index) {
+          // For zero-length matches, manually advance to prevent infinite loop
+          local.lastIndex = Math.max(mm.index + 1, local.lastIndex + 1);
+
+          // If we've gone past the string length, break
+          if (local.lastIndex > safeText.length) {
+            break;
+          }
+        }
+      }
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'Error while executing regex';
+      executionError = errorMessage;
+      return { results: [], executionError };
+    }
+
+    out.push({
+      testStringIndex: i,
+      matches,
+      totalMatches: count,
+      truncated: textTruncatedByGlobalCap || lengthTruncated || count >= MAX_MATCHES_PER_STRING,
+    });
+  }
+
+  return { results: out, executionError };
+}
+
 export const useRegexMatcher = (pattern: string, flags: RegexFlags, testStrings: string[]) => {
-  const [results, setResults] = useState<MatchResult[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  // Track global active index and a map of global indices for components to consume (no hook logic in components)
   const [activeGlobalIndex, setActiveGlobalIndex] = useState<number>(0);
-  const [globalIndexMap, setGlobalIndexMap] = useState<Record<string, number>>({});
 
   const debouncedPattern = useDebounce(pattern, 300);
   const debouncedTests = useDebounce(testStrings, 300);
   const flagsStr = useMemo(() => flagsToString(flags), [flags]);
 
-  const regex = useMemo(() => {
-    if (!debouncedPattern) return null;
+  const { regex, regexError } = useMemo(() => {
+    if (!debouncedPattern) return { regex: null, regexError: null };
     try {
-      return new RegExp(debouncedPattern, flagsStr);
+      return { regex: new RegExp(debouncedPattern, flagsStr), regexError: null };
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : 'Invalid pattern';
-      setError(errorMessage);
-      return null;
+      return { regex: null, regexError: errorMessage };
     }
   }, [debouncedPattern, flagsStr]);
 
-  useEffect(() => {
-    if (!debouncedPattern) {
-      setResults([]);
-      setError(null);
-      return;
-    }
-    if (!regex) {
-      setResults([]);
-      return;
+  const { results, executionError, dangerWarning } = useMemo(() => {
+    if (!debouncedPattern || !regex) {
+      return { results: [] as MatchResult[], executionError: null, dangerWarning: null };
     }
 
-    // Add safety checks
-    if (isPotentiallyDangerous(debouncedPattern)) {
-      setError('Warning: This pattern may cause performance issues');
-    }
-    setError(null);
+    const dangerWarning = isPotentiallyDangerous(debouncedPattern)
+      ? 'Warning: This pattern may cause performance issues'
+      : null;
 
-    const out: MatchResult[] = [];
-
-    for (let i = 0; i < debouncedTests.length; i++) {
-      const original = debouncedTests[i] ?? '';
-      const { text: limitedInput, truncated: textTruncatedByGlobalCap } = safeSubstring(original, MAX_CHARS_PER_STRING);
-
-      // Limit input length for safety feature (Phase 4)
-      const safeText = limitedInput.length > MAX_INPUT_LENGTH
-        ? limitedInput.slice(0, MAX_INPUT_LENGTH)
-        : limitedInput;
-      const lengthTruncated = limitedInput.length > MAX_INPUT_LENGTH;
-
-      // Clone a new regex for each test string because lastIndex changes with /g or /y
-      const local = new RegExp(regex.source, regex.flags);
-      const matches: SingleMatch[] = [];
-      let count = 0;
-      let m: RegExpExecArray | null;
-
-      try {
-        // For non-global/non-sticky regex, exec() does not advance across the string.
-        // We'll detect global-like behavior and handle iteration accordingly.
-        const isGlobalLike = (local as RegExp).global || ('sticky' in local && (local as RegExp & { sticky: boolean }).sticky === true);
-
-        const startTime = Date.now();
-        while ((m = local.exec(safeText)) !== null) {
-          // Check timeout
-          if (Date.now() - startTime > REGEX_TIMEOUT_MS) {
-            setError('Pattern execution timeout - pattern may be too complex');
-            break;
-          }
-          // m is non-null inside this loop
-          const mm = m as RegExpExecArray & { groups?: Record<string, string>; indices?: number[][] };
-          const fullMatch = mm[0] ?? '';
-          const start = mm.index;
-          const end = start + fullMatch.length;
-
-          const groups = Array.from({ length: Math.max(0, mm.length - 1) }, (_, gi) => {
-            const val = mm[gi + 1] ?? '';
-            // Named groups are on mm.groups if available
-            const name = mm.groups ? Object.keys(mm.groups)[gi] : undefined;
-            const hasIndices = typeof mm.indices === 'object' && !!mm.indices;
-            const grpStart = hasIndices && mm.indices?.[gi + 1] ? mm.indices[gi + 1][0] : -1;
-            const grpEnd = hasIndices && mm.indices?.[gi + 1] ? mm.indices[gi + 1][1] : -1;
-            return {
-              name,
-              value: val,
-              start: grpStart,
-              end: grpEnd,
-            };
-          });
-
-          matches.push({
-            fullMatch,
-            start,
-            end,
-            groups,
-          });
-
-          count++;
-          if (count >= MAX_MATCHES_PER_STRING) break;
-
-          // If the regex is NOT global or sticky, stop after the first match.
-          // exec() without /g or /y will always return the first match and then null on subsequent calls,
-          // but lastIndex manipulation has no effect. To be safe, break explicitly.
-          if (!isGlobalLike) {
-            break;
-          }
-
-          // Safety against zero-length infinite loops: advance lastIndex on zero-length or stagnant matches
-          if (mm[0] === '' || local.lastIndex === mm.index) {
-            // For zero-length matches, manually advance to prevent infinite loop
-            local.lastIndex = Math.max(mm.index + 1, local.lastIndex + 1);
-
-            // If we've gone past the string length, break
-            if (local.lastIndex > safeText.length) {
-              break;
-            }
-          }
-        }
-      } catch (e: unknown) {
-        const errorMessage = e instanceof Error ? e.message : 'Error while executing regex';
-        setError(errorMessage);
-        out.length = 0;
-        break;
-      }
-
-      out.push({
-        testStringIndex: i,
-        matches,
-        totalMatches: count,
-        truncated: textTruncatedByGlobalCap || lengthTruncated || count >= MAX_MATCHES_PER_STRING,
-      });
-    }
-
-    setResults(out);
+    const { results, executionError } = executeRegexMatching(regex, debouncedTests);
+    return { results, executionError, dangerWarning };
   }, [debouncedPattern, debouncedTests, regex]);
 
-  // Build a map from (testStringIndex, matchIndex) => globalIndex so UI can emphasize the active match
-  useEffect(() => {
+  const globalIndexMap = useMemo(() => {
     const map: Record<string, number> = {};
     let base = 0;
     for (let i = 0; i < results.length; i++) {
@@ -199,16 +207,27 @@ export const useRegexMatcher = (pattern: string, flags: RegexFlags, testStrings:
       }
       base += res.matches.length;
     }
-    setGlobalIndexMap(map);
+    return map;
+  }, [results]);
 
-    // Ensure active index stays within bounds
-    const total = results.reduce((acc, r) => acc + r.matches.length, 0);
-    if (total === 0) {
-      setActiveGlobalIndex(0);
-    } else if (activeGlobalIndex >= total) {
-      setActiveGlobalIndex(total - 1);
-    }
-  }, [results, activeGlobalIndex]);
+  const totalMatches = useMemo(
+    () => results.reduce((acc, r) => acc + r.matches.length, 0),
+    [results]
+  );
 
-  return { matches: results, error, activeGlobalIndex, setActiveGlobalIndex, globalIndexMap };
+  const clampedActiveIndex = totalMatches === 0
+    ? 0
+    : activeGlobalIndex >= totalMatches
+      ? totalMatches - 1
+      : activeGlobalIndex;
+
+  const error = regexError ?? executionError ?? dangerWarning;
+
+  return {
+    matches: results,
+    error,
+    activeGlobalIndex: clampedActiveIndex,
+    setActiveGlobalIndex,
+    globalIndexMap
+  };
 };

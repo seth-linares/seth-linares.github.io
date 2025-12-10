@@ -11,7 +11,7 @@ function MatchesNav({
   error,
 }: MatchesNavProps) {
   return (
-    <div className="card bg-gradient-to-br from-base-200 to-base-300 shadow-xl backdrop-blur-sm">
+    <div className="card bg-linear-to-br from-base-200 to-base-300 shadow-xl backdrop-blur-sm">
       <div className="card-body py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

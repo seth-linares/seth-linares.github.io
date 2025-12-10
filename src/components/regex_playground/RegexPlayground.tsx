@@ -41,10 +41,6 @@ function RegexPlayground() {
       setPattern('');
       setFlags({ g: true, i: false, m: false, s: false, u: false, y: false });
     },
-    onCopy: () => {
-      // Copy the JavaScript code directly
-      navigator.clipboard.writeText(generateJsSnippet());
-    },
     onPrevMatch: goPrev,
     onNextMatch: goNext,
   });
@@ -58,7 +54,7 @@ function RegexPlayground() {
         <div className="mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
-              <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">Regex Playground</span>
+              <span className="bg-linear-to-r from-primary via-accent to-primary bg-clip-text text-transparent">Regex Playground</span>
             </h1>
             <div className="flex items-center gap-2">
               <ShareButton 
@@ -68,7 +64,7 @@ function RegexPlayground() {
                   console.log('Regex pattern shared:', state.pattern);
                 }}
               />
-              <div className="tooltip tooltip-top z-[60]" data-tip="Reset inputs">
+              <div className="tooltip tooltip-top z-60" data-tip="Reset inputs">
                 <button
                   className="btn btn-ghost btn-sm hover:shadow-md transition-all"
                   onClick={() => {

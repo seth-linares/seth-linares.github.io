@@ -10,7 +10,7 @@ function HeroSection() {
 
     return (
         <motion.section 
-            className="hero min-h-screen bg-gradient-to-br from-base-200 to-base-300"
+            className="hero min-h-screen bg-linear-to-br from-base-200 to-base-300"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}

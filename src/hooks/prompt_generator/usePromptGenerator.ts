@@ -14,8 +14,13 @@ function usePromptGenerator() {
     const [promptInput, setPromptInput] = useState('');
     const [apiKeyInput, setApiKeyInput] = useState('');
     const [tokenCount, setTokenCount] = useState<number | null>(null);
-    const [apiKey, setApiKey] = useState<string | null>(null);
-    const [client, setClient] = useState<Anthropic | null>(null);
+    const [apiKey, setApiKey] = useState<string | null>(
+        () => localStorage.getItem('anthropic-api-key')
+    );
+    const [client, setClient] = useState<Anthropic | null>(() => {
+        const key = localStorage.getItem('anthropic-api-key');
+        return key ? new Anthropic({ apiKey: key, dangerouslyAllowBrowser: true }) : null;
+    });
     const [generatedPrompt, setGeneratedPrompt] = useState<string>('');
     const [showGeneratedPrompt, setShowGeneratedPrompt] = useState(false);
     const [isPromptMinimized, setIsPromptMinimized] = useState(false);
@@ -27,21 +32,12 @@ function usePromptGenerator() {
         setShowGeneratedPrompt(true);
     }, [promptInput, generatePrompt]);
 
-    useEffect(() => {
-        setShowGeneratedPrompt(false);
-        setGeneratedPrompt('');
-    }, [fileText]);
-
-    useEffect(() => {
-        const storedApiKey = localStorage.getItem('anthropic-api-key');
-        setApiKey(storedApiKey);
-        if (storedApiKey) {
-            setClient(new Anthropic({ apiKey: storedApiKey, dangerouslyAllowBrowser: true }));
-        } else {
-            setClient(null);
-        }
-    }, []);
-
+    const [prevFileText, setPrevFileText] = useState(fileText);
+    if (prevFileText !== fileText) {
+        setPrevFileText(fileText);
+        if (showGeneratedPrompt) setShowGeneratedPrompt(false);
+        if (generatedPrompt) setGeneratedPrompt('');
+    }
 
     useEffect(() => {
         fileTextRef.current = fileText;

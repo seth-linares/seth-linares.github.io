@@ -10,12 +10,12 @@ function TestStringInput({
   removeTestString,
 }: TestStringInputProps) {
   return (
-    <div className="card bg-gradient-to-br from-base-200 to-base-300 shadow-xl backdrop-blur-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+    <div className="card bg-linear-to-br from-base-200 to-base-300 shadow-xl backdrop-blur-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
       <div className="card-body">
         <div className="flex items-center justify-between">
           <h2 className="card-title text-primary">Test Strings</h2>
           <div className="flex items-center gap-2">
-            <button className="btn btn-sm btn-secondary bg-gradient-to-r from-primary to-accent text-primary-content" onClick={addTestString}>
+            <button className="btn btn-sm btn-secondary bg-linear-to-r from-primary to-accent text-primary-content" onClick={addTestString}>
               + Add
             </button>
           </div>

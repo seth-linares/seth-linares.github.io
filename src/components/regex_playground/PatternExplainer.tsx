@@ -9,7 +9,7 @@ interface PatternExplainerProps {
 
 export default function PatternExplainer({ pattern, tokens }: PatternExplainerProps) {
   return (
-    <div className="card bg-gradient-to-br from-base-200 to-base-300 shadow-xl">
+    <div className="card bg-linear-to-br from-base-200 to-base-300 shadow-xl">
       <div className="card-body">
         <h2 className="card-title text-primary">Pattern Breakdown</h2>
         <div className="text-xs opacity-70 -mt-1 mb-2">
