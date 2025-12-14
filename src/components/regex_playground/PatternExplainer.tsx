@@ -6,6 +6,7 @@ import { createPortal } from "react-dom";
 import {
   getSimpleDescription,
   getDescriptionExample,
+  getDescriptionTip,
 } from "@/utils/regex/beginnerDescriptions";
 
 // Tooltip component that renders via portal
@@ -20,6 +21,7 @@ function TokenTooltip({
 }) {
   const simpleDesc = getSimpleDescription(token);
   const example = getDescriptionExample(token);
+  const tip = getDescriptionTip(token);
 
   // Calculate position when visible and ref is available
   if (!isVisible || !targetRef.current) return null;
@@ -44,6 +46,7 @@ function TokenTooltip({
       <div className="absolute left-1/2 -translate-x-1/2 -top-2 w-0 h-0 border-l-4 border-r-4 border-b-8 border-transparent border-b-base-300" />
       <div className="font-medium text-sm">{simpleDesc}</div>
       {example && <div className="opacity-70 mt-1">{example}</div>}
+      {tip && <div className="text-accent mt-1 font-medium">Tip: {tip}</div>}
     </div>,
     document.body
   );
@@ -84,6 +87,7 @@ function TokenWithTooltip({
 interface PatternExplainerProps {
   pattern: string;
   tokens: PatternToken[];
+  warnings?: string[];
 }
 
 // Color legend configuration
@@ -112,6 +116,7 @@ function getTokenColorClass(type: string): string {
 export default function PatternExplainer({
   pattern,
   tokens,
+  warnings = [],
 }: PatternExplainerProps) {
   const [showLegend, setShowLegend] = useState(true);
   const [showTokenList, setShowTokenList] = useState(true);
@@ -129,6 +134,20 @@ export default function PatternExplainer({
             {showLegend ? "Hide" : "Show"} Legend
           </button>
         </div>
+
+        {/* Warnings Section */}
+        {warnings.length > 0 && (
+          <div className="alert alert-warning mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div className="flex flex-col gap-1">
+              {warnings.map((warning, idx) => (
+                <span key={idx} className="text-sm">{warning}</span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Collapsible Color Legend */}
         {showLegend && (
@@ -198,6 +217,7 @@ export default function PatternExplainer({
               {tokens.map((token, idx) => {
                 const simpleDesc = getSimpleDescription(token);
                 const example = getDescriptionExample(token);
+                const tip = getDescriptionTip(token);
 
                 return (
                   <motion.div
@@ -214,6 +234,9 @@ export default function PatternExplainer({
                     <p className="text-sm">{simpleDesc}</p>
                     {example && (
                       <p className="text-xs opacity-70 mt-1 italic">Example: {example}</p>
+                    )}
+                    {tip && (
+                      <p className="text-xs text-accent-content mt-1 font-medium">Tip: {tip}</p>
                     )}
                   </motion.div>
                 );

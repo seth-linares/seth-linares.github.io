@@ -166,6 +166,10 @@ export interface PatternToken {
   end: number;
   description?: string;
   children?: PatternToken[];
+  /** For quantifiers: index of the token being quantified in the parent array */
+  targetIndex?: number;
+  /** For tokens in alternation: which branch (0 for first, 1 for second, etc.) */
+  branchIndex?: number;
 }
 
 export interface RegexFlags {

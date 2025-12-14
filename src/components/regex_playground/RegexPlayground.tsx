@@ -29,7 +29,7 @@ function RegexPlayground() {
     goPrev,
     goNext,
   } = useRegexPlayground();
-  const { tokens } = usePatternExplainer(state.pattern);
+  const { tokens, warnings } = usePatternExplainer(state.pattern);
   
   // Keyboard shortcuts
   useKeyboardShortcuts({
@@ -119,7 +119,7 @@ function RegexPlayground() {
             />
             {/* Pattern Explanation */}
             {state.pattern && tokens.length > 0 && (
-              <PatternExplainer pattern={state.pattern} tokens={tokens} />
+              <PatternExplainer pattern={state.pattern} tokens={tokens} warnings={warnings} />
             )}
 
             {/* Code */}

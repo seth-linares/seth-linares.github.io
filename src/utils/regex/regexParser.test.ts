@@ -863,33 +863,33 @@ describe('parseRegexPatternWithWarnings', () => {
   it('should warn about nested quantifiers (ReDoS)', () => {
     const result = parseRegexPatternWithWarnings('(a+)+');
     expect(result.warnings.length).toBeGreaterThan(0);
-    expect(result.warnings[0]).toContain('catastrophic backtracking');
+    expect(result.warnings[0]).toContain('slow');
   });
 
   it('should warn about quantified alternation', () => {
     const result = parseRegexPatternWithWarnings('(a|b)+');
     expect(result.warnings.length).toBeGreaterThan(0);
-    expect(result.warnings.some((w: string) => w.includes('alternation'))).toBe(true);
+    expect(result.warnings.some((w: string) => w.includes('OR patterns') || w.includes('slow'))).toBe(true);
   });
 
   it('should warn about very large quantifiers', () => {
     const result = parseRegexPatternWithWarnings('a{100000}');
-    expect(result.warnings.some((w: string) => w.includes('performance'))).toBe(true);
+    expect(result.warnings.some((w: string) => w.includes('slow'))).toBe(true);
   });
 
   it('should warn about invalid backreferences', () => {
     const result = parseRegexPatternWithWarnings('(a)\\2');
-    expect(result.warnings.some((w: string) => w.includes('non-existent group'))).toBe(true);
+    expect(result.warnings.some((w: string) => w.includes('only have'))).toBe(true);
   });
 
   it('should warn about quantifier after anchor', () => {
     const result = parseRegexPatternWithWarnings('^+');
-    expect(result.warnings.some((w: string) => w.includes('anchor') && w.includes('invalid'))).toBe(true);
+    expect(result.warnings.some((w: string) => w.includes('position'))).toBe(true);
   });
 
   it('should warn about duplicate named groups', () => {
     const result = parseRegexPatternWithWarnings('(?<name>a)(?<name>b)');
-    expect(result.warnings.some((w: string) => w.includes('Duplicate named group'))).toBe(true);
+    expect(result.warnings.some((w: string) => w.includes('two groups named'))).toBe(true);
   });
 });
 
@@ -913,5 +913,418 @@ describe('parseRegexPatternBasic', () => {
 
     // Basic should be at least as fast (usually faster due to no enhancement pass)
     expect(basicTime).toBeLessThanOrEqual(fullTime * 1.5);
+  });
+});
+
+// ============================================
+// NEW FEATURE TESTS (Parser Refactoring)
+// ============================================
+
+describe('Unicode Property Escapes (\\p{...} and \\P{...})', () => {
+  it('should parse \\p{Letter}', () => {
+    const result = parseRegexPattern('\\p{Letter}');
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      type: 'escape',
+      value: '\\p{Letter}',
+      description: expect.stringContaining('letter')
+    });
+  });
+
+  it('should parse short form \\p{L}', () => {
+    const result = parseRegexPattern('\\p{L}');
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      type: 'escape',
+      value: '\\p{L}',
+      description: expect.stringContaining('letter')
+    });
+  });
+
+  it('should parse negated \\P{Letter}', () => {
+    const result = parseRegexPattern('\\P{Letter}');
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      type: 'escape',
+      value: '\\P{Letter}',
+      description: expect.stringContaining('NOT')
+    });
+  });
+
+  it('should parse \\p{Number}', () => {
+    const result = parseRegexPattern('\\p{Number}');
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      type: 'escape',
+      value: '\\p{Number}',
+      description: expect.stringContaining('numeric')
+    });
+  });
+
+  it('should parse \\p{Emoji}', () => {
+    const result = parseRegexPattern('\\p{Emoji}');
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      type: 'escape',
+      value: '\\p{Emoji}',
+      description: expect.stringContaining('emoji')
+    });
+  });
+
+  it('should parse script property \\p{Script=Latin}', () => {
+    const result = parseRegexPattern('\\p{Script=Latin}');
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      type: 'escape',
+      value: '\\p{Script=Latin}',
+      description: expect.stringContaining('Latin')
+    });
+  });
+
+  it('should parse script property \\p{Script=Greek}', () => {
+    const result = parseRegexPattern('\\p{Script=Greek}');
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      type: 'escape',
+      value: '\\p{Script=Greek}',
+      description: expect.stringContaining('Greek')
+    });
+  });
+
+  it('should parse \\p{Script=Han} for Chinese characters', () => {
+    const result = parseRegexPattern('\\p{Script=Han}');
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      type: 'escape',
+      value: '\\p{Script=Han}',
+      description: expect.stringContaining('Han')
+    });
+  });
+
+  it('should handle unknown property gracefully', () => {
+    const result = parseRegexPattern('\\p{UnknownProperty}');
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      type: 'escape',
+      value: '\\p{UnknownProperty}',
+      description: expect.stringContaining('UnknownProperty')
+    });
+  });
+
+  it('should handle malformed property escape (missing closing brace)', () => {
+    const result = parseRegexPattern('\\p{Letter');
+    expect(result.length).toBeGreaterThan(0);
+    // Should handle gracefully
+  });
+
+  it('should parse unicode properties in complex patterns', () => {
+    const result = parseRegexPattern('^\\p{Letter}+$');
+    expect(result).toHaveLength(4); // ^, \p{Letter}, +, $
+    expect(result[1]).toMatchObject({
+      type: 'escape',
+      value: '\\p{Letter}'
+    });
+  });
+});
+
+describe('Invalid Character Range Detection', () => {
+  it('should warn about invalid range [z-a]', () => {
+    const result = parseRegexPatternWithWarnings('[z-a]');
+    expect(result.warnings.some(w => w.includes('Invalid character range'))).toBe(true);
+    expect(result.warnings.some(w => w.includes('z') && w.includes('a'))).toBe(true);
+  });
+
+  it('should warn about invalid range [9-0]', () => {
+    const result = parseRegexPatternWithWarnings('[9-0]');
+    expect(result.warnings.some(w => w.includes('Invalid character range'))).toBe(true);
+  });
+
+  it('should warn about invalid range [Z-A]', () => {
+    const result = parseRegexPatternWithWarnings('[Z-A]');
+    expect(result.warnings.some(w => w.includes('Invalid character range'))).toBe(true);
+  });
+
+  it('should NOT warn about valid range [a-z]', () => {
+    const result = parseRegexPatternWithWarnings('[a-z]');
+    expect(result.warnings.every(w => !w.includes('Invalid character range'))).toBe(true);
+  });
+
+  it('should NOT warn about valid range [0-9]', () => {
+    const result = parseRegexPatternWithWarnings('[0-9]');
+    expect(result.warnings.every(w => !w.includes('Invalid character range'))).toBe(true);
+  });
+
+  it('should NOT warn about literal hyphen at start [-a]', () => {
+    const result = parseRegexPatternWithWarnings('[-a]');
+    expect(result.warnings.every(w => !w.includes('Invalid character range'))).toBe(true);
+  });
+
+  it('should NOT warn about literal hyphen at end [a-]', () => {
+    const result = parseRegexPatternWithWarnings('[a-]');
+    expect(result.warnings.every(w => !w.includes('Invalid character range'))).toBe(true);
+  });
+
+  it('should warn about invalid range in negated class [^z-a]', () => {
+    const result = parseRegexPatternWithWarnings('[^z-a]');
+    expect(result.warnings.some(w => w.includes('Invalid character range'))).toBe(true);
+  });
+});
+
+describe('Quantifier targetIndex', () => {
+  it('should set targetIndex on * quantifier', () => {
+    const result = parseRegexPattern('a*');
+    expect(result).toHaveLength(2);
+    expect(result[1]).toMatchObject({
+      type: 'quantifier',
+      value: '*',
+      targetIndex: 0 // Points to 'a'
+    });
+  });
+
+  it('should set targetIndex on + quantifier', () => {
+    const result = parseRegexPattern('b+');
+    expect(result).toHaveLength(2);
+    expect(result[1]).toMatchObject({
+      type: 'quantifier',
+      value: '+',
+      targetIndex: 0 // Points to 'b'
+    });
+  });
+
+  it('should set targetIndex on ? quantifier', () => {
+    const result = parseRegexPattern('c?');
+    expect(result).toHaveLength(2);
+    expect(result[1]).toMatchObject({
+      type: 'quantifier',
+      value: '?',
+      targetIndex: 0 // Points to 'c'
+    });
+  });
+
+  it('should set targetIndex on {n} quantifier', () => {
+    const result = parseRegexPattern('d{3}');
+    expect(result).toHaveLength(2);
+    expect(result[1]).toMatchObject({
+      type: 'quantifier',
+      value: '{3}',
+      targetIndex: 0 // Points to 'd'
+    });
+  });
+
+  it('should set targetIndex on {n,m} quantifier', () => {
+    const result = parseRegexPattern('e{2,5}');
+    expect(result).toHaveLength(2);
+    expect(result[1]).toMatchObject({
+      type: 'quantifier',
+      value: '{2,5}',
+      targetIndex: 0 // Points to 'e'
+    });
+  });
+
+  it('should set correct targetIndex in complex pattern', () => {
+    const result = parseRegexPattern('ab+c*');
+    // Tokens: a(0), b(1), +(2), c(3), *(4)
+    expect(result).toHaveLength(5);
+    expect(result[2]).toMatchObject({
+      type: 'quantifier',
+      value: '+',
+      targetIndex: 1 // Points to 'b'
+    });
+    expect(result[4]).toMatchObject({
+      type: 'quantifier',
+      value: '*',
+      targetIndex: 3 // Points to 'c'
+    });
+  });
+
+  it('should set targetIndex pointing to group', () => {
+    const result = parseRegexPattern('(abc)+');
+    expect(result).toHaveLength(2);
+    expect(result[1]).toMatchObject({
+      type: 'quantifier',
+      value: '+',
+      targetIndex: 0 // Points to the group
+    });
+  });
+
+  it('should set targetIndex pointing to character class', () => {
+    const result = parseRegexPattern('[a-z]+');
+    expect(result).toHaveLength(2);
+    expect(result[1]).toMatchObject({
+      type: 'quantifier',
+      value: '+',
+      targetIndex: 0 // Points to the character class
+    });
+  });
+
+  it('should set targetIndex pointing to escape sequence', () => {
+    const result = parseRegexPattern('\\d+');
+    expect(result).toHaveLength(2);
+    expect(result[1]).toMatchObject({
+      type: 'quantifier',
+      value: '+',
+      targetIndex: 0 // Points to \d
+    });
+  });
+});
+
+describe('Alternation branchIndex', () => {
+  it('should set branchIndex for simple alternation', () => {
+    const result = parseRegexPattern('cat|dog');
+    // Tokens: c(0), a(1), t(2), |(3), d(4), o(5), g(6)
+    expect(result[0].branchIndex).toBe(0); // c
+    expect(result[1].branchIndex).toBe(0); // a
+    expect(result[2].branchIndex).toBe(0); // t
+    expect(result[3].branchIndex).toBeUndefined(); // | has no branchIndex
+    expect(result[4].branchIndex).toBe(1); // d
+    expect(result[5].branchIndex).toBe(1); // o
+    expect(result[6].branchIndex).toBe(1); // g
+  });
+
+  it('should set branchIndex for multiple alternations', () => {
+    const result = parseRegexPattern('a|b|c');
+    // Tokens: a(0), |(1), b(2), |(3), c(4)
+    expect(result[0].branchIndex).toBe(0); // a
+    expect(result[2].branchIndex).toBe(1); // b
+    expect(result[4].branchIndex).toBe(2); // c
+  });
+
+  it('should NOT set branchIndex when no alternation', () => {
+    const result = parseRegexPattern('abc');
+    expect(result[0].branchIndex).toBeUndefined();
+    expect(result[1].branchIndex).toBeUndefined();
+    expect(result[2].branchIndex).toBeUndefined();
+  });
+
+  it('should set branchIndex for alternation inside groups', () => {
+    const result = parseRegexPattern('(cat|dog)');
+    expect(result).toHaveLength(1);
+    const children = result[0].children!;
+    expect(children[0].branchIndex).toBe(0); // c
+    expect(children[1].branchIndex).toBe(0); // a
+    expect(children[2].branchIndex).toBe(0); // t
+    expect(children[4].branchIndex).toBe(1); // d
+    expect(children[5].branchIndex).toBe(1); // o
+    expect(children[6].branchIndex).toBe(1); // g
+  });
+
+  it('should handle complex alternation with quantifiers', () => {
+    const result = parseRegexPattern('cat+|dog*');
+    // cat+ is branch 0, dog* is branch 1
+    expect(result[0].branchIndex).toBe(0); // c
+    expect(result[3].branchIndex).toBe(0); // + (quantifier)
+    expect(result[5].branchIndex).toBe(1); // d
+    expect(result[8].branchIndex).toBe(1); // * (quantifier)
+  });
+});
+
+describe('Extended Unicode Bug Fix Verification', () => {
+  it('should parse extended unicode \\u{1F600} correctly (bug fix)', () => {
+    const result = parseRegexPattern('\\u{1F600}');
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      type: 'escape',
+      value: '\\u{1F600}',
+      description: expect.stringContaining('Extended Unicode')
+    });
+  });
+
+  it('should parse extended unicode \\u{41} (short form)', () => {
+    const result = parseRegexPattern('\\u{41}');
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      type: 'escape',
+      value: '\\u{41}',
+      description: expect.stringContaining('Extended Unicode')
+    });
+  });
+
+  it('should still parse basic unicode \\u0041', () => {
+    const result = parseRegexPattern('\\u0041');
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({
+      type: 'escape',
+      value: '\\u0041',
+      description: expect.stringContaining('Unicode escape')
+    });
+    // Should NOT contain "Extended"
+    expect(result[0].description).not.toContain('Extended');
+  });
+
+  it('should differentiate between \\u{...} and \\uNNNN', () => {
+    const extendedResult = parseRegexPattern('\\u{0041}');
+    const basicResult = parseRegexPattern('\\u0041');
+
+    expect(extendedResult[0].value).toBe('\\u{0041}');
+    expect(basicResult[0].value).toBe('\\u0041');
+    expect(extendedResult[0].description).toContain('Extended');
+    expect(basicResult[0].description).not.toContain('Extended');
+  });
+
+  it('should parse multiple extended unicode escapes', () => {
+    const result = parseRegexPattern('\\u{1F600}\\u{1F601}');
+    expect(result).toHaveLength(2);
+    expect(result[0].value).toBe('\\u{1F600}');
+    expect(result[1].value).toBe('\\u{1F601}');
+  });
+});
+
+describe('Updated Warning Messages (Beginner-Friendly)', () => {
+  it('should provide beginner-friendly nested quantifier warning', () => {
+    const result = parseRegexPatternWithWarnings('(a+)+');
+    expect(result.warnings.some(w =>
+      w.includes('VERY slow') || w.includes('simplifying')
+    )).toBe(true);
+  });
+
+  it('should provide beginner-friendly alternation warning', () => {
+    const result = parseRegexPatternWithWarnings('(cat|car)+');
+    expect(result.warnings.some(w =>
+      w.includes('OR patterns') || w.includes('slow')
+    )).toBe(true);
+  });
+
+  it('should provide beginner-friendly consecutive quantifier warning', () => {
+    const result = parseRegexPatternWithWarnings('a++');
+    expect(result.warnings.some(w =>
+      w.includes('Two quantifiers in a row') || w.includes('invalid')
+    )).toBe(true);
+  });
+
+  it('should provide beginner-friendly large quantifier warning', () => {
+    const result = parseRegexPatternWithWarnings('a{100000}');
+    expect(result.warnings.some(w =>
+      w.includes('10,000') || w.includes('slow')
+    )).toBe(true);
+  });
+
+  it('should provide beginner-friendly deep nesting warning', () => {
+    // Create a pattern with 12 levels of nesting
+    const nested = '('.repeat(12) + 'a' + ')'.repeat(12);
+    const result = parseRegexPatternWithWarnings(nested);
+    expect(result.warnings.some(w =>
+      w.includes('nested groups') || w.includes('10 levels')
+    )).toBe(true);
+  });
+
+  it('should provide beginner-friendly backreference warning', () => {
+    const result = parseRegexPatternWithWarnings('(a)\\5');
+    expect(result.warnings.some(w =>
+      w.includes('capture group') && w.includes('only have')
+    )).toBe(true);
+  });
+
+  it('should provide beginner-friendly named backreference warning', () => {
+    const result = parseRegexPatternWithWarnings('\\k<missing>');
+    expect(result.warnings.some(w =>
+      w.includes('group named') && w.includes('doesn\'t exist') || w.includes('no group')
+    )).toBe(true);
+  });
+
+  it('should provide beginner-friendly anchor quantifier warning', () => {
+    const result = parseRegexPatternWithWarnings('^+');
+    expect(result.warnings.some(w =>
+      w.includes('position') || w.includes("doesn't make sense")
+    )).toBe(true);
   });
 });

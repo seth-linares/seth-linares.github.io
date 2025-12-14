@@ -9,6 +9,8 @@ import type { PatternToken } from "@/types/regex";
 interface BeginnerDescription {
   simple: string;
   example?: string;
+  /** Quick helpful hint for beginners */
+  tip?: string;
 }
 
 // Escape sequence mappings (value -> description)
@@ -16,38 +18,47 @@ const ESCAPE_DESCRIPTIONS: Record<string, BeginnerDescription> = {
   "\\d": {
     simple: "Any single digit (0-9)",
     example: "In '2024', matches '2', '0', '2', '4' separately",
+    tip: "Use \\d+ to match whole numbers like '2024'",
   },
   "\\D": {
     simple: "Any character that's NOT a digit",
     example: "In 'a1b2', matches 'a' and 'b'",
+    tip: "Useful for extracting text between numbers",
   },
   "\\w": {
     simple: "Any letter, digit, or underscore",
     example: "In 'hello_123', matches each character",
+    tip: "\\w+ is great for matching variable names or words",
   },
   "\\W": {
     simple: "Any character that's NOT a letter, digit, or underscore",
     example: "In 'hi there!', matches the space and '!'",
+    tip: "Use to find punctuation or special characters",
   },
   "\\s": {
     simple: "Any whitespace (space, tab, newline)",
     example: "In 'hello world', matches the space",
+    tip: "\\s+ matches multiple spaces or mixed whitespace",
   },
   "\\S": {
     simple: "Any character that's NOT whitespace",
     example: "In 'a b', matches 'a' and 'b'",
+    tip: "\\S+ matches words or continuous non-space text",
   },
   "\\b": {
     simple: "Word boundary (edge between word and non-word)",
     example: "\\bcat\\b matches 'cat' but not 'category'",
+    tip: "Wrap your word with \\b...\\b to match whole words only",
   },
   "\\B": {
     simple: "NOT a word boundary (inside a word)",
     example: "\\Bcat matches 'cat' in 'scatter' but not at start",
+    tip: "Rarely used - \\b is more common",
   },
   "\\n": {
     simple: "Newline character (line break)",
     example: "Matches where you press Enter",
+    tip: "Use the 'm' flag to make ^ and $ match line boundaries",
   },
   "\\t": {
     simple: "Tab character",
@@ -56,6 +67,56 @@ const ESCAPE_DESCRIPTIONS: Record<string, BeginnerDescription> = {
   "\\r": {
     simple: "Carriage return (part of Windows line endings)",
     example: "Often paired with \\n as \\r\\n",
+    tip: "Use \\r?\\n to match both Unix and Windows line endings",
+  },
+};
+
+// Unicode property escape descriptions
+const UNICODE_PROPERTY_DESCRIPTIONS: Record<string, BeginnerDescription> = {
+  "\\p{Letter}": {
+    simple: "Any letter in any language (not just English)",
+    example: "Matches 'a', 'Z', 'e', 'α', '漢'",
+    tip: "Great for international text! Requires the 'u' flag",
+  },
+  "\\p{L}": {
+    simple: "Any letter in any language (short form)",
+    example: "Same as \\p{Letter}",
+    tip: "Requires the 'u' flag to work",
+  },
+  "\\p{Number}": {
+    simple: "Any numeric character from any script",
+    example: "Matches '5', '٥' (Arabic), '五' (Chinese)",
+    tip: "More inclusive than \\d for international numbers",
+  },
+  "\\p{N}": {
+    simple: "Any numeric character (short form)",
+    example: "Same as \\p{Number}",
+  },
+  "\\p{Emoji}": {
+    simple: "Any emoji character",
+    example: "Matches 😀, 🎉, ❤️, etc.",
+    tip: "Perfect for finding or removing emojis from text",
+  },
+  "\\p{Script=Latin}": {
+    simple: "Latin script characters (A-Z, accented letters)",
+    example: "Matches 'a', 'Z', 'e', 'ñ', 'ü'",
+    tip: "Use for European languages with Latin alphabet",
+  },
+  "\\p{Script=Greek}": {
+    simple: "Greek script characters",
+    example: "Matches 'α', 'β', 'Ω', etc.",
+  },
+  "\\p{Script=Han}": {
+    simple: "Chinese/Japanese Kanji characters",
+    example: "Matches '漢', '字', '中', etc.",
+  },
+  "\\p{Punctuation}": {
+    simple: "Any punctuation character",
+    example: "Matches '.', ',', '!', '?', etc.",
+  },
+  "\\p{P}": {
+    simple: "Any punctuation (short form)",
+    example: "Same as \\p{Punctuation}",
   },
 };
 
@@ -136,6 +197,34 @@ export function getBeginnerDescription(token: PatternToken): BeginnerDescription
       return {
         simple: `Same text as the '${groupName}' group`,
         example: `Refers back to what (?<${groupName}>...) matched`,
+      };
+    }
+
+    // Handle Unicode property escapes \p{...} and \P{...}
+    if (/^\\[pP]\{.+\}$/.test(value)) {
+      // Check for exact match first
+      if (UNICODE_PROPERTY_DESCRIPTIONS[value]) {
+        return UNICODE_PROPERTY_DESCRIPTIONS[value];
+      }
+      // Handle negated version
+      const isNegated = value[1] === "P";
+      const property = value.slice(3, -1);
+      // Try to find the positive version for negated
+      const positiveKey = `\\p{${property}}`;
+      if (isNegated && UNICODE_PROPERTY_DESCRIPTIONS[positiveKey]) {
+        const positive = UNICODE_PROPERTY_DESCRIPTIONS[positiveKey];
+        return {
+          simple: `NOT ${positive.simple}`,
+          example: positive.example ? `Opposite of: ${positive.example}` : undefined,
+          tip: "Requires the 'u' flag to work",
+        };
+      }
+      // Generic unicode property description
+      return {
+        simple: isNegated
+          ? `Any character NOT matching Unicode property "${property}"`
+          : `Any character matching Unicode property "${property}"`,
+        tip: "Requires the 'u' flag to work",
       };
     }
 
@@ -398,4 +487,11 @@ export function getSimpleDescription(token: PatternToken): string {
  */
 export function getDescriptionExample(token: PatternToken): string | undefined {
   return getBeginnerDescription(token).example;
+}
+
+/**
+ * Get just the tip (if any)
+ */
+export function getDescriptionTip(token: PatternToken): string | undefined {
+  return getBeginnerDescription(token).tip;
 }
