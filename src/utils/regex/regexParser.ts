@@ -622,35 +622,128 @@ function parseQuantifier(pattern: string, start: number): QuantifierResult | nul
 }
 
 /**
+ * Checks if a group's content has a required literal boundary (prefix OR suffix) that prevents backtracking.
+ * Patterns like (?:-[a-z]+)* are safe because '-' MUST match first.
+ * Patterns like (?:\d{1,3}\.){3} are safe because '\.' MUST match at the end of each repetition.
+ */
+function hasRequiredLiteralBoundary(groupContent: string): boolean {
+  // Skip non-capturing group prefix if present
+  const content = groupContent.replace(/^\?:/, '');
+
+  // Check for required literal PREFIX (start of group)
+  // The key is that the FIRST element must NOT be quantified at all.
+
+  // Starts with escaped character NOT quantified (like \. in \.[a-z]+)
+  if (/^\\[.dDwWsS](?![*+?{])/.test(content)) {
+    return true;
+  }
+
+  // Starts with a plain literal char NOT followed by any quantifier
+  // e.g., '-' in -[a-z]+ is a required prefix, but 'a' in a+ is NOT
+  if (/^[a-zA-Z0-9\-_.,:;!@#$%&=<>'"\/](?![*+?{])/.test(content)) {
+    return true;
+  }
+
+  // Starts with a character class NOT followed by any quantifier
+  // e.g., [A-Z] in [A-Z][a-z]+ is required, but [a-z] in [a-z]+ is NOT
+  if (/^\[[^\]]+\](?![*+?{])/.test(content)) {
+    return true;
+  }
+
+  // Check for required literal SUFFIX (end of group)
+  // e.g., \d{1,3}\. has \. at the end which creates an unambiguous boundary
+
+  // Ends with escaped character (like \. in \d{1,3}\.)
+  if (/\\[.dDwWsS]$/.test(content)) {
+    return true;
+  }
+
+  // Ends with a plain literal char not preceded by a quantifier
+  // e.g., 'x' at end if not part of a quantifier like {1,3}
+  if (/[a-zA-Z0-9\-_.,:;!@#$%&=<>'"\/]$/.test(content) && !/[*+?}].$/.test(content)) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Checks if two alternatives in an alternation are disjoint (can't match the same input).
+ * Patterns like ([^"\\]|\\.)* are safe because the alternatives can never overlap.
+ */
+function areAlternativesDisjoint(alt1: string, alt2: string): boolean {
+  // Negated char class vs escaped sequence - these are commonly disjoint
+  // e.g., [^"\\] can't match what \\. matches (backslash + any char)
+  const negatedClassPattern = /^\[\^/;
+  const escapedPattern = /^\\\\/;
+
+  if ((negatedClassPattern.test(alt1) && escapedPattern.test(alt2)) ||
+      (negatedClassPattern.test(alt2) && escapedPattern.test(alt1))) {
+    return true;
+  }
+
+  // Two different literal characters are disjoint
+  const literalChar1 = alt1.match(/^[a-zA-Z0-9]$/);
+  const literalChar2 = alt2.match(/^[a-zA-Z0-9]$/);
+  if (literalChar1 && literalChar2 && alt1 !== alt2) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
  * Detects potentially dangerous regex patterns that could cause ReDoS (Regular Expression Denial of Service)
  */
 function detectPotentialReDoS(pattern: string): string[] {
   const warnings: string[] = [];
-  
-  // Nested quantifiers: (a+)+, (a*)+, (a?)*, etc.
-  const nestedQuantifierPatterns = [
-    /\([^)]*[*+][^)]*\)[*+?]/,  // (a+)+ or (a+)? 
-    /\([^)]*[*+?][^)]*\)[*+]/,  // (a+)* or (a?)+ 
-    /\([^)]*\?[^)]*\)[*+]/,     // (a?)+
-  ];
-  
-  for (const regexPattern of nestedQuantifierPatterns) {
-    if (regexPattern.test(pattern)) {
-      warnings.push("Nested quantifiers like (a+)+ can be VERY slow on long text. Try simplifying - for example, (a+)+ can usually be replaced with just a+");
-      break;
+
+  // Nested quantifiers: (a+)+, (a*)+, etc.
+  // But skip if the group has a required literal boundary that prevents backtracking
+  const groupWithQuantifier = /\((\?:)?([^)]+)\)([*+?]|\{[0-9,]+\})/g;
+  let match;
+  let foundNestedQuantifier = false;
+
+  while ((match = groupWithQuantifier.exec(pattern)) !== null) {
+    const groupContent = match[2];
+    const outerQuantifier = match[3];
+
+    // Check if inner content has a quantifier
+    const hasInnerQuantifier = /[*+?]|\{[0-9,]+\}/.test(groupContent);
+
+    if (hasInnerQuantifier && (outerQuantifier === '*' || outerQuantifier === '+' || outerQuantifier.startsWith('{'))) {
+      // This COULD be dangerous, but check for safe patterns
+      if (!hasRequiredLiteralBoundary(groupContent)) {
+        warnings.push("Nested quantifiers like (a+)+ can be VERY slow on long text. Try simplifying - for example, (a+)+ can usually be replaced with just a+");
+        foundNestedQuantifier = true;
+        break;
+      }
     }
   }
-  
-  // Alternation with quantifiers: (a|a)+, (ab|a)*, etc.
-  if (/\([^)]*\|[^)]*\)[*+?]/.test(pattern)) {
-    warnings.push("OR patterns with repeaters like (cat|car)+ can be slow if the options share characters. Consider rewriting as ca(t|r)+ if possible");
+
+  // Alternation with quantifiers: (a|b)+
+  // But skip if alternatives are disjoint
+  if (!foundNestedQuantifier) {
+    const altWithQuantifier = /\((\?:)?([^)|]+)\|([^)]+)\)([*+?]|\{[0-9,]+\})/g;
+    while ((match = altWithQuantifier.exec(pattern)) !== null) {
+      const alt1 = match[2];
+      const alt2 = match[3];
+
+      // Check if alternatives could overlap
+      if (!areAlternativesDisjoint(alt1, alt2)) {
+        warnings.push("OR patterns with repeaters like (cat|car)+ can be slow if the options share characters. Consider rewriting as ca(t|r)+ if possible");
+        break;
+      }
+    }
   }
-  
+
   // Multiple consecutive quantifiers (invalid but dangerous): a++, b**
-  if (/[*+?][*+?]/.test(pattern)) {
+  // But NOT escaped characters like \+? (escaped plus followed by optional)
+  // Use negative lookbehind to exclude escaped characters
+  if (/(?<!\\)[*+?][*+?]/.test(pattern)) {
     warnings.push("Two quantifiers in a row (like ++ or *?) is invalid. Each quantifier should follow something to repeat, like a+ or \\d*");
   }
-  
+
   // Very large quantifiers: {999999}
   const largeQuantifier = pattern.match(/\{(\d+)(?:,(\d+))?\}/g);
   if (largeQuantifier) {
@@ -662,7 +755,7 @@ function detectPotentialReDoS(pattern: string): string[] {
       }
     }
   }
-  
+
   // Deep nesting check (basic)
   let maxDepth = 0;
   let currentDepth = 0;
@@ -674,11 +767,11 @@ function detectPotentialReDoS(pattern: string): string[] {
       currentDepth--;
     }
   }
-  
+
   if (maxDepth > PARSER_LIMITS.DEEP_NESTING_WARNING_THRESHOLD) {
     warnings.push("Your pattern has many nested groups (over 10 levels deep). This can slow down matching. Try to flatten or simplify if possible");
   }
-  
+
   return warnings;
 }
 

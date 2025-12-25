@@ -8,8 +8,10 @@ import CodeSection from '@/components/regex_playground/CodeSection';
 import MatchesNav from '@/components/regex_playground/MatchesNav';
 import PatternExplainer from '@/components/regex_playground/PatternExplainer';
 import ShareButton from '@/components/regex_playground/ShareButton';
+import WarningToast from '@/components/regex_playground/WarningToast';
 import { usePatternExplainer } from '@/hooks/regex_playground/usePatternExplainer';
 import { useKeyboardShortcuts } from '@/hooks/regex_playground/useKeyboardShortcuts';
+import { useWarningNotification } from '@/hooks/regex_playground/useWarningNotification';
 
 
 function RegexPlayground() {
@@ -30,7 +32,8 @@ function RegexPlayground() {
     goNext,
   } = useRegexPlayground();
   const { tokens, warnings } = usePatternExplainer(state.pattern);
-  
+  const { showToast, toastWarnings, dismissToast } = useWarningNotification(warnings);
+
   // Keyboard shortcuts
   useKeyboardShortcuts({
     onFocusPattern: () => {
@@ -89,7 +92,7 @@ function RegexPlayground() {
           <div className="lg:col-span-2 xl:col-span-3 flex flex-col gap-6">
             {/* Pattern Editor */}
             <div className="sticky top-20 z-10">
-              <PatternInput pattern={state.pattern} setPattern={setPattern} flags={state.flags} toggleFlag={toggleFlag} />
+              <PatternInput pattern={state.pattern} setPattern={setPattern} flags={state.flags} toggleFlag={toggleFlag} warnings={warnings} />
               {state.error && <div className="alert alert-error mt-3"><span>{state.error}</span></div>}
             </div>
 
@@ -119,7 +122,7 @@ function RegexPlayground() {
             />
             {/* Pattern Explanation */}
             {state.pattern && tokens.length > 0 && (
-              <PatternExplainer pattern={state.pattern} tokens={tokens} warnings={warnings} />
+              <PatternExplainer pattern={state.pattern} tokens={tokens} />
             )}
 
             {/* Code */}
@@ -179,6 +182,9 @@ function RegexPlayground() {
           </div>
         </div>
       </div>
+
+      {/* Warning toast notification */}
+      <WarningToast warnings={toastWarnings} visible={showToast} onDismiss={dismissToast} />
     </div>
   );
 }

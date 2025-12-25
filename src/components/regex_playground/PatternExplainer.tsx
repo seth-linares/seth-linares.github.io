@@ -87,7 +87,6 @@ function TokenWithTooltip({
 interface PatternExplainerProps {
   pattern: string;
   tokens: PatternToken[];
-  warnings?: string[];
 }
 
 // Color legend configuration
@@ -116,7 +115,6 @@ function getTokenColorClass(type: string): string {
 export default function PatternExplainer({
   pattern,
   tokens,
-  warnings = [],
 }: PatternExplainerProps) {
   const [showLegend, setShowLegend] = useState(true);
   const [showTokenList, setShowTokenList] = useState(true);
@@ -134,20 +132,6 @@ export default function PatternExplainer({
             {showLegend ? "Hide" : "Show"} Legend
           </button>
         </div>
-
-        {/* Warnings Section */}
-        {warnings.length > 0 && (
-          <div className="alert alert-warning mb-3">
-            <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <div className="flex flex-col gap-1">
-              {warnings.map((warning, idx) => (
-                <span key={idx} className="text-sm">{warning}</span>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Collapsible Color Legend */}
         {showLegend && (

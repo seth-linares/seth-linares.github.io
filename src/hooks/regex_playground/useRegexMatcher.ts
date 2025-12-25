@@ -6,21 +6,6 @@ import { flagsToString } from '@/types/regex';
 
 const REGEX_TIMEOUT_MS = 1000; // 1 second timeout
 const MAX_INPUT_LENGTH = 10000; // 10k chars max
-
-// Conservative ReDoS detection - only flags patterns that are DEFINITELY dangerous
-function isPotentiallyDangerous(pattern: string): boolean {
-  const dangerous = [
-    /\([^)]*[+*]\)\s*[+*]/,           // Nested quantifiers: (x+)+ or (x*)*
-    /\([^)]*[+*]\)\s*\{[0-9,]+\}/,    // Nested with range: (x+){2,}
-    /\(\.\*\)\s*[+*]/,                 // Explicit (.*)+
-  ];
-  try {
-    return dangerous.some((d) => d.test(pattern));
-  } catch {
-    return false;
-  }
-}
-
 const MAX_MATCHES_PER_STRING = 1000; // safety cap
 const MAX_CHARS_PER_STRING = 200_000; // safety cap against catastrophic inputs
 
@@ -158,17 +143,13 @@ export const useRegexMatcher = (pattern: string, flags: RegexFlags, testStrings:
     }
   }, [pattern, flagsStr]);
 
-  const { results, executionError, dangerWarning } = useMemo(() => {
+  const { results, executionError } = useMemo(() => {
     if (!pattern || !regex) {
-      return { results: [] as MatchResult[], executionError: null, dangerWarning: null };
+      return { results: [] as MatchResult[], executionError: null };
     }
 
-    const dangerWarning = isPotentiallyDangerous(pattern)
-      ? 'Warning: This pattern may cause performance issues'
-      : null;
-
     const { results, executionError } = executeRegexMatching(regex, testStrings);
-    return { results, executionError, dangerWarning };
+    return { results, executionError };
   }, [pattern, testStrings, regex]);
 
   const globalIndexMap = useMemo(() => {
@@ -189,7 +170,8 @@ export const useRegexMatcher = (pattern: string, flags: RegexFlags, testStrings:
     [results]
   );
 
-  const error = regexError ?? executionError ?? dangerWarning;
+  // Only return actual errors, not warnings (warnings handled separately via usePatternExplainer)
+  const error = regexError ?? executionError ?? null;
 
   return {
     matches: results,

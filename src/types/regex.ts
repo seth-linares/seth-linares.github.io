@@ -34,6 +34,7 @@ export interface PatternInputProps {
   setPattern: (v: string) => void;
   flags: RegexFlags;
   toggleFlag: (k: keyof RegexFlags) => void;
+  warnings?: string[];
 };
 
 export interface FlagToggleProps { 

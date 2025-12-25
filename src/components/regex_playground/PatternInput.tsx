@@ -1,6 +1,7 @@
 // src/components/regex_playground/PatternInput.tsx
 import type { FlagToggleProps, PatternInputProps, RegexFlags } from '@/types/regex';
 import { useDebouncedValue } from '@/hooks/regex_playground/useDebouncedValue';
+import WarningIndicator from './WarningIndicator';
 
 // Enhanced flag descriptions with beginner-friendly explanations
 const FLAG_HELP: Record<keyof RegexFlags, { name: string; desc: string; example: string }> = {
@@ -65,6 +66,7 @@ function PatternInput({
   setPattern,
   flags,
   toggleFlag,
+  warnings = [],
 }: PatternInputProps) {
   // Use shared hook for debounce so spinner only shows while typing
   const debouncedPattern = useDebouncedValue(pattern, 300);
@@ -74,7 +76,10 @@ function PatternInput({
     <div className="card bg-linear-to-br from-base-200 to-base-300 shadow-xl backdrop-blur-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
       <div className="card-body">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="card-title text-primary">Pattern Editor</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="card-title text-primary">Pattern Editor</h2>
+            <WarningIndicator warnings={warnings} />
+          </div>
           <div className="flex flex-wrap gap-1">
             {(Object.keys(flags) as (keyof RegexFlags)[]).map((k) => (
               <FlagToggle key={k} k={k} active={!!flags[k]} onToggle={() => toggleFlag(k)} />

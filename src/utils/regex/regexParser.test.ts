@@ -866,10 +866,43 @@ describe('parseRegexPatternWithWarnings', () => {
     expect(result.warnings[0]).toContain('slow');
   });
 
-  it('should warn about quantified alternation', () => {
-    const result = parseRegexPatternWithWarnings('(a|b)+');
+  it('should warn about quantified alternation with overlapping alternatives', () => {
+    // (a|ab)+ is dangerous because both alternatives can match starting with 'a'
+    const result = parseRegexPatternWithWarnings('(a|ab)+');
     expect(result.warnings.length).toBeGreaterThan(0);
     expect(result.warnings.some((w: string) => w.includes('OR patterns') || w.includes('slow'))).toBe(true);
+  });
+
+  it('should NOT warn about disjoint alternation', () => {
+    // (a|b)+ is safe because 'a' and 'b' can never match the same character
+    const result = parseRegexPatternWithWarnings('(a|b)+');
+    expect(result.warnings.length).toBe(0);
+  });
+
+  it('should NOT warn about safe nested quantifiers with literal prefix or suffix', () => {
+    // These patterns have required literal boundaries that prevent backtracking
+    const safePatterns = [
+      '-?\\d+(?:\\.\\d+)?',           // Number pattern - \. prefix
+      '[a-z0-9]+(?:-[a-z0-9]+)*',     // URL slug - '-' prefix
+      '[a-z]+(?:[A-Z][a-z]+)+',       // camelCase - [A-Z] prefix
+      '\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b',  // IPv4 - \. suffix creates boundary
+    ];
+    for (const pattern of safePatterns) {
+      const result = parseRegexPatternWithWarnings(pattern);
+      expect(result.warnings.filter(w => w.includes('slow') || w.includes('Nested'))).toHaveLength(0);
+    }
+  });
+
+  it('should NOT warn about escaped plus followed by optional quantifier', () => {
+    // \+? is an escaped literal plus made optional, NOT two consecutive quantifiers
+    const result = parseRegexPatternWithWarnings('\\+?[\\d\\s\\-().]{7,}');
+    expect(result.warnings.filter(w => w.includes('Two quantifiers'))).toHaveLength(0);
+  });
+
+  it('should NOT warn about quoted string pattern with disjoint alternatives', () => {
+    // ([^"\\]|\\.)* is safe because [^"\\] and \\. can never match the same input
+    const result = parseRegexPatternWithWarnings('"([^"\\\\]|\\\\.)*"');
+    expect(result.warnings.filter(w => w.includes('OR patterns'))).toHaveLength(0);
   });
 
   it('should warn about very large quantifiers', () => {
