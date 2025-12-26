@@ -1,13 +1,11 @@
 // src/components/ProjectsSection.tsx
 
-import { lazy, Suspense, useMemo } from 'react';
+import { useMemo } from 'react';
 import useProjectsSection from '@/hooks/useProjectsSection';
 import SectionHeader from '@/components/common/SectionHeader';
 import FeaturedProjectCard from '@/components/projects/FeaturedProjectCard';
 import CompactProjectCard from '@/components/projects/CompactProjectCard';
-
-// Lazy load ProjectModal since it's only used when opened
-const ProjectModal = lazy(() => import('./ProjectModal'));
+import ProjectModal from './ProjectModal';
 
 function ProjectsSection() {
     const { 
@@ -62,16 +60,11 @@ function ProjectsSection() {
                 </div>
             </div>
             
-            {/* Lazy-loaded Project Modal */}
-            {isModalOpen && (
-                <Suspense fallback={<div className="modal modal-open"><div className="modal-box">Loading...</div></div>}>
-                    <ProjectModal 
-                        project={selectedProject}
-                        isOpen={isModalOpen}
-                        onClose={handleCloseModal}
-                    />
-                </Suspense>
-            )}
+            <ProjectModal
+                project={selectedProject}
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+            />
         </section>
     );
 }

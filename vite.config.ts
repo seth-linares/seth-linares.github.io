@@ -32,14 +32,12 @@ export default defineConfig({
           markdown: [
             'react-markdown',
             'remark-gfm',
-            'remark-math',
             'remark-supersub',
-            'rehype-highlight',
-            'rehype-katex'
+            'rehype-highlight'
           ],
-          highlighting: ['highlight.js'],
           motion: ['motion'],
-          icons: ['react-icons']
+          icons: ['react-icons'],
+          anthropic: ['@anthropic-ai/sdk']
         },
       },
     },
