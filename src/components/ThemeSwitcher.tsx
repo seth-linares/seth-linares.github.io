@@ -1,5 +1,6 @@
 // src/components/ThemeSwitcher.tsx
 
+import React, { useCallback } from 'react';
 import { IoColorPaletteOutline } from 'react-icons/io5';
 import { motion, AnimatePresence } from 'motion/react';
 import useThemeSwitcher from '@/hooks/useThemeSwitcher';
@@ -16,10 +17,19 @@ const THEMES = [
 const ThemeSwitcher: React.FC = () => {
     const { isOpen, currentTheme, setIsOpen, changeTheme } = useThemeSwitcher(THEMES);
 
+    // Memoize toggle handler
+    const handleToggle = useCallback(() => setIsOpen(!isOpen), [isOpen, setIsOpen]);
+
+    // Memoize theme selection handler
+    const handleThemeSelect = useCallback((theme: typeof THEMES[number]) => {
+        changeTheme(theme);
+        setIsOpen(false);
+    }, [changeTheme, setIsOpen]);
+
     return (
         <div className="relative">
             <button
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={handleToggle}
                 className="btn btn-ghost btn-circle"
                 aria-label="Theme switcher"
             >
@@ -38,10 +48,7 @@ const ThemeSwitcher: React.FC = () => {
                             {THEMES.map((theme) => (
                                 <button
                                     key={theme}
-                                    onClick={() => {
-                                        changeTheme(theme);
-                                        setIsOpen(false);
-                                    }}
+                                    onClick={() => handleThemeSelect(theme)}
                                     className={`w-full px-4 py-2 text-sm hover:bg-base-300 text-left capitalize
                                         ${currentTheme === theme ? 'bg-primary/10' : ''}`}
                                 >
@@ -56,4 +63,4 @@ const ThemeSwitcher: React.FC = () => {
     );
 }
 
-export default ThemeSwitcher;
+export default React.memo(ThemeSwitcher);

@@ -1,4 +1,5 @@
 // src/components/regex_playground/RegexPlayground.tsx
+import { useMemo, useCallback } from 'react';
 import { useRegexPlayground } from '@/hooks/regex_playground/useRegexPlayground';
 import PatternInput from '@/components/regex_playground/PatternInput';
 import TestStringInput from '@/components/regex_playground/TestStringInput';
@@ -33,6 +34,14 @@ function RegexPlayground() {
   } = useRegexPlayground();
   const { tokens, warnings } = usePatternExplainer(state.pattern);
   const { showToast, toastWarnings, dismissToast } = useWarningNotification(warnings);
+
+  // Memoize the generated snippet to avoid recalculation
+  const jsSnippet = useMemo(() => generateJsSnippet(), [generateJsSnippet]);
+
+  // Memoize the copy handler
+  const handleCopySnippet = useCallback(() => {
+    navigator.clipboard.writeText(jsSnippet);
+  }, [jsSnippet]);
 
   // Keyboard shortcuts
   useKeyboardShortcuts({
@@ -128,8 +137,8 @@ function RegexPlayground() {
             {/* Code */}
             <CodeSection
               title="Code Generation"
-              code={generateJsSnippet()}
-              onCopy={() => navigator.clipboard.writeText(generateJsSnippet())}
+              code={jsSnippet}
+              onCopy={handleCopySnippet}
               pattern={state.pattern}
               flags={state.flags}
             />

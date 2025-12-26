@@ -1,7 +1,7 @@
 // src/components/regex_playground/MatchVisualizer.tsx
 
 import { MatchVisualizerProps } from "@/types/regex";
-import { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useMemo } from "react";
 import { motion } from "motion/react";
 
 function MatchVisualizer({
@@ -23,15 +23,16 @@ function MatchVisualizer({
     }
   }, [activeGlobalIndex, onScrollToActive]);
 
-  // Compute global index offsets per test block (pure calc – no hooks aside from effect above)
-  const blockOffsets: number[] = [];
-  {
+  // Compute global index offsets per test block - memoized to prevent recalculation
+  const blockOffsets = useMemo(() => {
+    const offsets: number[] = [];
     let base = 0;
     for (let i = 0; i < matches.length; i++) {
-      blockOffsets[i] = base;
+      offsets[i] = base;
       base += matches[i].matches.length;
     }
-  }
+    return offsets;
+  }, [matches])
 
   return (
     <div className="card bg-linear-to-br from-base-200 to-base-300 shadow-xl backdrop-blur-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
@@ -135,4 +136,4 @@ function MatchVisualizer({
   );
 }
 
-export default MatchVisualizer;
+export default React.memo(MatchVisualizer);

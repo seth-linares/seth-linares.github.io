@@ -1,6 +1,6 @@
 // src/components/ProjectsSection.tsx
 
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useMemo } from 'react';
 import useProjectsSection from '@/hooks/useProjectsSection';
 import SectionHeader from '@/components/common/SectionHeader';
 import FeaturedProjectCard from '@/components/projects/FeaturedProjectCard';
@@ -17,8 +17,12 @@ function ProjectsSection() {
         handleProjectLink, 
         handleOpenModal, 
         handleCloseModal, 
-        getCategoryIcon 
+        getCategoryIcon
     } = useProjectsSection();
+
+    // Memoize filtered arrays to prevent recalculation on each render
+    const featuredProjects = useMemo(() => projectsData.filter(project => project.featured), [projectsData]);
+    const otherProjects = useMemo(() => projectsData.filter(project => !project.featured), [projectsData]);
 
     return (
         <section id="projects" className="py-20 bg-base-100">
@@ -29,7 +33,7 @@ function ProjectsSection() {
                 />
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-                    {projectsData.filter(project => project.featured).map((project, index) => (
+                    {featuredProjects.map((project, index) => (
                         <FeaturedProjectCard
                             key={project.id}
                             project={project}
@@ -45,7 +49,7 @@ function ProjectsSection() {
                     title="Other Projects" 
                 />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {projectsData.filter(project => !project.featured).map((project, index) => (
+                    {otherProjects.map((project, index) => (
                         <CompactProjectCard
                             key={project.id}
                             project={project}

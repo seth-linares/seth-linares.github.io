@@ -1,13 +1,15 @@
 // src/App.tsx
 
 import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
-import { Suspense } from 'react';
+import { Suspense, lazy } from 'react';
 import { AnimatePresence } from 'motion/react';
 import Navbar from './components/Navbar';
 import HomePage from './components/HomePage';
-import PromptGenerator from './components/prompt_generator/PromptGenerator';
 import FileContextProvider from './contexts/FileContextProvider';
-import RegexPlayground from './components/regex_playground/RegexPlayground';
+
+// Lazy-load heavy route components for better initial load time
+const PromptGenerator = lazy(() => import('./components/prompt_generator/PromptGenerator'));
+const RegexPlayground = lazy(() => import('./components/regex_playground/RegexPlayground'));
 
 // Loading component shown while our lazy-loaded components are being fetched
 const LoadingScreen = () => (

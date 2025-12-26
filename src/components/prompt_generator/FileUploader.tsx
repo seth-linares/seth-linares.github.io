@@ -4,8 +4,6 @@ import useFileUploader from "@/hooks/prompt_generator/useFileUploader";
 import useFileContext from "@/hooks/prompt_generator/useFileContext";
 import { FiUpload, FiX, FiFile } from "react-icons/fi";
 import { motion, AnimatePresence } from "motion/react";
-import { ANIMATION_VARIANTS } from "@/utils/animations";
-import AnimatedButton from "@/components/common/AnimatedButton";
 
 function FileUploader() {
     const { files, removeFile } = useFileContext();
@@ -20,32 +18,32 @@ function FileUploader() {
     return (
         <div className="space-y-4">
             <div className="flex gap-2">
-                <AnimatedButton
+                <button
                     type="button"
-                    className="flex-1 gap-2"
+                    className="btn btn-secondary flex-1 gap-2 btn-animated"
                     onClick={selectFiles}
-                    variant="secondary"
                 >
                     <FiUpload className="w-5 h-5" />
                     Upload Files
-                </AnimatedButton>
+                </button>
                 {files.length > 0 && (
-                    <AnimatedButton
+                    <button
                         type="button"
-                        className="btn-square btn-error"
+                        className="btn btn-square btn-error btn-animated"
                         onClick={reset}
                     >
                         <FiX className="w-5 h-5" />
-                    </AnimatedButton>
+                    </button>
                 )}
             </div>
 
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
                 {files.length > 0 && (
                     <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
+                        initial={{ opacity: 0, maxHeight: 0 }}
+                        animate={{ opacity: 1, maxHeight: 400 }}
+                        exit={{ opacity: 0, maxHeight: 0 }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
                         className="overflow-hidden"
                     >
                         <div className="bg-base-200 rounded-lg p-4">
@@ -64,17 +62,12 @@ function FileUploader() {
                                             <FiFile className="w-4 h-4 text-secondary" />
                                             <span className="truncate">{file.name}</span>
                                         </div>
-                                        <motion.button
-                                            initial={{ opacity: 0.5 }}
-                                            animate={{ opacity: 0.5 }}
-                                            whileHover={ANIMATION_VARIANTS.buttonHover}
-                                            whileTap={ANIMATION_VARIANTS.buttonTap}
-                                            transition={{ duration: 0.1 }}
-                                            className="btn btn-accent btn-xs btn-soft"
+                                        <button
+                                            className="btn btn-accent btn-xs btn-soft btn-animated opacity-50 hover:opacity-100"
                                             onClick={() => removeFile(index)}
                                         >
                                             <FiX className="w-4 h-4" />
-                                        </motion.button>
+                                        </button>
                                     </motion.div>
                                 ))}
                             </div>

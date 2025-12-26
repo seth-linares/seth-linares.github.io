@@ -1,6 +1,6 @@
 // UI component types
 
-import { ButtonHTMLAttributes, ReactNode } from "react";
+import { ReactNode } from "react";
 
 // Prompt generator types
 export interface ApiKeyFormProps {
@@ -41,20 +41,6 @@ export interface FileContextType {
 }
 
 // Common component types
-// Exclude event handlers that conflict with Motion's animation and interaction system
-export type ButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 
-  | 'onAnimationStart' | 'onAnimationEnd' | 'onAnimationIteration' | 'onAnimationCancel'
-  | 'onDragStart' | 'onDrag' | 'onDragEnd' | 'onDragEnter' | 'onDragExit' 
-  | 'onDragLeave' | 'onDragOver' | 'onDrop'
->;
-
-export interface AnimatedButtonProps extends ButtonProps {
-  children: ReactNode;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
-  className?: string;
-}
-
 export interface AnimatedCardProps {
   children: ReactNode;
   index?: number;

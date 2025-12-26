@@ -2,7 +2,7 @@
 
 import { useNavbar } from "@/hooks/useNavbar"
 import { motion, useTransform, AnimatePresence, useMotionValueEvent } from "motion/react"
-import { useState } from "react"
+import React, { useState, useMemo, useCallback } from "react"
 import { Link } from "react-router-dom"
 import { HiOutlineMenuAlt3 } from "react-icons/hi"
 import { IoChevronUpOutline } from "react-icons/io5"
@@ -13,7 +13,7 @@ import { NavButtonProps } from "@/types/navigation"
 
 
 
-function NavButton({ label, isActive, isHovered, onClick, onHoverStart, onHoverEnd }: NavButtonProps) {
+const NavButton = React.memo(function NavButton({ label, isActive, isHovered, onClick, onHoverStart, onHoverEnd }: NavButtonProps) {
   return (
     <motion.button
       className="relative px-4 py-2 text-sm font-medium transition-colors duration-200"
@@ -38,18 +38,18 @@ function NavButton({ label, isActive, isHovered, onClick, onHoverStart, onHoverE
         }}
         transition={{ duration: 0.2, ease: "easeOut" }}
       />
-      
+
       {/* Text with color transition */}
-      <span 
+      <span
         className={`relative z-10 ${
-          isActive 
-            ? 'bg-linear-to-r from-violet-500 to-blue-500 bg-clip-text text-transparent' 
+          isActive
+            ? 'bg-linear-to-r from-violet-500 to-blue-500 bg-clip-text text-transparent'
             : 'text-base-content'
         }`}
       >
         {label}
       </span>
-      
+
       {/* Active indicator dot */}
       <AnimatePresence>
         {isActive && (
@@ -64,7 +64,7 @@ function NavButton({ label, isActive, isHovered, onClick, onHoverStart, onHoverE
       </AnimatePresence>
     </motion.button>
   )
-}
+})
 
 function Navbar() {
   const {
@@ -95,13 +95,18 @@ function Navbar() {
     setIsPullTabVisible(latest < 0.5)
   })
 
-  const navigationItems = [
+  // Memoize navigation items to prevent recreation on each render
+  const navigationItems = useMemo(() => [
     { id: 'about', label: 'About' },
     { id: 'experience', label: 'Experience' },
     { id: 'projects', label: 'Projects' },
     { id: 'tools', label: 'Tools' },
     { id: 'contact', label: 'Contact' }
-  ]
+  ], [])
+
+  // Memoize logo hover handlers
+  const handleLogoHoverStart = useCallback(() => setIsLogoHovered(true), [setIsLogoHovered])
+  const handleLogoHoverEnd = useCallback(() => setIsLogoHovered(false), [setIsLogoHovered])
 
   return (
     <>
@@ -131,8 +136,8 @@ function Navbar() {
             <Link to="/" onClick={closeMobileMenu} className="inline-block">
               <AnimatedLogo
                 isHovered={isLogoHovered}
-                onHoverStart={() => setIsLogoHovered(true)}
-                onHoverEnd={() => setIsLogoHovered(false)}
+                onHoverStart={handleLogoHoverStart}
+                onHoverEnd={handleLogoHoverEnd}
               />
             </Link>
           </div>
@@ -186,13 +191,13 @@ function Navbar() {
           </div>
 
           {/* Mobile Menu */}
-          <AnimatePresence>
+          <AnimatePresence mode="wait">
             {isMobileMenuOpen && (
-              <motion.div 
-                className="md:hidden absolute top-full left-0 right-0 bg-base-100/95 backdrop-blur-md shadow-xl border-t border-base-300"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
+              <motion.div
+                className="md:hidden absolute top-full left-0 right-0 bg-base-100/95 backdrop-blur-md shadow-xl border-t border-base-300 overflow-hidden"
+                initial={{ maxHeight: 0, opacity: 0 }}
+                animate={{ maxHeight: 500, opacity: 1 }}
+                exit={{ maxHeight: 0, opacity: 0 }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
               >
                 <motion.div 

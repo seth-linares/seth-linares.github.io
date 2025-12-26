@@ -1,5 +1,5 @@
 // src/components/regex_playground/WarningIndicator.tsx
-import { useState, useRef } from "react";
+import { useState, useRef, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 
 interface WarningIndicatorProps {
@@ -15,15 +15,24 @@ function WarningTooltip({
   targetRef: React.RefObject<HTMLButtonElement | null>;
   isVisible: boolean;
 }) {
-  if (!isVisible || !targetRef.current || typeof document === "undefined") {
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
+
+  // Calculate position in effect, not during render
+  useLayoutEffect(() => {
+    if (isVisible && targetRef.current && typeof document !== "undefined") {
+      const rect = targetRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + 8,
+        left: rect.left + rect.width / 2,
+      });
+    } else {
+      setPosition(null);
+    }
+  }, [isVisible, targetRef]);
+
+  if (!isVisible || !position || typeof document === "undefined") {
     return null;
   }
-
-  const rect = targetRef.current.getBoundingClientRect();
-  const position = {
-    top: rect.bottom + 8,
-    left: rect.left + rect.width / 2,
-  };
 
   return createPortal(
     <div

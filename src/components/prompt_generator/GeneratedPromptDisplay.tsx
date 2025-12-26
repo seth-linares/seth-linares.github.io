@@ -1,7 +1,7 @@
 // src/components/prompt_generator/GeneratedPromptDisplay.tsx
 
 import { motion, AnimatePresence } from 'motion/react';
-import { Suspense, lazy } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { FiMaximize2, FiMinimize2, FiX, FiArrowUp, FiArrowDown, FiCopy, FiCheck, FiList, FiCode} from 'react-icons/fi';
 import { getFileIconAndStyle, useGeneratedPromptDisplay } from '@/hooks/prompt_generator/useGeneratedPromptDisplay';
 import { ANIMATION_VARIANTS } from '@/utils/animations.ts';
@@ -58,35 +58,28 @@ const GeneratedPromptDisplay: React.FC<GeneratedPromptDisplayProps> = ({
                 <h3 className="text-lg font-semibold">Generated Prompt</h3>
                 <div className="flex flex-wrap gap-2">
                   {fileCheckpoints.length > 0 && (
-                    <motion.button
-                      whileHover={ANIMATION_VARIANTS.buttonHover}
-                      whileTap={ANIMATION_VARIANTS.buttonTap}
+                    <button
                       className={`
-                        btn btn-sm transition-all duration-200 relative overflow-hidden
-                        ${showFileNav 
-                          ? 'btn-primary shadow-md' 
+                        btn btn-sm btn-animated transition-all duration-200 relative overflow-hidden
+                        ${showFileNav
+                          ? 'btn-primary shadow-md'
                           : 'btn-ghost hover:bg-primary/10 hover:border-primary/20'
                         }
                       `}
                       onClick={() => setShowFileNav(!showFileNav)}
                       title="Navigate to files"
                     >
-                      <motion.div
-                        animate={{ rotate: showFileNav ? 180 : 0 }}
-                        transition={{ duration: 0.3 }}
+                      <div
+                        className={`transition-transform duration-300 ${showFileNav ? 'rotate-180' : ''}`}
                       >
                         <FiList className="w-4 h-4" />
-                      </motion.div>
+                      </div>
                       <span className="ml-1 hidden sm:inline">Files</span>
                       {/* Pulse effect when active */}
                       {showFileNav && (
-                        <motion.div
-                          className="absolute inset-0 bg-primary/20 rounded-lg"
-                          animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0, 0.5] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                        />
+                        <div className="absolute inset-0 bg-primary/20 rounded-lg animate-pulse-ring" />
                       )}
-                    </motion.button>
+                    </button>
                   )}
                   <button
                     className={`btn btn-sm btn-ghost ${copied ? 'btn-success' : ''}`}
@@ -144,17 +137,12 @@ const GeneratedPromptDisplay: React.FC<GeneratedPromptDisplayProps> = ({
                         </div>
                         <div className="max-h-40 overflow-y-auto">
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                            {fileCheckpoints.map((checkpoint, index) => {
+                            {fileCheckpoints.map((checkpoint) => {
                               const { icon: Icon, badgeClass } = getFileIconAndStyle(checkpoint.fileName);
                               return (
-                                <motion.button
+                                <button
                                   key={checkpoint.fileName}
-                                  initial={{ opacity: 0, y: 10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{ delay: index * 0.05, duration: 0.2 }}
-                                  whileHover={ANIMATION_VARIANTS.buttonHover}
-                                  whileTap={ANIMATION_VARIANTS.buttonTap}
-                                  className="btn btn-ghost btn-sm justify-start h-auto p-2 group"
+                                  className="btn btn-ghost btn-sm btn-animated justify-start h-auto p-2 group animate-fadeIn"
                                   onClick={() => scrollToFile(checkpoint.fileName)}
                                   title={checkpoint.fileName}
                                 >
@@ -166,7 +154,7 @@ const GeneratedPromptDisplay: React.FC<GeneratedPromptDisplayProps> = ({
                                       {checkpoint.fileName}
                                     </span>
                                   </div>
-                                </motion.button>
+                                </button>
                               );
                             })}
                           </div>
@@ -243,4 +231,4 @@ const GeneratedPromptDisplay: React.FC<GeneratedPromptDisplayProps> = ({
   );
 };
 
-export default GeneratedPromptDisplay;
+export default React.memo(GeneratedPromptDisplay);

@@ -1,5 +1,6 @@
 // src/components/ContactSection.tsx
 
+import React, { useCallback } from 'react';
 import { motion } from 'motion/react';
 import useContactSection from '@/hooks/useContactSection';
 import { ANIMATION_VARIANTS, CARD_VIEWPORT_CONFIG } from '@/utils/animations';
@@ -7,6 +8,12 @@ import SectionHeader from '@/components/common/SectionHeader';
 
 function ContactSection() {
     const { contactData, handleContactClick, getContactIcon } = useContactSection();
+
+    // Memoize click handlers
+    const handleEmailClick = useCallback(() => handleContactClick('email', contactData.email), [handleContactClick, contactData.email]);
+    const handlePhoneClick = useCallback(() => handleContactClick('phone', contactData.phone), [handleContactClick, contactData.phone]);
+    const handleLinkedInClick = useCallback(() => handleContactClick('linkedin', contactData.linkedin), [handleContactClick, contactData.linkedin]);
+    const handleGithubClick = useCallback(() => handleContactClick('github', contactData.github), [handleContactClick, contactData.github]);
 
     return (
         <section id="contact" className="py-20 bg-base-200">
@@ -28,7 +35,7 @@ function ContactSection() {
                         whileHover={ANIMATION_VARIANTS.buttonHover}
                         whileTap={ANIMATION_VARIANTS.buttonTap}
                         className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer"
-                        onClick={() => handleContactClick('email', contactData.email)}
+                        onClick={handleEmailClick}
                     >
                         <div className="card-body items-center text-center p-8">
                             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
@@ -46,7 +53,7 @@ function ContactSection() {
                         whileHover={ANIMATION_VARIANTS.buttonHover}
                         whileTap={ANIMATION_VARIANTS.buttonTap}
                         className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer"
-                        onClick={() => handleContactClick('phone', contactData.phone)}
+                        onClick={handlePhoneClick}
                     >
                         <div className="card-body items-center text-center p-8">
                             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
@@ -64,7 +71,7 @@ function ContactSection() {
                         whileHover={ANIMATION_VARIANTS.buttonHover}
                         whileTap={ANIMATION_VARIANTS.buttonTap}
                         className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer"
-                        onClick={() => handleContactClick('linkedin', contactData.linkedin)}
+                        onClick={handleLinkedInClick}
                     >
                         <div className="card-body items-center text-center p-8">
                             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
@@ -82,7 +89,7 @@ function ContactSection() {
                         whileHover={ANIMATION_VARIANTS.buttonHover}
                         whileTap={ANIMATION_VARIANTS.buttonTap}
                         className="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow duration-300 cursor-pointer"
-                        onClick={() => handleContactClick('github', contactData.github)}
+                        onClick={handleGithubClick}
                     >
                         <div className="card-body items-center text-center p-8">
                             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
@@ -114,13 +121,13 @@ function ContactSection() {
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                 <button
-                                    onClick={() => handleContactClick('email', contactData.email)}
+                                    onClick={handleEmailClick}
                                     className="btn btn-primary btn-lg"
                                 >
                                     Send Email
                                 </button>
                                 <button
-                                    onClick={() => handleContactClick('linkedin', contactData.linkedin)}
+                                    onClick={handleLinkedInClick}
                                     className="btn btn-outline btn-lg"
                                 >
                                     Connect on LinkedIn
@@ -134,4 +141,4 @@ function ContactSection() {
     );
 }
 
-export default ContactSection;
+export default React.memo(ContactSection);

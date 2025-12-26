@@ -1,4 +1,5 @@
 // src/components/regex_playground/PatternInput.tsx
+import React, { useCallback } from 'react';
 import type { FlagToggleProps, PatternInputProps, RegexFlags } from '@/types/regex';
 import { useDebouncedValue } from '@/hooks/regex_playground/useDebouncedValue';
 import WarningIndicator from './WarningIndicator';
@@ -37,7 +38,7 @@ const FLAG_HELP: Record<keyof RegexFlags, { name: string; desc: string; example:
   },
 };
 
-function FlagToggle({
+const FlagToggle = React.memo(function FlagToggle({
   k,
   active,
   onToggle
@@ -59,7 +60,7 @@ function FlagToggle({
       </button>
     </div>
   );
-}
+})
 
 function PatternInput({
   pattern,
@@ -71,6 +72,12 @@ function PatternInput({
   // Use shared hook for debounce so spinner only shows while typing
   const debouncedPattern = useDebouncedValue(pattern, 300);
   const showLoading = pattern !== debouncedPattern;
+
+  // Memoize pattern change handler
+  const handlePatternChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => setPattern(e.target.value),
+    [setPattern]
+  );
 
   return (
     <div className="card bg-linear-to-br from-base-200 to-base-300 shadow-xl backdrop-blur-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
@@ -93,7 +100,7 @@ function PatternInput({
             rows={3}
             placeholder="Enter your regex pattern (e.g. \\b\\w+@\\w+\\.\\w+\\b)"
             value={pattern}
-            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setPattern(e.target.value)}
+            onChange={handlePatternChange}
             aria-label="Regex pattern input"
           />
           {/* Loading indicator during debounce */}
@@ -111,4 +118,4 @@ function PatternInput({
   );
 }
 
-export default PatternInput;
+export default React.memo(PatternInput);

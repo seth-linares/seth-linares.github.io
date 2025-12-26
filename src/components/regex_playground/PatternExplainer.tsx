@@ -1,7 +1,7 @@
 // src/components/regex_playground/PatternExplainer.tsx
 import type { PatternToken } from "@/types/regex";
 import { motion } from "motion/react";
-import { useState, useRef } from "react";
+import { useState, useRef, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
 import {
   getSimpleDescription,
@@ -19,18 +19,25 @@ function TokenTooltip({
   targetRef: React.RefObject<HTMLSpanElement | null>;
   isVisible: boolean;
 }) {
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const simpleDesc = getSimpleDescription(token);
   const example = getDescriptionExample(token);
   const tip = getDescriptionTip(token);
 
-  // Calculate position when visible and ref is available
-  if (!isVisible || !targetRef.current) return null;
+  // Calculate position in effect, not during render
+  useLayoutEffect(() => {
+    if (isVisible && targetRef.current) {
+      const rect = targetRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + 8,
+        left: rect.left + rect.width / 2,
+      });
+    } else {
+      setPosition(null);
+    }
+  }, [isVisible, targetRef]);
 
-  const rect = targetRef.current.getBoundingClientRect();
-  const position = {
-    top: rect.bottom + 8,
-    left: rect.left + rect.width / 2,
-  };
+  if (!isVisible || !position) return null;
 
   return createPortal(
     <div
@@ -65,10 +72,9 @@ function TokenWithTooltip({
 
   return (
     <>
-      <motion.span
+      <span
         key={`${token.type}-${token.start}-${idx}`}
-        className="relative inline-block"
-        whileHover={{ scale: 1.08 }}
+        className="relative inline-block hover:scale-[1.08] transition-transform duration-150"
       >
         <span
           ref={ref}
@@ -78,7 +84,7 @@ function TokenWithTooltip({
         >
           {token.value}
         </span>
-      </motion.span>
+      </span>
       <TokenTooltip token={token} targetRef={ref} isVisible={isHovered} />
     </>
   );

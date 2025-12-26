@@ -1,5 +1,6 @@
 // src/components/PromptGenerator.tsx
 
+import { useCallback } from 'react';
 import usePromptGenerator from '@/hooks/prompt_generator/usePromptGenerator';
 import useFileContext from '@/hooks/prompt_generator/useFileContext';
 import { FiHash, FiRefreshCw, FiKey } from 'react-icons/fi';
@@ -10,7 +11,6 @@ import FileUploader from './FileUploader';
 import ApiKeyForm from './ApiKeyForm';
 import TokenCountDisplay from './TokenCountDisplay';
 import GeneratedPromptDisplay from './GeneratedPromptDisplay';
-import AnimatedButton from '@/components/common/AnimatedButton';
 
 function PromptGenerator() {
     const { fileText } = useFileContext();
@@ -34,6 +34,14 @@ function PromptGenerator() {
         setIsPromptMinimized,
     } = usePromptGenerator();
 
+    const handleApiKeyToggle = useCallback(() => {
+        if (apiKey) {
+            resetApiKey();
+        } else {
+            setIsApiKeyFormExpanded(!isApiKeyFormExpanded);
+        }
+    }, [apiKey, resetApiKey, setIsApiKeyFormExpanded, isApiKeyFormExpanded]);
+
     return (
         <motion.div 
             initial={{ opacity: 0 }}
@@ -43,7 +51,7 @@ function PromptGenerator() {
             <ToastContainer
                 position="top-center"
                 hideProgressBar
-                className="!font-sans"
+                className="font-sans!"
             />
             <motion.div 
                 className="card bg-base-100 shadow-xl w-full max-w-5xl"
@@ -63,16 +71,14 @@ function PromptGenerator() {
                             <FiHash className="w-8 h-8 text-primary" />
                             Prompt Builder
                         </motion.h2>
-                        <AnimatedButton 
-                            type="button" 
-                            className="gap-2 btn-info"
-                            onClick={() => apiKey ? resetApiKey() : setIsApiKeyFormExpanded(!isApiKeyFormExpanded)}
-                            variant="outline"
-                            size="sm"
+                        <button
+                            type="button"
+                            className="btn btn-outline btn-sm btn-info gap-2 btn-animated"
+                            onClick={handleApiKeyToggle}
                         >
                             {apiKey ? <FiRefreshCw className="w-4 h-4" /> : <FiKey className="w-4 h-4" />}
                             {apiKey ? 'Change API Key' : 'Add API Key'}
-                        </AnimatedButton>
+                        </button>
                     </div>
                     <div className="divider m-0"></div>
                     
@@ -113,25 +119,23 @@ function PromptGenerator() {
                                         <FileUploader />
                                     </div>
                                     <div className="flex items-center ml-auto gap-2">
-                                         <AnimatedButton 
-                                             type="button" 
-                                             className="gap-2 min-w-[300px]"
+                                         <button
+                                             type="button"
+                                             className={`btn gap-2 min-w-[300px] btn-animated ${!apiKey ? 'btn-ghost' : 'btn-primary'}`}
                                              onClick={handleSubmitTokens}
                                              disabled={!apiKey || (!promptInput && !fileText)}
-                                             variant={!apiKey ? "ghost" : "primary"}
                                          >
                                              <FiHash className="w-5 h-5" />
                                              {!apiKey ? 'Count Tokens (API Key Required)' : 'Count Tokens'}
-                                         </AnimatedButton>
-                                         <AnimatedButton 
-                                             type="button" 
-                                             className="gap-2"
-                                             onClick={() => handleGeneratePrompt()}
+                                         </button>
+                                         <button
+                                             type="button"
+                                             className="btn btn-secondary gap-2 btn-animated"
+                                             onClick={handleGeneratePrompt}
                                              disabled={!fileText}
-                                             variant="secondary"
                                          >
                                              Generate Prompt
-                                         </AnimatedButton>
+                                         </button>
                                     </div>
                                 </div>
 

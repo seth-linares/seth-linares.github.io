@@ -1,6 +1,6 @@
 // src/hooks/useThemeSwitcher.ts
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 export default function useThemeSwitcher<T extends readonly string[]>(themes: T) {
     const [isOpen, setIsOpen] = useState(false);
@@ -19,7 +19,7 @@ export default function useThemeSwitcher<T extends readonly string[]>(themes: T)
     }, [currentTheme]);
 
 
-    const changeTheme = (theme: T[number]) => {
+    const changeTheme = useCallback((theme: T[number]) => {
         // update our local variable to hold new theme
         if(themes.includes(theme)) {
             setCurrentTheme(theme);
@@ -27,7 +27,7 @@ export default function useThemeSwitcher<T extends readonly string[]>(themes: T)
         else {
             console.error(`Unknown theme: ${theme}`);
         }
-    };
+    }, [themes]);
 
     return {
         isOpen,

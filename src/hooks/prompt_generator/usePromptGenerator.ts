@@ -1,15 +1,20 @@
 // src/hooks/prompt_generator/usePromptGenerator.ts
 
-import { useCallback, useState, useEffect, useRef } from "react";
+import { useCallback, useState, useMemo } from "react";
 import Anthropic, { AnthropicError } from "@anthropic-ai/sdk";
 import { toast } from "react-toastify";
 import { formatAnthropicError } from "@/types/AnthropicErrors";
 import useFileContext from "./useFileContext";
 
+// Stores generated prompt along with the fileText it was generated from
+interface GeneratedPromptData {
+    prompt: string;
+    sourceFileText: string;
+}
+
 function usePromptGenerator() {
 
     const { fileText, generatePrompt } = useFileContext();
-    const fileTextRef = useRef(fileText);
 
     const [promptInput, setPromptInput] = useState('');
     const [apiKeyInput, setApiKeyInput] = useState('');
@@ -17,39 +22,43 @@ function usePromptGenerator() {
     const [apiKey, setApiKey] = useState<string | null>(
         () => localStorage.getItem('anthropic-api-key')
     );
-    const [client, setClient] = useState<Anthropic | null>(() => {
-        const key = localStorage.getItem('anthropic-api-key');
-        return key ? new Anthropic({ apiKey: key, dangerouslyAllowBrowser: true }) : null;
-    });
-    const [generatedPrompt, setGeneratedPrompt] = useState<string>('');
-    const [showGeneratedPrompt, setShowGeneratedPrompt] = useState(false);
+
+    // Derive client from apiKey using useMemo instead of storing as state
+    const client = useMemo(() => {
+        return apiKey ? new Anthropic({ apiKey, dangerouslyAllowBrowser: true }) : null;
+    }, [apiKey]);
+
+    // Store generated prompt with its source fileText for staleness detection
+    const [generatedPromptData, setGeneratedPromptData] = useState<GeneratedPromptData | null>(null);
+    // User-controlled visibility (can be hidden by user even if prompt is valid)
+    const [isPromptVisible, setIsPromptVisible] = useState(false);
     const [isPromptMinimized, setIsPromptMinimized] = useState(false);
     const [isApiKeyFormExpanded, setIsApiKeyFormExpanded] = useState(false);
 
+    // Derive whether prompt is still valid (fileText hasn't changed since generation)
+    const isPromptValid = generatedPromptData !== null && generatedPromptData.sourceFileText === fileText;
+
+    // Derive the actual values to expose - prompt is empty if stale
+    const generatedPrompt = isPromptValid ? generatedPromptData.prompt : '';
+    const showGeneratedPrompt = isPromptValid && isPromptVisible;
+
+    // Wrapper to allow consumer to hide the prompt
+    const setShowGeneratedPrompt = useCallback((show: boolean) => {
+        setIsPromptVisible(show);
+    }, []);
+
     const handleGeneratePrompt = useCallback(() => {
         const prompt = generatePrompt(promptInput);
-        setGeneratedPrompt(prompt);
-        setShowGeneratedPrompt(true);
-    }, [promptInput, generatePrompt]);
-
-    const [prevFileText, setPrevFileText] = useState(fileText);
-    if (prevFileText !== fileText) {
-        setPrevFileText(fileText);
-        if (showGeneratedPrompt) setShowGeneratedPrompt(false);
-        if (generatedPrompt) setGeneratedPrompt('');
-    }
-
-    useEffect(() => {
-        fileTextRef.current = fileText;
-    }, [fileText]);
+        setGeneratedPromptData({ prompt, sourceFileText: fileText });
+        setIsPromptVisible(true);
+    }, [promptInput, generatePrompt, fileText]);
 
     const localSaveApiKey = useCallback((e: React.FormEvent) => {
         e.preventDefault();
         if (!apiKeyInput) return;
-        
+
         localStorage.setItem('anthropic-api-key', apiKeyInput);
         setApiKey(apiKeyInput);
-        setClient(new Anthropic({ apiKey: apiKeyInput, dangerouslyAllowBrowser: true }));
         setIsApiKeyFormExpanded(false);
     }, [apiKeyInput]);
 
@@ -57,7 +66,6 @@ function usePromptGenerator() {
         localStorage.removeItem('anthropic-api-key');
         setApiKey(null);
         setApiKeyInput('');
-        setClient(null);
         setIsApiKeyFormExpanded(true);
     }, []);
 

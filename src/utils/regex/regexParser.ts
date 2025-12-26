@@ -640,7 +640,7 @@ function hasRequiredLiteralBoundary(groupContent: string): boolean {
 
   // Starts with a plain literal char NOT followed by any quantifier
   // e.g., '-' in -[a-z]+ is a required prefix, but 'a' in a+ is NOT
-  if (/^[a-zA-Z0-9\-_.,:;!@#$%&=<>'"\/](?![*+?{])/.test(content)) {
+  if (/^[a-zA-Z0-9\-_.,:;!@#$%&=<>'"/](?![*+?{])/.test(content)) {
     return true;
   }
 
@@ -660,7 +660,7 @@ function hasRequiredLiteralBoundary(groupContent: string): boolean {
 
   // Ends with a plain literal char not preceded by a quantifier
   // e.g., 'x' at end if not part of a quantifier like {1,3}
-  if (/[a-zA-Z0-9\-_.,:;!@#$%&=<>'"\/]$/.test(content) && !/[*+?}].$/.test(content)) {
+  if (/[a-zA-Z0-9\-_.,:;!@#$%&=<>'"/]$/.test(content) && !/[*+?}].$/.test(content)) {
     return true;
   }
 
@@ -877,7 +877,7 @@ function validatePattern(tokens: PatternToken[]): string[] {
       // Check for hyphen that could be a range
       if (inner[i] === '-' && i > 0 && i < inner.length - 1) {
         // Get the character before the hyphen
-        let startChar = inner[i - 1];
+        const startChar = inner[i - 1];
         // Handle if previous char was an escape sequence
         if (i >= 2 && inner[i - 2] === '\\') {
           // This is an escaped char like \d- which isn't a valid range start
@@ -886,7 +886,7 @@ function validatePattern(tokens: PatternToken[]): string[] {
         }
 
         // Get the character after the hyphen
-        let endChar = inner[i + 1];
+        const endChar = inner[i + 1];
         // Handle if next char is escaped
         if (endChar === '\\' && i + 2 < inner.length) {
           // Escaped char after hyphen - not a simple range

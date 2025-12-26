@@ -4,7 +4,6 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { CompactProjectCardProps } from '@/types/portfolio';
 import { ANIMATION_VARIANTS, CARD_VIEWPORT_CONFIG } from '@/utils/animations';
-import AnimatedButton from '@/components/common/AnimatedButton';
 
 function CompactProjectCard({ 
   project, 
@@ -70,16 +69,15 @@ function CompactProjectCard({
 
         <div className="card-actions justify-end gap-2">
           {project.links.github && (
-            <AnimatedButton
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 onProjectLink(project.links.github!);
               }}
-              variant="outline"
-              size="sm"
+              className="btn btn-outline btn-sm btn-animated"
             >
               View
-            </AnimatedButton>
+            </button>
           )}
         </div>
       </div>

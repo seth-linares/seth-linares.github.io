@@ -1,9 +1,9 @@
 // src/components/prompt_generator/ApiKeyForm.tsx
 
+import React from 'react';
 import { FiKey } from 'react-icons/fi';
 import { motion } from 'motion/react';
 import { ApiKeyFormProps } from '@/types/components';
-import AnimatedButton from '@/components/common/AnimatedButton';
 
 
 const ApiKeyForm: React.FC<ApiKeyFormProps> = ({ apiKeyInput, setApiKeyInput, localSaveApiKey }) => (
@@ -38,14 +38,13 @@ const ApiKeyForm: React.FC<ApiKeyFormProps> = ({ apiKeyInput, setApiKeyInput, lo
             </div>
           </div>
         </div>
-        <AnimatedButton
+        <button
           type="submit"
-          className="whitespace-nowrap"
+          className="btn btn-primary whitespace-nowrap btn-animated"
           disabled={!apiKeyInput}
-          variant="primary"
         >
           Save API Key
-        </AnimatedButton>
+        </button>
       </div>
       <div className="text-center mt-2">
         <span className="label-text-alt text-base-content/70">
@@ -56,4 +55,4 @@ const ApiKeyForm: React.FC<ApiKeyFormProps> = ({ apiKeyInput, setApiKeyInput, lo
   </motion.div>
 );
 
-export default ApiKeyForm;
+export default React.memo(ApiKeyForm);

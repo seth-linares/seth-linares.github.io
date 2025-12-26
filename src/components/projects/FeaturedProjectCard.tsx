@@ -3,7 +3,6 @@
 import React from 'react';
 import { FeaturedProjectCardProps } from '@/types/portfolio';
 import AnimatedCard from '@/components/common/AnimatedCard';
-import AnimatedButton from '@/components/common/AnimatedButton';
 
 
 
@@ -61,16 +60,15 @@ function FeaturedProjectCard({
 
         <div className="card-actions justify-end gap-2">
           {project.links.github && (
-            <AnimatedButton
+            <button
               onClick={(e) => {
                 e.stopPropagation();
                 onProjectLink(project.links.github!);
               }}
-              variant="primary"
-              size="sm"
+              className="btn btn-primary btn-sm btn-animated"
             >
               View Code
-            </AnimatedButton>
+            </button>
           )}
         </div>
       </div>
