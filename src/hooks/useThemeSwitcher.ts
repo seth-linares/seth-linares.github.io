@@ -7,7 +7,7 @@ export default function useThemeSwitcher<T extends readonly string[]>(themes: T)
     const [currentTheme, setCurrentTheme] = useState<T[number]>(() => {
         const savedTheme: string = localStorage.getItem("theme") ?? "";
         // if the theme isn't a part of the possible themes, then set it to dark -> useful for when user incorrectly alters their theme val
-        return themes.includes(savedTheme) ? savedTheme : "autumn";
+        return themes.includes(savedTheme) ? savedTheme : "sweetandmore";
     });
 
     // run each time the currentTheme is updated and on initial mount
