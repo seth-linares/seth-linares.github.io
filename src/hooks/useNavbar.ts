@@ -127,17 +127,28 @@ export function useNavbar(): NavbarState {
   const updateActiveSection = useCallback(() => {
     if (!isHomePage) return
 
+    // Check if we're at the bottom of the page - if so, contact section is active
+    const scrollTop = window.scrollY || document.documentElement.scrollTop
+    const windowHeight = window.innerHeight
+    const documentHeight = document.documentElement.scrollHeight
+    const isAtBottom = scrollTop + windowHeight >= documentHeight - 50 // 50px threshold
+
+    if (isAtBottom) {
+      setActiveSection('contact')
+      return
+    }
+
     // Find the section with the highest visibility ratio
     let maxRatio = 0
     let activeSectionId: string | null = null
-    
+
     visibleSections.current.forEach((ratio, sectionId) => {
       if (ratio > maxRatio) {
         maxRatio = ratio
         activeSectionId = sectionId
       }
     })
-    
+
     // Only update if we have a clear winner
     if (activeSectionId && maxRatio > 0.3) {
       setActiveSection(activeSectionId)
@@ -150,6 +161,15 @@ export function useNavbar(): NavbarState {
     
     sectionObserver.current = new IntersectionObserver(
       (entries) => {
+        // Check if at bottom of page first - skip intersection logic if so
+        const scrollTop = window.scrollY || document.documentElement.scrollTop
+        const windowHeight = window.innerHeight
+        const documentHeight = document.documentElement.scrollHeight
+        if (scrollTop + windowHeight >= documentHeight - 50) {
+          setActiveSection('contact')
+          return
+        }
+
         entries.forEach(entry => {
           if (entry.isIntersecting) {
             visibleSections.current.set(entry.target.id, entry.intersectionRatio)
@@ -157,7 +177,7 @@ export function useNavbar(): NavbarState {
             visibleSections.current.delete(entry.target.id)
           }
         })
-        
+
         updateActiveSection()
       },
       {
@@ -238,6 +258,7 @@ export function useNavbar(): NavbarState {
       
       scrollTimeoutRef.current = setTimeout(() => {
         updateNavbarVisibility()
+        updateActiveSection()
       }, NAVBAR_CONFIG.DEBOUNCE_DELAY)
     }
     
@@ -249,7 +270,7 @@ export function useNavbar(): NavbarState {
         clearTimeout(scrollTimeoutRef.current)
       }
     }
-  }, [updateNavbarVisibility])
+  }, [updateNavbarVisibility, updateActiveSection])
 
   if (prevPathname !== location.pathname) {
     setPrevPathname(location.pathname)
