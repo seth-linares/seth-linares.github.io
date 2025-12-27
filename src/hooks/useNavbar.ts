@@ -16,9 +16,8 @@ const NAVBAR_CONFIG = {
   SCROLL_THRESHOLD: 100,
   VELOCITY_THRESHOLD: 300,
   DEBOUNCE_DELAY: 50,
-  OBSERVER_THRESHOLD: [0, 0.25, 0.5, 0.75, 1],
-  OBSERVER_ROOT_MARGIN: '-80px 0px -20% 0px',
-  SECTIONS: ['about', 'experience', 'projects', 'tools', 'contact'] as const
+  NAVBAR_OFFSET: 120,
+  SECTIONS: ['about', 'experience', 'projects', 'skills', 'education', 'tools', 'contact'] as const
 }
 
 export function useNavbar(): NavbarState {
@@ -37,8 +36,7 @@ export function useNavbar(): NavbarState {
   // Refs for managing state without causing re-renders
   const lastScrollY = useRef(0)
   const scrollDirection = useRef<'up' | 'down' | null>(null)
-  const sectionObserver = useRef<IntersectionObserver | null>(null)
-  const visibleSections = useRef<Map<string, number>>(new Map())
+  const isNavigating = useRef(false)
   const [prevPathname, setPrevPathname] = useState(location.pathname)
 
   // Scroll animation setup
@@ -123,96 +121,49 @@ export function useNavbar(): NavbarState {
     rawNavbarVisibility.set(1)
   }, [rawNavbarVisibility])
 
-  // Simplified section detection
+  // Simple scroll-position-based section detection
   const updateActiveSection = useCallback(() => {
-    if (!isHomePage) return
+    if (!isHomePage || isNavigating.current) return
 
-    // Check if we're at the bottom of the page - if so, contact section is active
-    const scrollTop = window.scrollY || document.documentElement.scrollTop
+    const scrollTop = window.scrollY
     const windowHeight = window.innerHeight
     const documentHeight = document.documentElement.scrollHeight
-    const isAtBottom = scrollTop + windowHeight >= documentHeight - 50 // 50px threshold
 
-    if (isAtBottom) {
+    // At bottom of page = contact section
+    if (scrollTop + windowHeight >= documentHeight - 50) {
       setActiveSection('contact')
       return
     }
 
-    // Find the section with the highest visibility ratio
-    let maxRatio = 0
-    let activeSectionId: string | null = null
+    // Find section whose top is closest to viewport top (with navbar offset)
+    let closestSection: string | null = null
+    let closestDistance = Infinity
 
-    visibleSections.current.forEach((ratio, sectionId) => {
-      if (ratio > maxRatio) {
-        maxRatio = ratio
-        activeSectionId = sectionId
-      }
-    })
-
-    // Only update if we have a clear winner
-    if (activeSectionId && maxRatio > 0.3) {
-      setActiveSection(activeSectionId)
-    }
-  }, [isHomePage])
-
-  // Setup Intersection Observer
-  const setupSectionObserver = useCallback(() => {
-    if (!isHomePage || sectionObserver.current) return
-    
-    sectionObserver.current = new IntersectionObserver(
-      (entries) => {
-        // Check if at bottom of page first - skip intersection logic if so
-        const scrollTop = window.scrollY || document.documentElement.scrollTop
-        const windowHeight = window.innerHeight
-        const documentHeight = document.documentElement.scrollHeight
-        if (scrollTop + windowHeight >= documentHeight - 50) {
-          setActiveSection('contact')
-          return
-        }
-
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            visibleSections.current.set(entry.target.id, entry.intersectionRatio)
-          } else {
-            visibleSections.current.delete(entry.target.id)
-          }
-        })
-
-        updateActiveSection()
-      },
-      {
-        threshold: NAVBAR_CONFIG.OBSERVER_THRESHOLD,
-        rootMargin: NAVBAR_CONFIG.OBSERVER_ROOT_MARGIN
-      }
-    )
-    
-    // Observe all sections
     NAVBAR_CONFIG.SECTIONS.forEach((sectionId) => {
       const element = document.getElementById(sectionId)
-      if (element && sectionObserver.current) {
-        sectionObserver.current.observe(element)
+      if (element) {
+        const rect = element.getBoundingClientRect()
+        const distance = Math.abs(rect.top - NAVBAR_CONFIG.NAVBAR_OFFSET)
+        // Section must be at or above the navbar offset point
+        if (rect.top <= NAVBAR_CONFIG.NAVBAR_OFFSET + 100 && distance < closestDistance) {
+          closestDistance = distance
+          closestSection = sectionId
+        }
       }
     })
-  }, [isHomePage, updateActiveSection])
 
-  // Cleanup observer
-  const cleanupSectionObserver = useCallback(() => {
-    if (sectionObserver.current) {
-      sectionObserver.current.disconnect()
-      sectionObserver.current = null
+    if (closestSection) {
+      setActiveSection(closestSection)
     }
-    visibleSections.current.clear()
-  }, [])
+  }, [isHomePage])
 
   // Navigation handler
   const navigateToSection = useCallback((sectionId: string) => {
     if (isHomePage) {
-      // Temporarily disable observer updates
-      cleanupSectionObserver()
-      
-      // Set active section immediately for visual feedback
+      // Lock section updates during navigation
+      isNavigating.current = true
       setActiveSection(sectionId)
-      
+
       // Scroll to section
       const element = document.getElementById(sectionId)
       if (element) {
@@ -220,18 +171,18 @@ export function useNavbar(): NavbarState {
         const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset
         window.scrollTo({ top: y, behavior: 'smooth' })
       }
-      
-      // Re-enable observer after animation
+
+      // Clear navigation lock after scroll animation
       setTimeout(() => {
-        setupSectionObserver()
+        isNavigating.current = false
       }, 1000)
     } else {
       // Navigate to home page with scroll target
       navigate('/', { state: { scrollTo: sectionId } })
     }
-    
+
     closeMobileMenu()
-  }, [isHomePage, navigate, closeMobileMenu, cleanupSectionObserver, setupSectionObserver])
+  }, [isHomePage, navigate, closeMobileMenu])
 
   // Handle navigation from other pages
   useEffect(() => {
@@ -276,19 +227,6 @@ export function useNavbar(): NavbarState {
     setPrevPathname(location.pathname)
     if (isMobileMenuOpen) setIsMobileMenuOpen(false)
   }
-
-  // Setup section observer
-  useEffect(() => {
-    if (isHomePage) {
-      const timer = setTimeout(setupSectionObserver, 100)
-      return () => {
-        clearTimeout(timer)
-        cleanupSectionObserver()
-      }
-    } else {
-      cleanupSectionObserver()
-    }
-  }, [isHomePage, setupSectionObserver, cleanupSectionObserver])
 
   return {
     isMobileMenuOpen,

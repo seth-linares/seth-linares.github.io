@@ -100,6 +100,8 @@ function Navbar() {
     { id: 'about', label: 'About' },
     { id: 'experience', label: 'Experience' },
     { id: 'projects', label: 'Projects' },
+    { id: 'skills', label: 'Skills' },
+    { id: 'education', label: 'Education' },
     { id: 'tools', label: 'Tools' },
     { id: 'contact', label: 'Contact' }
   ], [])
@@ -107,6 +109,15 @@ function Navbar() {
   // Memoize logo hover handlers
   const handleLogoHoverStart = useCallback(() => setIsLogoHovered(true), [setIsLogoHovered])
   const handleLogoHoverEnd = useCallback(() => setIsLogoHovered(false), [setIsLogoHovered])
+
+  // Logo click scrolls to hero on home page
+  const handleLogoClick = useCallback((e: React.MouseEvent) => {
+    closeMobileMenu()
+    if (isHomePage) {
+      e.preventDefault()
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }, [isHomePage, closeMobileMenu])
 
   return (
     <>
@@ -133,7 +144,7 @@ function Navbar() {
         
         <nav className="navbar container mx-auto px-4 h-full">
           <div className="flex-1">
-            <Link to="/" onClick={closeMobileMenu} className="inline-block">
+            <Link to="/" onClick={handleLogoClick} className="inline-block">
               <AnimatedLogo
                 isHovered={isLogoHovered}
                 onHoverStart={handleLogoHoverStart}
