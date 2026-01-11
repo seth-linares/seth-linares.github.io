@@ -8,26 +8,32 @@ import CompactProjectCard from '@/components/projects/CompactProjectCard';
 import ProjectModal from './ProjectModal';
 
 function ProjectsSection() {
-    const { 
-        projectsData, 
-        selectedProject, 
-        isModalOpen, 
-        handleProjectLink, 
-        handleOpenModal, 
-        handleCloseModal, 
-        getCategoryIcon
+    const {
+        projectsData,
+        selectedProject,
+        isModalOpen,
+        handleProjectLink,
+        handleOpenModal,
+        handleCloseModal,
+        getCategoryIcon,
     } = useProjectsSection();
 
     // Memoize filtered arrays to prevent recalculation on each render
-    const featuredProjects = useMemo(() => projectsData.filter(project => project.featured), [projectsData]);
-    const otherProjects = useMemo(() => projectsData.filter(project => !project.featured), [projectsData]);
+    const featuredProjects = useMemo(
+        () => projectsData.filter((project) => project.featured),
+        [projectsData]
+    );
+    const otherProjects = useMemo(
+        () => projectsData.filter((project) => !project.featured),
+        [projectsData]
+    );
 
     return (
         <section id="projects" className="py-20 bg-base-100">
             <div className="container mx-auto px-4 max-w-7xl">
-                <SectionHeader 
-                    title="Featured Projects" 
-                    description="A collection of projects showcasing my expertise in security, education, and developer tools" 
+                <SectionHeader
+                    title="Featured Projects"
+                    description="A collection of projects showcasing my expertise in security, education, and developer tools"
                 />
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
@@ -43,9 +49,7 @@ function ProjectsSection() {
                     ))}
                 </div>
 
-                <SectionHeader 
-                    title="Other Projects" 
-                />
+                <SectionHeader title="Other Projects" />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {otherProjects.map((project, index) => (
                         <CompactProjectCard
@@ -59,7 +63,7 @@ function ProjectsSection() {
                     ))}
                 </div>
             </div>
-            
+
             <ProjectModal
                 project={selectedProject}
                 isOpen={isModalOpen}

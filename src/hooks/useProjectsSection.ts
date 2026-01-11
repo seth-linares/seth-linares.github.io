@@ -35,7 +35,7 @@ function useProjectsSection() {
         handleProjectLink,
         handleOpenModal,
         handleCloseModal,
-        getCategoryIcon
+        getCategoryIcon,
     };
 }
 

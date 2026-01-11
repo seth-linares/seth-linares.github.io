@@ -4,7 +4,6 @@ import { useCallback, useEffect } from 'react';
 import { ProjectSection, UseProjectModalProps } from '@/types/portfolio';
 import { getProjectCategoryIcon } from '@/utils/iconMaps';
 
-
 function useProjectModal({ isOpen, onClose }: UseProjectModalProps) {
     const handleBackdropClick = useCallback(() => {
         onClose();
@@ -52,7 +51,7 @@ function useProjectModal({ isOpen, onClose }: UseProjectModalProps) {
     return {
         handleBackdropClick,
         handleLinkClick,
-        getCategoryIcon
+        getCategoryIcon,
     };
 }
 

@@ -10,9 +10,9 @@ function useHeroSection() {
         if (link.startsWith('#')) {
             const element = document.querySelector(link);
             if (element) {
-                element.scrollIntoView({ 
+                element.scrollIntoView({
                     behavior: 'smooth',
-                    block: 'start'
+                    block: 'start',
                 });
             }
         } else {
@@ -33,7 +33,7 @@ function useHeroSection() {
     return {
         heroData,
         handleCtaClick,
-        handleResumeDownload
+        handleResumeDownload,
     };
 }
 

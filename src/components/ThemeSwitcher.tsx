@@ -6,13 +6,40 @@ import { motion, AnimatePresence } from 'motion/react';
 import useThemeSwitcher from '@/hooks/useThemeSwitcher';
 
 const THEMES = [
-    "acid", "aqua", "autumn", "black", "bumblebee", "business", "cmyk",
-    "coffee", "corporate", "cupcake", "cyberpunk", "dark", "dim", "dracula",
-    "emerald", "fantasy", "forest", "garden", "halloween", "lemonade",
-    "light", "lofi", "luxury", "night", "nord", "pastel", "retro", "sunset", 
-    "sweetandmore", "synthwave", "valentine", "winter", "wireframe"
+    'acid',
+    'aqua',
+    'autumn',
+    'black',
+    'bumblebee',
+    'business',
+    'cmyk',
+    'coffee',
+    'corporate',
+    'cupcake',
+    'cyberpunk',
+    'dark',
+    'dim',
+    'dracula',
+    'emerald',
+    'fantasy',
+    'forest',
+    'garden',
+    'halloween',
+    'lemonade',
+    'light',
+    'lofi',
+    'luxury',
+    'night',
+    'nord',
+    'pastel',
+    'retro',
+    'sunset',
+    'sweetandmore',
+    'synthwave',
+    'valentine',
+    'winter',
+    'wireframe',
 ] as const;
-
 
 const ThemeSwitcher: React.FC = () => {
     const { isOpen, currentTheme, setIsOpen, changeTheme } = useThemeSwitcher(THEMES);
@@ -21,10 +48,13 @@ const ThemeSwitcher: React.FC = () => {
     const handleToggle = useCallback(() => setIsOpen(!isOpen), [isOpen, setIsOpen]);
 
     // Memoize theme selection handler
-    const handleThemeSelect = useCallback((theme: typeof THEMES[number]) => {
-        changeTheme(theme);
-        setIsOpen(false);
-    }, [changeTheme, setIsOpen]);
+    const handleThemeSelect = useCallback(
+        (theme: (typeof THEMES)[number]) => {
+            changeTheme(theme);
+            setIsOpen(false);
+        },
+        [changeTheme, setIsOpen]
+    );
 
     return (
         <div className="relative">
@@ -61,6 +91,6 @@ const ThemeSwitcher: React.FC = () => {
             </AnimatePresence>
         </div>
     );
-}
+};
 
 export default React.memo(ThemeSwitcher);

@@ -14,11 +14,7 @@ function ExperienceSection() {
 
                 <div className="space-y-8">
                     {experienceData.map((experience, index) => (
-                        <AnimatedCard
-                            key={index}
-                            index={index}
-                            className="bg-base-100"
-                        >
+                        <AnimatedCard key={index} index={index} className="bg-base-100">
                             <div className="card-body p-8">
                                 <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6">
                                     <div className="mb-4 lg:mb-0">
@@ -49,21 +45,26 @@ function ExperienceSection() {
                                         Key Achievements
                                     </h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                        {experience.achievements.map((achievement, achievementIndex) => (
-                                            <motion.div
-                                                key={achievementIndex}
-                                                initial={{ opacity: 0, x: -10 }}
-                                                whileInView={{ opacity: 1, x: 0 }}
-                                                transition={{ duration: 0.4, delay: achievementIndex * 0.05 }}
-                                                viewport={{ once: true }}
-                                                className="flex items-start gap-3"
-                                            >
-                                                <div className="w-2 h-2 bg-primary rounded-full mt-2 shrink-0"></div>
-                                                <p className="text-base-content/80 text-sm leading-relaxed">
-                                                    {achievement}
-                                                </p>
-                                            </motion.div>
-                                        ))}
+                                        {experience.achievements.map(
+                                            (achievement, achievementIndex) => (
+                                                <motion.div
+                                                    key={achievementIndex}
+                                                    initial={{ opacity: 0, x: -10 }}
+                                                    whileInView={{ opacity: 1, x: 0 }}
+                                                    transition={{
+                                                        duration: 0.4,
+                                                        delay: achievementIndex * 0.05,
+                                                    }}
+                                                    viewport={{ once: true }}
+                                                    className="flex items-start gap-3"
+                                                >
+                                                    <div className="w-2 h-2 bg-primary rounded-full mt-2 shrink-0"></div>
+                                                    <p className="text-base-content/80 text-sm leading-relaxed">
+                                                        {achievement}
+                                                    </p>
+                                                </motion.div>
+                                            )
+                                        )}
                                     </div>
                                 </div>
 

@@ -1,19 +1,14 @@
 // src/components/prompt_generator/FileUploader.tsx
 
-import useFileUploader from "@/hooks/prompt_generator/useFileUploader";
-import useFileContext from "@/hooks/prompt_generator/useFileContext";
-import { FiUpload, FiX, FiFile } from "react-icons/fi";
-import { motion, AnimatePresence } from "motion/react";
+import useFileUploader from '@/hooks/prompt_generator/useFileUploader';
+import useFileContext from '@/hooks/prompt_generator/useFileContext';
+import { FiUpload, FiX, FiFile } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'motion/react';
 
 function FileUploader() {
     const { files, removeFile } = useFileContext();
-    
-    const {
-        isLoading,
-        error,
-        selectFiles,
-        reset,
-    } = useFileUploader();
+
+    const { isLoading, error, selectFiles, reset } = useFileUploader();
 
     return (
         <div className="space-y-4">
@@ -43,7 +38,7 @@ function FileUploader() {
                         initial={{ opacity: 0, maxHeight: 0 }}
                         animate={{ opacity: 1, maxHeight: 400 }}
                         exit={{ opacity: 0, maxHeight: 0 }}
-                        transition={{ duration: 0.3, ease: "easeOut" }}
+                        transition={{ duration: 0.3, ease: 'easeOut' }}
                         className="overflow-hidden"
                     >
                         <div className="bg-base-200 rounded-lg p-4">
@@ -76,15 +71,9 @@ function FileUploader() {
                 )}
             </AnimatePresence>
 
-            {error && (
-                <div className="text-error text-sm">
-                    Error: {error.message}
-                </div>
-            )}
+            {error && <div className="text-error text-sm">Error: {error.message}</div>}
 
-            {isLoading && (
-                <div className="loading loading-spinner loading-sm text-secondary" />
-            )}
+            {isLoading && <div className="loading loading-spinner loading-sm text-secondary" />}
         </div>
     );
 }

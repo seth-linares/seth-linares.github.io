@@ -8,7 +8,7 @@ function useAboutSection() {
 
     return {
         aboutData,
-        getValueIcon
+        getValueIcon,
     };
 }
 

@@ -6,7 +6,7 @@ function useExperienceSection() {
     const experienceData = siteData.experience;
 
     return {
-        experienceData
+        experienceData,
     };
 }
 

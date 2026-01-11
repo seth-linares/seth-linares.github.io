@@ -10,20 +10,32 @@ function ContactSection() {
     const { contactData, handleContactClick, getContactIcon } = useContactSection();
 
     // Memoize click handlers
-    const handleEmailClick = useCallback(() => handleContactClick('email', contactData.email), [handleContactClick, contactData.email]);
-    const handlePhoneClick = useCallback(() => handleContactClick('phone', contactData.phone), [handleContactClick, contactData.phone]);
-    const handleLinkedInClick = useCallback(() => handleContactClick('linkedin', contactData.linkedin), [handleContactClick, contactData.linkedin]);
-    const handleGithubClick = useCallback(() => handleContactClick('github', contactData.github), [handleContactClick, contactData.github]);
+    const handleEmailClick = useCallback(
+        () => handleContactClick('email', contactData.email),
+        [handleContactClick, contactData.email]
+    );
+    const handlePhoneClick = useCallback(
+        () => handleContactClick('phone', contactData.phone),
+        [handleContactClick, contactData.phone]
+    );
+    const handleLinkedInClick = useCallback(
+        () => handleContactClick('linkedin', contactData.linkedin),
+        [handleContactClick, contactData.linkedin]
+    );
+    const handleGithubClick = useCallback(
+        () => handleContactClick('github', contactData.github),
+        [handleContactClick, contactData.github]
+    );
 
     return (
         <section id="contact" className="py-20 bg-base-200">
             <div className="container mx-auto px-4 max-w-6xl">
-                <SectionHeader 
-                    title="Get In Touch" 
-                    description="Let's connect and discuss opportunities, projects, or just have a great conversation about technology" 
+                <SectionHeader
+                    title="Get In Touch"
+                    description="Let's connect and discuss opportunities, projects, or just have a great conversation about technology"
                 />
 
-                <motion.div 
+                <motion.div
                     variants={ANIMATION_VARIANTS.cardContainer}
                     initial="hidden"
                     whileInView="visible"
@@ -39,7 +51,11 @@ function ContactSection() {
                     >
                         <div className="card-body items-center text-center p-8">
                             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                                <img src={getContactIcon('email')} alt="Email" className="w-8 h-8" />
+                                <img
+                                    src={getContactIcon('email')}
+                                    alt="Email"
+                                    className="w-8 h-8"
+                                />
                             </div>
                             <h3 className="text-lg font-bold text-base-content mb-2">Email</h3>
                             <p className="text-base-content/70 text-sm break-all">
@@ -57,12 +73,14 @@ function ContactSection() {
                     >
                         <div className="card-body items-center text-center p-8">
                             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                                <img src={getContactIcon('phone')} alt="Phone" className="w-8 h-8 ml-4" />
+                                <img
+                                    src={getContactIcon('phone')}
+                                    alt="Phone"
+                                    className="w-8 h-8 ml-4"
+                                />
                             </div>
                             <h3 className="text-lg font-bold text-base-content mb-2">Phone</h3>
-                            <p className="text-base-content/70 text-sm">
-                                {contactData.phone}
-                            </p>
+                            <p className="text-base-content/70 text-sm">{contactData.phone}</p>
                         </div>
                     </motion.div>
 
@@ -75,12 +93,14 @@ function ContactSection() {
                     >
                         <div className="card-body items-center text-center p-8">
                             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                                <img src={getContactIcon('linkedin')} alt="LinkedIn" className="w-8 h-8" />
+                                <img
+                                    src={getContactIcon('linkedin')}
+                                    alt="LinkedIn"
+                                    className="w-8 h-8"
+                                />
                             </div>
                             <h3 className="text-lg font-bold text-base-content mb-2">LinkedIn</h3>
-                            <p className="text-base-content/70 text-sm">
-                                Professional Profile
-                            </p>
+                            <p className="text-base-content/70 text-sm">Professional Profile</p>
                         </div>
                     </motion.div>
 
@@ -93,12 +113,14 @@ function ContactSection() {
                     >
                         <div className="card-body items-center text-center p-8">
                             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                                <img src={getContactIcon('github')} alt="github" className="w-8 h-8" />
+                                <img
+                                    src={getContactIcon('github')}
+                                    alt="github"
+                                    className="w-8 h-8"
+                                />
                             </div>
                             <h3 className="text-lg font-bold text-base-content mb-2">GitHub</h3>
-                            <p className="text-base-content/70 text-sm">
-                                Code Portfolio
-                            </p>
+                            <p className="text-base-content/70 text-sm">Code Portfolio</p>
                         </div>
                     </motion.div>
                 </motion.div>
@@ -115,9 +137,9 @@ function ContactSection() {
                                 Ready to Collaborate?
                             </h3>
                             <p className="text-base-content/70 mb-6 max-w-2xl mx-auto">
-                                I'm always interested in discussing new opportunities, innovative projects, 
-                                or contributing to meaningful solutions. Whether you're looking for a 
-                                developer, consultant, or collaborator, let's connect!
+                                I'm always interested in discussing new opportunities, innovative
+                                projects, or contributing to meaningful solutions. Whether you're
+                                looking for a developer, consultant, or collaborator, let's connect!
                             </p>
                             <div className="flex flex-col sm:flex-row gap-4 justify-center">
                                 <button

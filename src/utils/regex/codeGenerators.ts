@@ -1,17 +1,17 @@
 // src/utils/regex/codeGenerators.ts
-import type { CodeGenOptions } from "@/types/regex";
+import type { CodeGenOptions } from '@/types/regex';
 
 export const generatePythonCode = (options: CodeGenOptions): string => {
-  const { pattern, flags, testVarName = "text" } = options;
-  const escaped = pattern.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+    const { pattern, flags, testVarName = 'text' } = options;
+    const escaped = pattern.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 
-  let flagsStr = "";
-  if (flags.i) flagsStr += "re.IGNORECASE | ";
-  if (flags.m) flagsStr += "re.MULTILINE | ";
-  if (flags.s) flagsStr += "re.DOTALL | ";
-  flagsStr = flagsStr.replace(/\s\|\s$/, ""); // remove trailing " | "
+    let flagsStr = '';
+    if (flags.i) flagsStr += 're.IGNORECASE | ';
+    if (flags.m) flagsStr += 're.MULTILINE | ';
+    if (flags.s) flagsStr += 're.DOTALL | ';
+    flagsStr = flagsStr.replace(/\s\|\s$/, ''); // remove trailing " | "
 
-  return `import re
+    return `import re
 
 pattern = r'${escaped}'
 ${testVarName} = 'your text here'
@@ -27,17 +27,17 @@ for match in matches:
 };
 
 export const generateJavaCode = (options: CodeGenOptions): string => {
-  const { pattern, flags, testVarName = "text" } = options;
-  const escaped = pattern.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    const { pattern, flags, testVarName = 'text' } = options;
+    const escaped = pattern.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 
-  let flagsInt = 0;
-  // Java Pattern flags:
-  // CASE_INSENSITIVE = 2, MULTILINE = 8, DOTALL = 32
-  if (flags.i) flagsInt |= 2;
-  if (flags.m) flagsInt |= 8;
-  if (flags.s) flagsInt |= 32;
+    let flagsInt = 0;
+    // Java Pattern flags:
+    // CASE_INSENSITIVE = 2, MULTILINE = 8, DOTALL = 32
+    if (flags.i) flagsInt |= 2;
+    if (flags.m) flagsInt |= 8;
+    if (flags.s) flagsInt |= 32;
 
-  return `import java.util.regex.*;
+    return `import java.util.regex.*;
 
 public class RegexExample {
     public static void main(String[] args) {
@@ -59,21 +59,19 @@ public class RegexExample {
 };
 
 export const generateCSharpCode = (options: CodeGenOptions): string => {
-  const { pattern, flags, testVarName = "text" } = options;
-  const escaped = pattern.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    const { pattern, flags, testVarName = 'text' } = options;
+    const escaped = pattern.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 
-  const regexOptions: string[] = [];
-  if (flags.i) regexOptions.push('RegexOptions.IgnoreCase');
-  if (flags.m) regexOptions.push('RegexOptions.Multiline');
-  if (flags.s) regexOptions.push('RegexOptions.Singleline');
-  // Note: Global flag 'g' doesn't have direct equivalent in C# RegexOptions
-  // JavaScript's sticky 'y' and unicode 'u' flags also don't have direct equivalents
+    const regexOptions: string[] = [];
+    if (flags.i) regexOptions.push('RegexOptions.IgnoreCase');
+    if (flags.m) regexOptions.push('RegexOptions.Multiline');
+    if (flags.s) regexOptions.push('RegexOptions.Singleline');
+    // Note: Global flag 'g' doesn't have direct equivalent in C# RegexOptions
+    // JavaScript's sticky 'y' and unicode 'u' flags also don't have direct equivalents
 
-  const optionsString = regexOptions.length > 0 
-    ? `, ${regexOptions.join(' | ')}`
-    : '';
+    const optionsString = regexOptions.length > 0 ? `, ${regexOptions.join(' | ')}` : '';
 
-  return `using System;
+    return `using System;
 using System.Text.RegularExpressions;
 
 class Program
@@ -101,18 +99,18 @@ class Program
 };
 
 export const generateTypeScriptCode = (options: CodeGenOptions): string => {
-  const { pattern, flags, testVarName = "text" } = options;
-  const escaped = pattern.replace(/\\/g, "\\\\").replace(/`/g, "\\`");
+    const { pattern, flags, testVarName = 'text' } = options;
+    const escaped = pattern.replace(/\\/g, '\\\\').replace(/`/g, '\\`');
 
-  let flagsStr = "";
-  if (flags.g) flagsStr += "g";
-  if (flags.i) flagsStr += "i";
-  if (flags.m) flagsStr += "m";
-  if (flags.s) flagsStr += "s";
-  if (flags.u) flagsStr += "u";
-  if (flags.y) flagsStr += "y";
+    let flagsStr = '';
+    if (flags.g) flagsStr += 'g';
+    if (flags.i) flagsStr += 'i';
+    if (flags.m) flagsStr += 'm';
+    if (flags.s) flagsStr += 's';
+    if (flags.u) flagsStr += 'u';
+    if (flags.y) flagsStr += 'y';
 
-  return `interface MatchResult {
+    return `interface MatchResult {
   full: string;
   index: number;
   groups: (string | undefined)[];

@@ -8,7 +8,7 @@ function HeroSection() {
     const { heroData, handleCtaClick, handleResumeDownload } = useHeroSection();
 
     return (
-        <motion.section 
+        <motion.section
             className="hero min-h-screen bg-linear-to-br from-base-200 to-base-300"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -23,8 +23,8 @@ function HeroSection() {
                         className="avatar"
                     >
                         <div className="w-98 h-98 rounded-lg ring ring-primary ring-offset-base-100 ring-offset-1 overflow-hidden">
-                            <img 
-                                src="/Seth-Linares-Picture-Headshot.jpeg" 
+                            <img
+                                src="/Seth-Linares-Picture-Headshot.jpeg"
                                 alt={heroData.name}
                                 className="w-full h-full object-cover"
                             />

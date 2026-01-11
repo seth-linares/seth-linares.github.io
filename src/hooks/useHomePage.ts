@@ -27,37 +27,39 @@ function useHomePage() {
 
     // Tools section data - currently just one tool
     const toolsData = {
-        title: "Developer Tools",
-        description: "Practical tools built to solve real development challenges",
+        title: 'Developer Tools',
+        description: 'Practical tools built to solve real development challenges',
         tools: [
             {
                 id: 'prompt-builder',
                 icon: '/icons/prompt-builder.svg',
                 title: 'Prompt Builder',
                 subtitle: 'AI Prompt Engineering Tool',
-                description: 'Build prompts by combining files and text with optional token counting. Perfect for LLM prompt engineering and context management.',
+                description:
+                    'Build prompts by combining files and text with optional token counting. Perfect for LLM prompt engineering and context management.',
                 technologies: ['React', 'TypeScript', 'Anthropic API'],
                 link: '/prompt-generator',
-                linkText: 'Try It Now'
+                linkText: 'Try It Now',
             },
             {
                 id: 'regex-playground',
                 icon: '/icons/regex-playground.svg',
                 title: 'Regex Playground',
                 subtitle: 'Interactive Regex Testing Tool',
-                description: 'Test, learn, and debug regular expressions with real-time matching, multiple test strings, and a handy pattern library.',
+                description:
+                    'Test, learn, and debug regular expressions with real-time matching, multiple test strings, and a handy pattern library.',
                 technologies: ['React', 'TypeScript', 'Tailwind', 'DaisyUI'],
                 link: '/regex-playground',
-                linkText: 'Open Playground'
-            }
-        ]
+                linkText: 'Open Playground',
+            },
+        ],
     };
 
     return {
         location,
         currentSection,
         scrollToSection,
-        toolsData
+        toolsData,
     };
 }
 

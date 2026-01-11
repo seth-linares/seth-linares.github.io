@@ -2,7 +2,12 @@
 
 import { useState, useEffect, useRef, useMemo, RefObject } from 'react';
 import type { RegexFlags } from '@/types/regex';
-import { generatePythonCode, generateJavaCode, generateCSharpCode, generateTypeScriptCode } from '@/utils/regex/codeGenerators';
+import {
+    generatePythonCode,
+    generateJavaCode,
+    generateCSharpCode,
+    generateTypeScriptCode,
+} from '@/utils/regex/codeGenerators';
 import hljs from 'highlight.js/lib/core';
 import javascript from 'highlight.js/lib/languages/javascript';
 import python from 'highlight.js/lib/languages/python';
@@ -24,54 +29,54 @@ hljs.configure({ ignoreUnescapedHTML: true });
 export type SupportedLanguage = 'javascript' | 'python' | 'java' | 'csharp' | 'typescript';
 
 interface UseCodeHighlightingOptions {
-  code: string;
-  pattern: string;
-  flags: RegexFlags;
+    code: string;
+    pattern: string;
+    flags: RegexFlags;
 }
 
 interface UseCodeHighlightingReturn {
-  language: SupportedLanguage;
-  setLanguage: (lang: SupportedLanguage) => void;
-  displayCode: string;
-  codeRef: RefObject<HTMLElement | null>;
+    language: SupportedLanguage;
+    setLanguage: (lang: SupportedLanguage) => void;
+    displayCode: string;
+    codeRef: RefObject<HTMLElement | null>;
 }
 
 export function useCodeHighlighting({
-  code,
-  pattern,
-  flags,
+    code,
+    pattern,
+    flags,
 }: UseCodeHighlightingOptions): UseCodeHighlightingReturn {
-  const [language, setLanguage] = useState<SupportedLanguage>('javascript');
-  const codeRef = useRef<HTMLElement>(null);
+    const [language, setLanguage] = useState<SupportedLanguage>('javascript');
+    const codeRef = useRef<HTMLElement>(null);
 
-  const displayCode = useMemo(() => {
-    switch (language) {
-      case 'python':
-        return generatePythonCode({ pattern, flags });
-      case 'java':
-        return generateJavaCode({ pattern, flags });
-      case 'csharp':
-        return generateCSharpCode({ pattern, flags });
-      case 'typescript':
-        return generateTypeScriptCode({ pattern, flags });
-      default:
-        return code;
-    }
-  }, [language, pattern, flags, code]);
+    const displayCode = useMemo(() => {
+        switch (language) {
+            case 'python':
+                return generatePythonCode({ pattern, flags });
+            case 'java':
+                return generateJavaCode({ pattern, flags });
+            case 'csharp':
+                return generateCSharpCode({ pattern, flags });
+            case 'typescript':
+                return generateTypeScriptCode({ pattern, flags });
+            default:
+                return code;
+        }
+    }, [language, pattern, flags, code]);
 
-  useEffect(() => {
-    if (codeRef.current && displayCode) {
-      codeRef.current.className = `language-${language}`;
-      codeRef.current.removeAttribute('data-highlighted');
-      
-      hljs.highlightElement(codeRef.current);
-    }
-  }, [displayCode, language]);
+    useEffect(() => {
+        if (codeRef.current && displayCode) {
+            codeRef.current.className = `language-${language}`;
+            codeRef.current.removeAttribute('data-highlighted');
 
-  return {
-    language,
-    setLanguage,
-    displayCode,
-    codeRef,
-  };
+            hljs.highlightElement(codeRef.current);
+        }
+    }, [displayCode, language]);
+
+    return {
+        language,
+        setLanguage,
+        displayCode,
+        codeRef,
+    };
 }

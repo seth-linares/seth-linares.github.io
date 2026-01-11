@@ -13,7 +13,7 @@ function useSkillsSection() {
 
     return {
         skillsData,
-        getCategoryIcon
+        getCategoryIcon,
     };
 }
 

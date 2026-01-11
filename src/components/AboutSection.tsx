@@ -20,17 +20,19 @@ function AboutSection() {
                             ...ANIMATION_VARIANTS.slideLeft.animate,
                             transition: {
                                 ...ANIMATION_VARIANTS.slideLeft.transition,
-                                delay: 0.2
-                            }
+                                delay: 0.2,
+                            },
                         }}
                         viewport={CARD_VIEWPORT_CONFIG}
                     >
                         <p className="text-lg text-base-content/80 leading-relaxed mb-8">
                             {aboutData.summary}
                         </p>
-                        
+
                         <div className="space-y-4">
-                            <h3 className="text-2xl font-semibold text-base-content mb-4">Key Highlights</h3>
+                            <h3 className="text-2xl font-semibold text-base-content mb-4">
+                                Key Highlights
+                            </h3>
                             {aboutData.highlights.map((highlight, index) => (
                                 <motion.div
                                     key={index}
@@ -39,8 +41,8 @@ function AboutSection() {
                                         ...ANIMATION_VARIANTS.fadeUpSubtle.animate,
                                         transition: {
                                             ...ANIMATION_VARIANTS.fadeUpSubtle.transition,
-                                            delay: createStaggeredDelay(index, 0.3)
-                                        }
+                                            delay: createStaggeredDelay(index, 0.3),
+                                        },
                                     }}
                                     viewport={CARD_VIEWPORT_CONFIG}
                                     className="flex items-start gap-3"
@@ -58,13 +60,15 @@ function AboutSection() {
                             ...ANIMATION_VARIANTS.slideRight.animate,
                             transition: {
                                 ...ANIMATION_VARIANTS.slideRight.transition,
-                                delay: 0.4
-                            }
+                                delay: 0.4,
+                            },
                         }}
                         viewport={CARD_VIEWPORT_CONFIG}
                         className="space-y-6"
                     >
-                        <h3 className="text-2xl font-semibold text-base-content mb-6">Core Values</h3>
+                        <h3 className="text-2xl font-semibold text-base-content mb-6">
+                            Core Values
+                        </h3>
                         {aboutData.values.map((value, index) => (
                             <motion.div
                                 key={index}
@@ -73,8 +77,8 @@ function AboutSection() {
                                     ...ANIMATION_VARIANTS.fadeUpSubtle.animate,
                                     transition: {
                                         ...ANIMATION_VARIANTS.fadeUpSubtle.transition,
-                                        delay: 0.1 * index
-                                    }
+                                        delay: 0.1 * index,
+                                    },
                                 }}
                                 whileHover={{
                                     ...ANIMATION_VARIANTS.buttonHover,
@@ -86,7 +90,11 @@ function AboutSection() {
                                 <div className="card-body p-6">
                                     <div className="flex items-center gap-4 mb-3">
                                         <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                                            <img src={getValueIcon(value.icon)} alt={value.title} className="w-8 h-8" />
+                                            <img
+                                                src={getValueIcon(value.icon)}
+                                                alt={value.title}
+                                                className="w-8 h-8"
+                                            />
                                         </div>
                                         <h4 className="text-xl font-semibold text-base-content">
                                             {value.title}

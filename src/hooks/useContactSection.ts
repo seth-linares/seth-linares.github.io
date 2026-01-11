@@ -30,7 +30,7 @@ function useContactSection() {
             linkedin: '/icons/linkedin.svg',
             github: '/icons/github-icon.svg',
             website: '🌐',
-            twitter: '🐦'
+            twitter: '🐦',
         };
         return iconMap[type] || '📞';
     }, []);
@@ -38,7 +38,7 @@ function useContactSection() {
     return {
         contactData,
         handleContactClick,
-        getContactIcon
+        getContactIcon,
     };
 }
 

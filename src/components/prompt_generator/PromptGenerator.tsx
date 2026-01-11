@@ -43,26 +43,22 @@ function PromptGenerator() {
     }, [apiKey, resetApiKey, setIsApiKeyFormExpanded, isApiKeyFormExpanded]);
 
     return (
-        <motion.div 
+        <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="min-h-screen bg-base-200 py-12 px-4 grid place-items-center"
         >
-            <ToastContainer
-                position="top-center"
-                hideProgressBar
-                className="font-sans!"
-            />
-            <motion.div 
+            <ToastContainer position="top-center" hideProgressBar className="font-sans!" />
+            <motion.div
                 className="card bg-base-100 shadow-xl w-full max-w-5xl"
                 initial={{ y: 20 }}
                 animate={{ y: 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             >
                 <div className="card-body space-y-6">
                     {/* Header Area with API Key Button */}
                     <div className="flex items-center justify-between">
-                        <motion.h2 
+                        <motion.h2
                             className="card-title text-3xl font-bold flex items-center gap-2"
                             initial={{ scale: 0.9 }}
                             animate={{ scale: 1 }}
@@ -76,81 +72,85 @@ function PromptGenerator() {
                             className="btn btn-outline btn-sm btn-info gap-2 btn-animated"
                             onClick={handleApiKeyToggle}
                         >
-                            {apiKey ? <FiRefreshCw className="w-4 h-4" /> : <FiKey className="w-4 h-4" />}
+                            {apiKey ? (
+                                <FiRefreshCw className="w-4 h-4" />
+                            ) : (
+                                <FiKey className="w-4 h-4" />
+                            )}
                             {apiKey ? 'Change API Key' : 'Add API Key'}
                         </button>
                     </div>
                     <div className="divider m-0"></div>
-                    
+
                     {/* API Key Form - Collapsible */}
-                    {(!apiKey && isApiKeyFormExpanded) && (
-                        <ApiKeyForm 
+                    {!apiKey && isApiKeyFormExpanded && (
+                        <ApiKeyForm
                             apiKeyInput={apiKeyInput}
                             setApiKeyInput={setApiKeyInput}
                             localSaveApiKey={localSaveApiKey}
                         />
                     )}
-                    
+
                     <motion.div
-                                key="prompt-generator"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -20 }}
-                                className="space-y-6"
-                            >
-                                {/* Text Input Area */}
-                                <form onSubmit={handleSubmitTokens} className="space-y-4">
-                                    <div className="form-control w-full">
-                                        <motion.textarea 
-                                            className="textarea textarea-bordered min-h-[200px] text-lg transition-all duration-200 focus:textarea-primary w-full"
-                                            value={promptInput}
-                                            onChange={(e) => setPromptInput(e.target.value)}
-                                            placeholder="Enter your prompt text..."
-                                            initial={{ height: 200 }}
-                                            animate={{ height: promptInput ? 300 : 200 }}
-                                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                        />
-                                    </div>
-                                </form>
-
-                                {/* Actions Area */}
-                                <div className="flex flex-wrap gap-6 items-start justify-between">
-                                    <div className="w-full md:w-1/3">
-                                        <FileUploader />
-                                    </div>
-                                    <div className="flex items-center ml-auto gap-2">
-                                         <button
-                                             type="button"
-                                             className={`btn gap-2 min-w-[300px] btn-animated ${!apiKey ? 'btn-ghost' : 'btn-primary'}`}
-                                             onClick={handleSubmitTokens}
-                                             disabled={!apiKey || (!promptInput && !fileText)}
-                                         >
-                                             <FiHash className="w-5 h-5" />
-                                             {!apiKey ? 'Count Tokens (API Key Required)' : 'Count Tokens'}
-                                         </button>
-                                         <button
-                                             type="button"
-                                             className="btn btn-secondary gap-2 btn-animated"
-                                             onClick={handleGeneratePrompt}
-                                             disabled={!fileText}
-                                         >
-                                             Generate Prompt
-                                         </button>
-                                    </div>
-                                </div>
-
-                                {/* Token Count Display */}
-                                <TokenCountDisplay tokenCount={tokenCount} />
-
-                                {/* Generated Prompt Display */}
-                                <GeneratedPromptDisplay
-                                    generatedPrompt={generatedPrompt}
-                                    showGeneratedPrompt={showGeneratedPrompt}
-                                    isPromptMinimized={isPromptMinimized}
-                                    setShowGeneratedPrompt={setShowGeneratedPrompt}
-                                    setIsPromptMinimized={setIsPromptMinimized}
+                        key="prompt-generator"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        className="space-y-6"
+                    >
+                        {/* Text Input Area */}
+                        <form onSubmit={handleSubmitTokens} className="space-y-4">
+                            <div className="form-control w-full">
+                                <motion.textarea
+                                    className="textarea textarea-bordered min-h-[200px] text-lg transition-all duration-200 focus:textarea-primary w-full"
+                                    value={promptInput}
+                                    onChange={(e) => setPromptInput(e.target.value)}
+                                    placeholder="Enter your prompt text..."
+                                    initial={{ height: 200 }}
+                                    animate={{ height: promptInput ? 300 : 200 }}
+                                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                                 />
-                            </motion.div>
+                            </div>
+                        </form>
+
+                        {/* Actions Area */}
+                        <div className="flex flex-wrap gap-6 items-start justify-between">
+                            <div className="w-full md:w-1/3">
+                                <FileUploader />
+                            </div>
+                            <div className="flex items-center ml-auto gap-2">
+                                <button
+                                    type="button"
+                                    className={`btn gap-2 min-w-[300px] btn-animated ${!apiKey ? 'btn-ghost' : 'btn-primary'}`}
+                                    onClick={handleSubmitTokens}
+                                    disabled={!apiKey || (!promptInput && !fileText)}
+                                >
+                                    <FiHash className="w-5 h-5" />
+                                    {!apiKey ? 'Count Tokens (API Key Required)' : 'Count Tokens'}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn btn-secondary gap-2 btn-animated"
+                                    onClick={handleGeneratePrompt}
+                                    disabled={!fileText}
+                                >
+                                    Generate Prompt
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Token Count Display */}
+                        <TokenCountDisplay tokenCount={tokenCount} />
+
+                        {/* Generated Prompt Display */}
+                        <GeneratedPromptDisplay
+                            generatedPrompt={generatedPrompt}
+                            showGeneratedPrompt={showGeneratedPrompt}
+                            isPromptMinimized={isPromptMinimized}
+                            setShowGeneratedPrompt={setShowGeneratedPrompt}
+                            setIsPromptMinimized={setIsPromptMinimized}
+                        />
+                    </motion.div>
                 </div>
             </motion.div>
         </motion.div>
