@@ -152,9 +152,8 @@ export function useNavbar(): NavbarState {
       }
     })
 
-    if (closestSection) {
-      setActiveSection(closestSection)
-    }
+    // Set activeSection even if null (hero area = no section active)
+    setActiveSection(closestSection)
   }, [isHomePage])
 
   // Navigation handler
