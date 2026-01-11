@@ -9,7 +9,6 @@ import {
     getDescriptionTip,
 } from '@/utils/regex/beginnerDescriptions';
 
-// Tooltip component that renders via portal
 function TokenTooltip({
     token,
     targetRef,
@@ -24,7 +23,6 @@ function TokenTooltip({
     const example = getDescriptionExample(token);
     const tip = getDescriptionTip(token);
 
-    // Calculate position in effect, not during render
     useLayoutEffect(() => {
         if (isVisible && targetRef.current) {
             const rect = targetRef.current.getBoundingClientRect();
@@ -49,7 +47,6 @@ function TokenTooltip({
                 zIndex: 9999,
             }}
         >
-            {/* Arrow pointing up */}
             <div className="absolute left-1/2 -translate-x-1/2 -top-2 w-0 h-0 border-l-4 border-r-4 border-b-8 border-transparent border-b-base-300" />
             <div className="font-medium text-sm">{simpleDesc}</div>
             {example && <div className="opacity-70 mt-1">{example}</div>}
@@ -89,7 +86,6 @@ interface PatternExplainerProps {
     tokens: PatternToken[];
 }
 
-// Color legend configuration
 const TOKEN_LEGEND = [
     { type: 'literal', color: 'bg-primary/20', label: 'Exact text', example: 'abc' },
     { type: 'escape', color: 'bg-secondary/20', label: 'Special code', example: '\\d \\w' },
@@ -106,7 +102,6 @@ const TOKEN_LEGEND = [
     { type: 'wildcard', color: 'bg-base-content/10', label: 'Any char', example: '.' },
 ] as const;
 
-// Map token type to color class
 function getTokenColorClass(type: string): string {
     const found = TOKEN_LEGEND.find((l) => l.type === type);
     return found?.color ?? 'bg-base-content/10';
@@ -130,7 +125,6 @@ export default function PatternExplainer({ pattern, tokens }: PatternExplainerPr
                     </button>
                 </div>
 
-                {/* Collapsible Color Legend */}
                 {showLegend && (
                     <motion.div
                         initial={{ opacity: 0, height: 0 }}
@@ -155,7 +149,6 @@ export default function PatternExplainer({ pattern, tokens }: PatternExplainerPr
                     <code className="font-mono break-all">{pattern}</code>
                 </div>
 
-                {/* Visual pattern with hover states and beginner tooltips */}
                 <div className="font-mono text-lg p-4 bg-base-100 rounded-lg overflow-x-auto">
                     <div className="flex flex-wrap gap-0.5 py-2">
                         {tokens.map((token, idx) => (
@@ -168,7 +161,6 @@ export default function PatternExplainer({ pattern, tokens }: PatternExplainerPr
                     </div>
                 </div>
 
-                {/* Collapsible Token List */}
                 <div className="mt-3">
                     <button
                         type="button"

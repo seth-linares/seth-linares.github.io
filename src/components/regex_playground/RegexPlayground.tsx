@@ -34,7 +34,6 @@ function RegexPlayground() {
     const { tokens, warnings } = usePatternExplainer(state.pattern);
     const { showToast, toastWarnings, dismissToast } = useWarningNotification(warnings);
 
-    // Memoize the generated snippet to avoid recalculation
     const jsSnippet = useMemo(() => generateJsSnippet(), [generateJsSnippet]);
 
     // Memoize the copy handler
@@ -61,9 +60,7 @@ function RegexPlayground() {
     return (
         <div className="px-4 pb-10 pt-24">
             {' '}
-            {/* top padding to clear Navbar height */}
             <div className="max-w-7xl mx-auto">
-                {/* Header / Toolbar */}
                 <div className="mb-6">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                         <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
@@ -75,7 +72,6 @@ function RegexPlayground() {
                             <ShareButton
                                 shareUrl={shareUrl}
                                 onShare={() => {
-                                    // Optional: track analytics or show notification
                                     console.log('Regex pattern shared:', state.pattern);
                                 }}
                             />
@@ -108,9 +104,7 @@ function RegexPlayground() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {/* Left column: Editors and Results */}
                     <div className="lg:col-span-2 xl:col-span-3 flex flex-col gap-6">
-                        {/* Pattern Editor */}
                         <div className="sticky top-20 z-10">
                             <PatternInput
                                 pattern={state.pattern}
@@ -126,7 +120,6 @@ function RegexPlayground() {
                             )}
                         </div>
 
-                        {/* Test Strings (extracted reusable component usage) */}
                         <TestStringInput
                             testStrings={state.testStrings}
                             setTestStringAt={setTestStringAt}
@@ -134,7 +127,6 @@ function RegexPlayground() {
                             removeTestString={removeTestString}
                         />
 
-                        {/* Matches */}
                         <MatchVisualizer
                             testStrings={state.testStrings}
                             matches={state.matches}
@@ -150,12 +142,11 @@ function RegexPlayground() {
                             onNext={goNext}
                             error={state.error}
                         />
-                        {/* Pattern Explanation */}
+
                         {state.pattern && tokens.length > 0 && (
                             <PatternExplainer pattern={state.pattern} tokens={tokens} />
                         )}
 
-                        {/* Code */}
                         <CodeSection
                             title="Code Generation"
                             code={jsSnippet}
@@ -165,17 +156,14 @@ function RegexPlayground() {
                         />
                     </div>
 
-                    {/* Right column: Sidebar */}
                     <div className="lg:col-span-1">
                         <div className="lg:sticky lg:top-24 flex flex-col gap-6">
-                            {/* Pattern Library */}
                             <PatternLibrary
                                 onUsePattern={({ pattern, flags, testString }) => {
                                     setPattern(pattern);
                                     if (flags) {
                                         setFlags((prev) => ({ ...prev, ...flags }));
                                     }
-                                    // Set the test string if provided by the pattern library
                                     if (testString) {
                                         setTestStringAt(0, testString);
                                     }
@@ -184,7 +172,6 @@ function RegexPlayground() {
                                 activePatternId={state.activePatternId || undefined}
                             />
 
-                            {/* Quick Actions */}
                             <div className="card bg-base-200 shadow-xl">
                                 <div className="card-body">
                                     <h3 className="card-title text-sm text-primary">
@@ -213,7 +200,6 @@ function RegexPlayground() {
                     </div>
                 </div>
             </div>
-            {/* Warning toast notification */}
             <WarningToast warnings={toastWarnings} visible={showToast} onDismiss={dismissToast} />
         </div>
     );

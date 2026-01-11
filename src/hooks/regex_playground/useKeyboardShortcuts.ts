@@ -19,7 +19,6 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            // Don't trigger shortcuts when user is typing in inputs
             const target = e.target as HTMLElement;
             if (
                 target.tagName === 'INPUT' ||
@@ -29,31 +28,26 @@ export function useKeyboardShortcuts(handlers: ShortcutHandlers) {
                 return;
             }
 
-            // Ctrl/Cmd + Enter - Test pattern
             if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
                 e.preventDefault();
                 handlersRef.current.onTest?.();
             }
 
-            // Ctrl/Cmd + / - Focus pattern input
             if ((e.ctrlKey || e.metaKey) && e.key === '/') {
                 e.preventDefault();
                 handlersRef.current.onFocusPattern?.();
             }
 
-            // Ctrl/Cmd + S - Save pattern (if implemented)
             if ((e.ctrlKey || e.metaKey) && e.key === 's') {
                 e.preventDefault();
                 handlersRef.current.onSave?.();
             }
 
-            // Ctrl/Cmd + Shift + R - Reset
             if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'R') {
                 e.preventDefault();
                 handlersRef.current.onReset?.();
             }
 
-            // Ctrl/Cmd + Left/Right Arrow - Navigate matches
             if ((e.ctrlKey || e.metaKey) && e.key === 'ArrowLeft') {
                 e.preventDefault();
                 handlersRef.current.onPrevMatch?.();

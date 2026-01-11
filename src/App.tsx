@@ -7,18 +7,15 @@ import Navbar from './components/Navbar';
 import HomePage from './components/HomePage';
 import FileContextProvider from './contexts/FileContextProvider';
 
-// Lazy-load heavy route components for better initial load time
 const PromptGenerator = lazy(() => import('./components/prompt_generator/PromptGenerator'));
 const RegexPlayground = lazy(() => import('./components/regex_playground/RegexPlayground'));
 
-// Loading component shown while our lazy-loaded components are being fetched
 const LoadingScreen = () => (
     <div className="h-screen w-full flex items-center justify-center bg-base-100">
         <div className="loading loading-spinner loading-lg text-primary"></div>
     </div>
 );
 
-// Layout component to wrap all pages
 const Layout = ({ children }: { children: React.ReactNode }) => (
     <>
         <Navbar />
@@ -26,14 +23,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => (
     </>
 );
 
-// AnimatedRoutes component to handle route animations
 const AnimatedRoutes = () => {
     const location = useLocation();
 
     return (
         <AnimatePresence mode="wait">
             <Routes location={location} key={location.pathname}>
-                {/* Path to home page */}
                 <Route
                     path="/"
                     element={
@@ -42,7 +37,7 @@ const AnimatedRoutes = () => {
                         </Layout>
                     }
                 />
-                {/* Path to Prompt generator */}
+
                 <Route
                     path="/prompt-generator"
                     element={
@@ -53,7 +48,7 @@ const AnimatedRoutes = () => {
                         </Layout>
                     }
                 />
-                {/* Path to Prompt generator */}
+
                 <Route
                     path="/regex-playground"
                     element={
@@ -62,7 +57,7 @@ const AnimatedRoutes = () => {
                         </Layout>
                     }
                 />
-                {/* Anything else == the page does not exist */}
+
                 <Route
                     path="*"
                     element={
@@ -87,9 +82,7 @@ const AnimatedRoutes = () => {
 
 function App() {
     return (
-        // HashRouter is used instead of BrowserRouter for GitHub Pages compatibility
         <HashRouter>
-            {/* Suspense handles the loading state while components are being fetched */}
             <Suspense fallback={<LoadingScreen />}>
                 <AnimatedRoutes />
             </Suspense>

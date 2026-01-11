@@ -17,7 +17,6 @@ function useProjectModal({ isOpen, onClose }: UseProjectModalProps) {
         return getProjectCategoryIcon(category);
     }, []);
 
-    // Handle keyboard navigation
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape' && isOpen) {
@@ -27,7 +26,6 @@ function useProjectModal({ isOpen, onClose }: UseProjectModalProps) {
 
         if (isOpen) {
             document.addEventListener('keydown', handleKeyDown);
-            // Prevent body scroll when modal is open
             document.body.style.overflow = 'hidden';
         }
 
@@ -40,7 +38,6 @@ function useProjectModal({ isOpen, onClose }: UseProjectModalProps) {
     // Focus management
     useEffect(() => {
         if (isOpen) {
-            // Focus the modal when it opens
             const modal = document.querySelector('[role="dialog"]');
             if (modal instanceof HTMLElement) {
                 modal.focus();

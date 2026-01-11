@@ -9,7 +9,7 @@ export const generatePythonCode = (options: CodeGenOptions): string => {
     if (flags.i) flagsStr += 're.IGNORECASE | ';
     if (flags.m) flagsStr += 're.MULTILINE | ';
     if (flags.s) flagsStr += 're.DOTALL | ';
-    flagsStr = flagsStr.replace(/\s\|\s$/, ''); // remove trailing " | "
+    flagsStr = flagsStr.replace(/\s\|\s$/, '');
 
     return `import re
 
@@ -32,7 +32,6 @@ export const generateJavaCode = (options: CodeGenOptions): string => {
 
     let flagsInt = 0;
     // Java Pattern flags:
-    // CASE_INSENSITIVE = 2, MULTILINE = 8, DOTALL = 32
     if (flags.i) flagsInt |= 2;
     if (flags.m) flagsInt |= 8;
     if (flags.s) flagsInt |= 32;
@@ -66,8 +65,6 @@ export const generateCSharpCode = (options: CodeGenOptions): string => {
     if (flags.i) regexOptions.push('RegexOptions.IgnoreCase');
     if (flags.m) regexOptions.push('RegexOptions.Multiline');
     if (flags.s) regexOptions.push('RegexOptions.Singleline');
-    // Note: Global flag 'g' doesn't have direct equivalent in C# RegexOptions
-    // JavaScript's sticky 'y' and unicode 'u' flags also don't have direct equivalents
 
     const optionsString = regexOptions.length > 0 ? `, ${regexOptions.join(' | ')}` : '';
 

@@ -28,7 +28,6 @@ const NavButton = React.memo(function NavButton({
             whileHover={ANIMATION_VARIANTS.buttonHover}
             whileTap={ANIMATION_VARIANTS.buttonTap}
         >
-            {/* Background with active/hover states */}
             <motion.div
                 className="absolute inset-0 rounded-lg"
                 initial={false}
@@ -44,7 +43,6 @@ const NavButton = React.memo(function NavButton({
                 transition={{ duration: 0.2, ease: 'easeOut' }}
             />
 
-            {/* Text with color transition */}
             <span
                 className={`relative z-10 ${
                     isActive
@@ -55,7 +53,6 @@ const NavButton = React.memo(function NavButton({
                 {label}
             </span>
 
-            {/* Active indicator dot */}
             <AnimatePresence>
                 {isActive && (
                     <motion.div
@@ -92,15 +89,12 @@ function Navbar() {
         scrollProgress,
     } = useNavbar();
 
-    // State to track pull tab visibility
     const [isPullTabVisible, setIsPullTabVisible] = useState(false);
 
-    // Listen to navbar visibility changes
     useMotionValueEvent(navbarVisibility, 'change', (latest) => {
         setIsPullTabVisible(latest < 0.5);
     });
 
-    // Memoize navigation items to prevent recreation on each render
     const navigationItems = useMemo(
         () => [
             { id: 'about', label: 'About' },
@@ -114,11 +108,9 @@ function Navbar() {
         []
     );
 
-    // Memoize logo hover handlers
     const handleLogoHoverStart = useCallback(() => setIsLogoHovered(true), [setIsLogoHovered]);
     const handleLogoHoverEnd = useCallback(() => setIsLogoHovered(false), [setIsLogoHovered]);
 
-    // Logo click scrolls to hero on home page
     const handleLogoClick = useCallback(
         (e: React.MouseEvent) => {
             closeMobileMenu();
@@ -140,7 +132,6 @@ function Navbar() {
                     y: useTransform(navbarVisibility, [0, 1], ['-100%', '0%']),
                 }}
             >
-                {/* Scroll Progress Indicator */}
                 {isHomePage && (
                     <motion.div
                         className="absolute bottom-0 left-0 h-0.5 bg-linear-to-r from-violet-500 to-blue-500"
@@ -164,7 +155,6 @@ function Navbar() {
                         </Link>
                     </div>
 
-                    {/* Desktop Navigation */}
                     <div className="hidden md:flex flex-none gap-1 items-center">
                         {!isHomePage && (
                             <motion.div
@@ -197,7 +187,6 @@ function Navbar() {
                         </div>
                     </div>
 
-                    {/* Mobile Navigation Trigger */}
                     <div className="flex-none md:hidden gap-2">
                         <ThemeSwitcher />
                         <motion.button
@@ -212,7 +201,6 @@ function Navbar() {
                         </motion.button>
                     </div>
 
-                    {/* Mobile Menu */}
                     <AnimatePresence mode="wait">
                         {isMobileMenuOpen && (
                             <motion.div
@@ -288,7 +276,6 @@ function Navbar() {
                 </nav>
             </motion.header>
 
-            {/* Pull Tab */}
             <AnimatePresence>
                 {isPullTabVisible && (
                     <motion.div
@@ -306,7 +293,6 @@ function Navbar() {
                             whileTap={ANIMATION_VARIANTS.buttonTap}
                             aria-label="Show navigation bar"
                         >
-                            {/* Gradient background on hover */}
                             <motion.div
                                 className="absolute inset-0 bg-linear-to-r from-violet-500/10 to-blue-500/10 rounded-b-xl"
                                 initial={{ opacity: 0 }}
@@ -314,7 +300,6 @@ function Navbar() {
                                 transition={{ duration: 0.3 }}
                             />
 
-                            {/* Icon with subtle animation */}
                             <motion.div
                                 animate={{ y: [0, -3, 0] }}
                                 transition={{
@@ -327,7 +312,6 @@ function Navbar() {
                                 <IoChevronUpOutline className="w-6 h-6 text-base-content/60 group-hover:text-primary transition-colors relative z-10" />
                             </motion.div>
 
-                            {/* Tooltip */}
                             <AnimatePresence>
                                 {!pullTabHintShown && (
                                     <motion.div

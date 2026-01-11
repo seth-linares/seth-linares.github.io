@@ -4,10 +4,10 @@ import { useMemo } from 'react';
 import type { MatchResult, RegexFlags, SingleMatch } from '@/types/regex';
 import { flagsToString } from '@/types/regex';
 
-const REGEX_TIMEOUT_MS = 1000; // 1 second timeout
-const MAX_INPUT_LENGTH = 10000; // 10k chars max
-const MAX_MATCHES_PER_STRING = 1000; // safety cap
-const MAX_CHARS_PER_STRING = 200_000; // safety cap against catastrophic inputs
+const REGEX_TIMEOUT_MS = 1000;
+const MAX_INPUT_LENGTH = 10000;
+const MAX_MATCHES_PER_STRING = 1000;
+const MAX_CHARS_PER_STRING = 200_000;
 
 export function safeSubstring(input: string, maxLen: number): { text: string; truncated: boolean } {
     if (input.length <= maxLen) return { text: input, truncated: false };
@@ -28,22 +28,18 @@ function executeRegexMatching(
             MAX_CHARS_PER_STRING
         );
 
-        // Limit input length for safety feature (Phase 4)
         const safeText =
             limitedInput.length > MAX_INPUT_LENGTH
                 ? limitedInput.slice(0, MAX_INPUT_LENGTH)
                 : limitedInput;
         const lengthTruncated = limitedInput.length > MAX_INPUT_LENGTH;
 
-        // Clone a new regex for each test string because lastIndex changes with /g or /y
         const local = new RegExp(regex.source, regex.flags);
         const matches: SingleMatch[] = [];
         let count = 0;
         let m: RegExpExecArray | null;
 
         try {
-            // For non-global/non-sticky regex, exec() does not advance across the string.
-            // We'll detect global-like behavior and handle iteration accordingly.
             const isGlobalLike =
                 (local as RegExp).global ||
                 ('sticky' in local && (local as RegExp & { sticky: boolean }).sticky === true);
@@ -63,7 +59,6 @@ function executeRegexMatching(
                     executionError = 'Pattern execution timeout - pattern may be too complex';
                     break;
                 }
-                // m is non-null inside this loop
                 const mm = m as RegExpExecArray & {
                     groups?: Record<string, string>;
                     indices?: number[][];
@@ -105,19 +100,13 @@ function executeRegexMatching(
                 count++;
                 if (count >= MAX_MATCHES_PER_STRING) break;
 
-                // If the regex is NOT global or sticky, stop after the first match.
-                // exec() without /g or /y will always return the first match and then null on subsequent calls,
-                // but lastIndex manipulation has no effect. To be safe, break explicitly.
                 if (!isGlobalLike) {
                     break;
                 }
 
-                // Safety against zero-length infinite loops: advance lastIndex on zero-length or stagnant matches
                 if (mm[0] === '' || local.lastIndex === mm.index) {
-                    // For zero-length matches, manually advance to prevent infinite loop
                     local.lastIndex = Math.max(mm.index + 1, local.lastIndex + 1);
 
-                    // If we've gone past the string length, break
                     if (local.lastIndex > safeText.length) {
                         break;
                     }
@@ -181,7 +170,6 @@ export const useRegexMatcher = (pattern: string, flags: RegexFlags, testStrings:
         [results]
     );
 
-    // Only return actual errors, not warnings (warnings handled separately via usePatternExplainer)
     const error = regexError ?? executionError ?? null;
 
     return {

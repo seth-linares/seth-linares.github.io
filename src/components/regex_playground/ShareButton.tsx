@@ -3,11 +3,10 @@
 import { useState } from 'react';
 
 interface ShareButtonProps {
-    /** The URL to share */
     shareUrl: string;
-    /** Callback when share action is triggered */
+
     onShare?: () => void;
-    /** Optional additional CSS classes */
+
     className?: string;
 }
 
@@ -21,16 +20,14 @@ function ShareButton({ shareUrl, onShare, className = '' }: ShareButtonProps) {
             setCopied(true);
             onShare?.();
 
-            // Reset copied state after 2 seconds
             setTimeout(() => setCopied(false), 2000);
         } catch (error) {
             console.error('Failed to copy URL to clipboard:', error);
-            // Fallback: Select the URL in a temporary input for manual copy
             const tempInput = document.createElement('input');
             tempInput.value = shareUrl;
             document.body.appendChild(tempInput);
             tempInput.select();
-            tempInput.setSelectionRange(0, 99999); // For mobile devices
+            tempInput.setSelectionRange(0, 99999);
 
             try {
                 document.execCommand('copy');
@@ -45,7 +42,6 @@ function ShareButton({ shareUrl, onShare, className = '' }: ShareButtonProps) {
     };
 
     const handleKeyDown = (event: React.KeyboardEvent) => {
-        // Handle Enter and Space key activation
         if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
             handleShare();
@@ -114,7 +110,6 @@ function ShareButton({ shareUrl, onShare, className = '' }: ShareButtonProps) {
                 </span>
             </button>
 
-            {/* Tooltip */}
             {isHovered && !copied && (
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 text-xs bg-base-content text-base-100 rounded shadow-lg whitespace-nowrap animate-in fade-in duration-200 z-60">
                     Click to copy link

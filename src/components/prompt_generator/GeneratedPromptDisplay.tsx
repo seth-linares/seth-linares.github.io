@@ -64,7 +64,6 @@ const GeneratedPromptDisplay: React.FC<GeneratedPromptDisplayProps> = ({
                     exit={{ opacity: 0, height: 0 }}
                 >
                     <div className="card-body p-0">
-                        {/* Header */}
                         <div className="p-4 border-b border-base-content/10">
                             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                                 <h3 className="text-lg font-semibold">Generated Prompt</h3>
@@ -88,7 +87,7 @@ const GeneratedPromptDisplay: React.FC<GeneratedPromptDisplayProps> = ({
                                                 <FiList className="w-4 h-4" />
                                             </div>
                                             <span className="ml-1 hidden sm:inline">Files</span>
-                                            {/* Pulse effect when active */}
+
                                             {showFileNav && (
                                                 <div className="absolute inset-0 bg-primary/20 rounded-lg animate-pulse-ring" />
                                             )}
@@ -132,7 +131,6 @@ const GeneratedPromptDisplay: React.FC<GeneratedPromptDisplayProps> = ({
                                 </div>
                             </div>
 
-                            {/* File Navigation */}
                             <AnimatePresence>
                                 {showFileNav && fileCheckpoints.length > 0 && (
                                     <motion.div
@@ -188,7 +186,6 @@ const GeneratedPromptDisplay: React.FC<GeneratedPromptDisplayProps> = ({
                             </AnimatePresence>
                         </div>
 
-                        {/* Content */}
                         <AnimatePresence>
                             {!isPromptMinimized && (
                                 <motion.div
@@ -199,7 +196,7 @@ const GeneratedPromptDisplay: React.FC<GeneratedPromptDisplayProps> = ({
                                 >
                                     <div
                                         ref={scrollContainerRef}
-                                        className="max-h-[60vh] min-h-[200px] overflow-y-auto p-4 relative"
+                                        className="max-h-[60vh] min-h-50 overflow-y-auto p-4 relative"
                                         style={{ scrollBehavior: 'smooth' }}
                                     >
                                         <Suspense
@@ -214,7 +211,6 @@ const GeneratedPromptDisplay: React.FC<GeneratedPromptDisplayProps> = ({
                                         </Suspense>
                                     </div>
 
-                                    {/* Scroll Controls */}
                                     <div className="absolute right-2 top-2 flex flex-col gap-1">
                                         <AnimatePresence>
                                             {canScrollUp && (

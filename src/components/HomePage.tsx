@@ -24,7 +24,6 @@ function HomePage() {
             <SkillsSection />
             <EducationSection />
 
-            {/* Tools Section - Highlighting Prompt Builder */}
             <section id="tools" className="py-20 bg-base-100">
                 <div className="container mx-auto px-4 max-w-6xl">
                     <SectionHeader title={toolsData.title} description={toolsData.description} />
@@ -35,7 +34,6 @@ function HomePage() {
                                 <div className="card-body p-8">
                                     <div className="flex items-center gap-4 mb-4">
                                         <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
-                                            {/* load in the svgs */}
                                             <img
                                                 src={tool.icon}
                                                 alt={`${tool.title} icon`}

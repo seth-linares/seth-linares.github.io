@@ -17,7 +17,6 @@ function WarningTooltip({
 }) {
     const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
 
-    // Calculate position in effect, not during render
     useLayoutEffect(() => {
         if (isVisible && targetRef.current && typeof document !== 'undefined') {
             const rect = targetRef.current.getBoundingClientRect();
@@ -44,7 +43,6 @@ function WarningTooltip({
                 zIndex: 9999,
             }}
         >
-            {/* Arrow pointing up */}
             <div className="absolute left-1/2 -translate-x-1/2 -top-2 w-0 h-0 border-l-4 border-r-4 border-b-8 border-transparent border-b-warning" />
             <div className="font-medium mb-1">Performance Warnings</div>
             <ul className="space-y-1">

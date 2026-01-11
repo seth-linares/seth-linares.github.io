@@ -44,10 +44,8 @@ const THEMES = [
 const ThemeSwitcher: React.FC = () => {
     const { isOpen, currentTheme, setIsOpen, changeTheme } = useThemeSwitcher(THEMES);
 
-    // Memoize toggle handler
     const handleToggle = useCallback(() => setIsOpen(!isOpen), [isOpen, setIsOpen]);
 
-    // Memoize theme selection handler
     const handleThemeSelect = useCallback(
         (theme: (typeof THEMES)[number]) => {
             changeTheme(theme);

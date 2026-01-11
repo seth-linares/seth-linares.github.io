@@ -19,20 +19,17 @@ const AnimatedLogo: React.FC<AnimatedLogoProps> = ({
             whileTap={{ scale: 0.98 }}
             transition={{ type: 'spring', stiffness: 400, damping: 17 }}
         >
-            {/* Logo Container */}
             <div
                 className={`relative transition-transform duration-300 ease-out ${
                     isHovered ? 'rotate-[5deg] scale-110' : ''
                 }`}
             >
-                {/* Background glow */}
                 <div
                     className={`absolute inset-0 rounded-full transition-all duration-300 ease-out logo-glow-bg ${
                         isHovered ? 'opacity-100 scale-130' : 'opacity-0 scale-100'
                     }`}
                 />
 
-                {/* Logo image */}
                 <img
                     src="/orange-cat.svg"
                     alt="Seth Linares Logo"
@@ -41,7 +38,6 @@ const AnimatedLogo: React.FC<AnimatedLogoProps> = ({
                     }`}
                 />
 
-                {/* Subtle glow effect */}
                 <div
                     className={`absolute inset-0 rounded-full blur-sm transition-all duration-300 logo-glow-accent ${
                         isHovered ? 'opacity-15 scale-120' : 'opacity-0 scale-100'
@@ -49,7 +45,6 @@ const AnimatedLogo: React.FC<AnimatedLogoProps> = ({
                 />
             </div>
 
-            {/* Text */}
             <span
                 className={`text-xl font-semibold transition-all duration-300 ${
                     isHovered

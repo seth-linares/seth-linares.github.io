@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ANIMATION_VARIANTS } from '@/utils/animations';
 import type { PatternLibraryProps, LibraryPattern } from '@/types/regex';
 
-// Organized pattern library with categories, examples, and test strings
 const PATTERN_LIBRARY: LibraryPattern[] = [
     // Validation
     {
@@ -342,7 +341,6 @@ function PatternLibrary({ onUsePattern, activePatternId }: PatternLibraryProps) 
             <div className="card-body">
                 <h2 className="card-title text-primary">Pattern Library</h2>
 
-                {/* Search Input */}
                 <div className="form-control mb-3">
                     <input
                         type="text"
@@ -353,7 +351,6 @@ function PatternLibrary({ onUsePattern, activePatternId }: PatternLibraryProps) 
                     />
                 </div>
 
-                {/* Category Tabs */}
                 <div className="tabs tabs-boxed mb-3">
                     {categories.map((cat) => (
                         <button
@@ -366,10 +363,9 @@ function PatternLibrary({ onUsePattern, activePatternId }: PatternLibraryProps) 
                     ))}
                 </div>
 
-                {/* Pattern Grid - FIXED ANIMATION */}
                 <motion.div
                     className="space-y-2 max-h-96 overflow-y-auto"
-                    key={`${activeCategory}-${searchTerm}`} // Force re-mount on filter change
+                    key={`${activeCategory}-${searchTerm}`}
                 >
                     <AnimatePresence initial={false}>
                         {filteredPatterns.map((pattern) => (
@@ -441,7 +437,7 @@ function PatternLibrary({ onUsePattern, activePatternId }: PatternLibraryProps) 
                                             Use
                                         </motion.button>
                                     </div>
-                                    {/* Custom tooltip that appears on hover */}
+
                                     {pattern.examples && (
                                         <div className="absolute left-0 right-0 bottom-full mb-2 p-3 bg-base-300 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 text-xs pointer-events-none">
                                             <div className="font-medium mb-1">

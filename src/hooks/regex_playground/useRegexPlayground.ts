@@ -36,9 +36,6 @@ function parseInitialState(): Partial<RegexPlaygroundState> {
     return { pattern, flags, testStrings };
 }
 
-/**
- * Check if flags differ from default values
- */
 function hasNonDefaultFlags(flags: RegexFlags): boolean {
     return (Object.keys(flags) as (keyof RegexFlags)[]).some(
         (key) => flags[key] !== defaultFlags[key]
@@ -53,9 +50,7 @@ export function useRegexPlayground() {
     const [explanation, setExplanation] = useState<PatternExplanation | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [activePatternId, setActivePatternId] = useState<string | null>(null);
-    // Internal active match tracking (SSR-safe, deterministic)
     const [activeMatchIndex, setActiveMatchIndex] = useState<number>(-1);
-    // Initialization state to prevent race conditions
     const [isInitialized, setIsInitialized] = useState(false);
 
     const debouncedPattern = useDebouncedValue(pattern, 300);
@@ -68,8 +63,6 @@ export function useRegexPlayground() {
         debouncedTests
     );
 
-    // Scroll to top when component mounts to fix annoying bug where
-    // the scroll position is maintained depending on where you load into the
     // tool.
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -79,7 +72,6 @@ export function useRegexPlayground() {
         setError(matchError);
     }, [matchError]);
 
-    // Sync URL hash parameters while preserving route
     useEffect(() => {
         if (!isInitialized) return;
 
@@ -92,11 +84,9 @@ export function useRegexPlayground() {
         updateHashParams(params);
     }, [debouncedPattern, debouncedFlags, debouncedTests, isInitialized]);
 
-    // Initialize state from URL params or localStorage
     useEffect(() => {
         if (isInitialized) return;
 
-        // First priority: URL parameters
         const urlState = parseInitialState();
         const hasUrlParams =
             urlState.pattern ||
@@ -108,7 +98,6 @@ export function useRegexPlayground() {
             if (urlState.flags) setFlags(urlState.flags);
             if (urlState.testStrings) setTestStrings(urlState.testStrings);
         } else {
-            // Second priority: localStorage
             try {
                 const saved = localStorage.getItem('regex_playground_state');
                 if (saved) {
@@ -126,7 +115,6 @@ export function useRegexPlayground() {
         setIsInitialized(true);
     }, [isInitialized]);
 
-    // Handle browser back/forward navigation
     useEffect(() => {
         const handleHashChange = () => {
             if (!isInitialized) return;
@@ -175,7 +163,6 @@ export function useRegexPlayground() {
         setTestStrings((prev) => prev.filter((_, i) => i !== index));
     }, []);
 
-    // Placeholder explanation (Phase 2 can replace)
     useEffect(() => {
         if (!debouncedPattern) {
             setExplanation(null);
@@ -229,7 +216,6 @@ export function useRegexPlayground() {
         return createShareableUrl(params, '/regex-playground');
     }, [state.pattern, state.flags, state.testStrings]);
 
-    // Simple JS-only code generator for MVP
     const generateJsSnippet = useCallback(
         (opts?: Partial<CodeGenOptions>) => {
             const p = opts?.pattern ?? pattern;
@@ -252,7 +238,6 @@ export function useRegexPlayground() {
     );
 
     const allMatches = useMemo(() => {
-        // Flatten across test strings and keep a reference to testStringIndex and local index
         return state.matches.flatMap((m) =>
             m.matches.map((x, localIdx) => ({
                 ...x,
@@ -262,7 +247,6 @@ export function useRegexPlayground() {
         );
     }, [state.matches]);
 
-    // Reset active index when results change
     useEffect(() => {
         if (!allMatches.length) {
             setActiveMatchIndex(-1);
@@ -287,7 +271,6 @@ export function useRegexPlayground() {
         });
     }, [allMatches.length]);
 
-    // Scroll-focused element into view when activeMatchIndex changes
     useEffect(() => {
         if (activeMatchIndex < 0) return;
         const el = document.querySelector<HTMLElement>(
@@ -295,16 +278,12 @@ export function useRegexPlayground() {
         );
         if (el) {
             el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-            // brief focus style via attribute for CSS-based highlight
             el.setAttribute('data-focused', 'true');
             window.setTimeout(() => el.removeAttribute('data-focused'), 600);
         }
     }, [activeMatchIndex]);
 
     // Layout notes:
-    // - Add top padding to avoid navbar overlap
-    // - Use a two-column layout with a persistent sidebar on large screens
-    // - Add sticky toolbar and better visual hierarchy
 
     return {
         state,

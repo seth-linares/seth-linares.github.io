@@ -13,13 +13,11 @@ export interface AnimationState {
 }
 
 export interface UseHomeReturn {
-    // Current section information
     currentSection: Section;
     sectionRefs: {
-        [K in Section]: RefObject<HTMLDivElement | null>; // Changed from HTMLElement to HTMLDivElement
+        [K in Section]: RefObject<HTMLDivElement | null>;
     };
 
-    // Animation states for each section
     animationStates: {
         [K in Section]: AnimationState;
     };

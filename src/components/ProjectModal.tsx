@@ -21,7 +21,6 @@ function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
         <AnimatePresence>
             {isOpen && (
                 <>
-                    {/* Backdrop */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -31,7 +30,6 @@ function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
                         onClick={handleBackdropClick}
                     />
 
-                    {/* Modal Container */}
                     <div
                         className="fixed inset-0 z-50 flex items-center justify-center p-4"
                         onClick={handleBackdropClick}
@@ -48,7 +46,6 @@ function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
                             tabIndex={-1}
                             onClick={(e) => e.stopPropagation()}
                         >
-                            {/* Header */}
                             <div className="bg-base-200 p-6 border-b border-base-300">
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-center gap-4">
@@ -84,10 +81,8 @@ function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
                                 </div>
                             </div>
 
-                            {/* Content */}
                             <div className="p-6 flex-1 overflow-y-auto">
                                 <div className="space-y-8">
-                                    {/* Description */}
                                     <div>
                                         <h3 className="text-xl font-bold text-base-content mb-4">
                                             About This Project
@@ -97,7 +92,6 @@ function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
                                         </p>
                                     </div>
 
-                                    {/* Highlights */}
                                     {project.highlights && project.highlights.length > 0 && (
                                         <div>
                                             <h3 className="text-xl font-bold text-base-content mb-4">
@@ -125,7 +119,6 @@ function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
                                         </div>
                                     )}
 
-                                    {/* Technologies */}
                                     <div>
                                         <h3 className="text-xl font-bold text-base-content mb-4">
                                             Technologies Used
@@ -150,7 +143,6 @@ function ProjectModal({ project, isOpen, onClose }: ProjectModalProps) {
                                 </div>
                             </div>
 
-                            {/* Footer */}
                             <div className="bg-base-200 p-6 border-t border-base-300">
                                 <div className="flex flex-wrap gap-4 justify-center">
                                     {project.links.github && (

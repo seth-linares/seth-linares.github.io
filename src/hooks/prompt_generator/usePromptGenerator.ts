@@ -6,7 +6,6 @@ import { toast } from 'react-toastify';
 import { formatAnthropicError } from '@/types/AnthropicErrors';
 import useFileContext from './useFileContext';
 
-// Stores generated prompt along with the fileText it was generated from
 interface GeneratedPromptData {
     prompt: string;
     sourceFileText: string;
@@ -22,29 +21,23 @@ function usePromptGenerator() {
         localStorage.getItem('anthropic-api-key')
     );
 
-    // Derive client from apiKey using useMemo instead of storing as state
     const client = useMemo(() => {
         return apiKey ? new Anthropic({ apiKey, dangerouslyAllowBrowser: true }) : null;
     }, [apiKey]);
 
-    // Store generated prompt with its source fileText for staleness detection
     const [generatedPromptData, setGeneratedPromptData] = useState<GeneratedPromptData | null>(
         null
     );
-    // User-controlled visibility (can be hidden by user even if prompt is valid)
     const [isPromptVisible, setIsPromptVisible] = useState(false);
     const [isPromptMinimized, setIsPromptMinimized] = useState(false);
     const [isApiKeyFormExpanded, setIsApiKeyFormExpanded] = useState(false);
 
-    // Derive whether prompt is still valid (fileText hasn't changed since generation)
     const isPromptValid =
         generatedPromptData !== null && generatedPromptData.sourceFileText === fileText;
 
-    // Derive the actual values to expose - prompt is empty if stale
     const generatedPrompt = isPromptValid ? generatedPromptData.prompt : '';
     const showGeneratedPrompt = isPromptValid && isPromptVisible;
 
-    // Wrapper to allow consumer to hide the prompt
     const setShowGeneratedPrompt = useCallback((show: boolean) => {
         setIsPromptVisible(show);
     }, []);

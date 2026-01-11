@@ -1,19 +1,13 @@
 // src/utils/regex/beginnerDescriptions.ts
 import type { PatternToken } from '@/types/regex';
 
-/**
- * Maps technical regex descriptions to beginner-friendly explanations
- * with concrete examples that help users understand what the pattern does.
- */
-
 interface BeginnerDescription {
     simple: string;
     example?: string;
-    /** Quick helpful hint for beginners */
+
     tip?: string;
 }
 
-// Escape sequence mappings (value -> description)
 const ESCAPE_DESCRIPTIONS: Record<string, BeginnerDescription> = {
     '\\d': {
         simple: 'Any single digit (0-9)',
@@ -71,7 +65,6 @@ const ESCAPE_DESCRIPTIONS: Record<string, BeginnerDescription> = {
     },
 };
 
-// Unicode property escape descriptions
 const UNICODE_PROPERTY_DESCRIPTIONS: Record<string, BeginnerDescription> = {
     '\\p{Letter}': {
         simple: 'Any letter in any language (not just English)',
@@ -120,7 +113,6 @@ const UNICODE_PROPERTY_DESCRIPTIONS: Record<string, BeginnerDescription> = {
     },
 };
 
-// Quantifier patterns (for matching against description)
 const QUANTIFIER_DESCRIPTIONS: Record<string, BeginnerDescription> = {
     '+': {
         simple: 'One or more of the previous',
@@ -148,7 +140,6 @@ const ANCHOR_DESCRIPTIONS: Record<string, BeginnerDescription> = {
     },
 };
 
-// Special character descriptions
 const SPECIAL_DESCRIPTIONS: Record<string, BeginnerDescription> = {
     '.': {
         simple: 'Any single character (except newline)',
@@ -160,20 +151,15 @@ const SPECIAL_DESCRIPTIONS: Record<string, BeginnerDescription> = {
     },
 };
 
-/**
- * Get a beginner-friendly description for a pattern token
- */
 export function getBeginnerDescription(token: PatternToken): BeginnerDescription {
     const { type, value, description } = token;
 
     // Handle escape sequences
     if (type === 'escape') {
-        // Check for known escape sequences
         if (ESCAPE_DESCRIPTIONS[value]) {
             return ESCAPE_DESCRIPTIONS[value];
         }
 
-        // Handle escaped special characters like \. \* \+ etc.
         if (value.length === 2 && value.startsWith('\\')) {
             const escaped = value[1];
             return {
@@ -191,7 +177,6 @@ export function getBeginnerDescription(token: PatternToken): BeginnerDescription
             };
         }
 
-        // Handle named backreferences
         if (/^\\k<.+>$/.test(value)) {
             const groupName = value.slice(3, -1);
             return {
@@ -200,16 +185,13 @@ export function getBeginnerDescription(token: PatternToken): BeginnerDescription
             };
         }
 
-        // Handle Unicode property escapes \p{...} and \P{...}
         if (/^\\[pP]\{.+\}$/.test(value)) {
-            // Check for exact match first
             if (UNICODE_PROPERTY_DESCRIPTIONS[value]) {
                 return UNICODE_PROPERTY_DESCRIPTIONS[value];
             }
             // Handle negated version
             const isNegated = value[1] === 'P';
             const property = value.slice(3, -1);
-            // Try to find the positive version for negated
             const positiveKey = `\\p{${property}}`;
             if (isNegated && UNICODE_PROPERTY_DESCRIPTIONS[positiveKey]) {
                 const positive = UNICODE_PROPERTY_DESCRIPTIONS[positiveKey];
@@ -219,7 +201,6 @@ export function getBeginnerDescription(token: PatternToken): BeginnerDescription
                     tip: "Requires the 'u' flag to work",
                 };
             }
-            // Generic unicode property description
             return {
                 simple: isNegated
                     ? `Any character NOT matching Unicode property "${property}"`
@@ -228,7 +209,6 @@ export function getBeginnerDescription(token: PatternToken): BeginnerDescription
             };
         }
 
-        // Fallback for other escapes
         return {
             simple: description || `Escape sequence ${value}`,
         };
@@ -236,12 +216,10 @@ export function getBeginnerDescription(token: PatternToken): BeginnerDescription
 
     // Handle quantifiers
     if (type === 'quantifier') {
-        // Check for simple quantifiers
         if (QUANTIFIER_DESCRIPTIONS[value]) {
             return QUANTIFIER_DESCRIPTIONS[value];
         }
 
-        // Handle + with lazy modifier
         if (value === '+?') {
             return {
                 simple: 'One or more (as few as possible)',
@@ -249,7 +227,6 @@ export function getBeginnerDescription(token: PatternToken): BeginnerDescription
             };
         }
 
-        // Handle * with lazy modifier
         if (value === '*?') {
             return {
                 simple: 'Zero or more (as few as possible)',
@@ -265,7 +242,6 @@ export function getBeginnerDescription(token: PatternToken): BeginnerDescription
             };
         }
 
-        // Handle {n} exact quantifier
         const exactMatch = value.match(/^\{(\d+)\}\??$/);
         if (exactMatch) {
             const count = exactMatch[1];
@@ -325,12 +301,10 @@ export function getBeginnerDescription(token: PatternToken): BeginnerDescription
         return SPECIAL_DESCRIPTIONS['|'];
     }
 
-    // Handle character classes [...]
     if (type === 'character-class') {
         const isNegated = value.startsWith('[^');
         const inner = isNegated ? value.slice(2, -1) : value.slice(1, -1);
 
-        // Common character class patterns
         if (inner === 'a-z') {
             return {
                 simple: isNegated

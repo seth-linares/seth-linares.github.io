@@ -12,7 +12,6 @@ import {
     SiTypescript,
 } from 'react-icons/si';
 
-// get file icon and badge style based on extension
 export const getFileIconAndStyle = (fileName: string) => {
     const ext = fileName.toLowerCase().split('.').pop();
 
@@ -86,7 +85,6 @@ export const useGeneratedPromptDisplay = ({
         }
     }, []);
 
-    // Generate file checkpoints by finding file headers in the DOM
     const generateFileCheckpoints = useCallback(() => {
         if (!scrollContainerRef.current) return;
 
@@ -114,7 +112,7 @@ export const useGeneratedPromptDisplay = ({
             const checkpoint = fileCheckpoints.find((cp) => cp.fileName === fileName);
             if (checkpoint && scrollContainerRef.current) {
                 scrollContainerRef.current.scrollTo({
-                    top: checkpoint.position - 20, // Small offset for better visibility
+                    top: checkpoint.position - 20,
                     behavior: 'smooth',
                 });
                 setShowFileNav(false);
@@ -127,9 +125,8 @@ export const useGeneratedPromptDisplay = ({
         const container = scrollContainerRef.current;
         if (container) {
             container.addEventListener('scroll', updateScrollButtons);
-            updateScrollButtons(); // Initial check
+            updateScrollButtons();
 
-            // Generate checkpoints after content loads
             const timer = setTimeout(generateFileCheckpoints, 500);
 
             return () => {

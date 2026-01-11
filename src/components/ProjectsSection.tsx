@@ -18,7 +18,6 @@ function ProjectsSection() {
         getCategoryIcon,
     } = useProjectsSection();
 
-    // Memoize filtered arrays to prevent recalculation on each render
     const featuredProjects = useMemo(
         () => projectsData.filter((project) => project.featured),
         [projectsData]

@@ -13,7 +13,7 @@ export interface CodeSectionProps {
 
 export interface MatchesNavProps {
     totalMatches: number;
-    currentIndex: number; // 1-based index for display
+    currentIndex: number;
     disabled: boolean;
     onPrev: () => void;
     onNext: () => void;
@@ -24,7 +24,6 @@ export interface MatchVisualizerProps {
     testStrings: string[];
     matches: VisualMatch[];
     error: string | null;
-    // Optional: emphasize an active global match and allow auto-scroll behavior
     activeGlobalIndex?: number;
     onScrollToActive?: boolean;
 }
@@ -58,7 +57,6 @@ export interface TestStringInputProps {
 // Other interfaces/types
 export interface VisualMatch {
     testStringIndex: number;
-    // Use SingleMatch so components can access groups and indices
     matches: SingleMatch[];
     totalMatches: number;
     truncated: boolean;
@@ -88,7 +86,7 @@ export interface MatchResult {
     testStringIndex: number;
     matches: SingleMatch[];
     totalMatches: number;
-    truncated: boolean; // indicates we hit max matches cap
+    truncated: boolean;
 }
 
 export interface PatternExplanation {
@@ -115,12 +113,12 @@ export interface LibraryPattern {
     flags?: Partial<RegexFlags>;
     description?: string;
     category: 'validation' | 'extraction' | 'formatting' | 'misc';
-    /** Example strings that match this pattern */
+
     examples?: {
         matches: string[];
         doesNotMatch?: string[];
     };
-    /** Default test string to populate when pattern is selected */
+
     testString?: string;
 }
 
@@ -139,9 +137,6 @@ export const defaultFlags: RegexFlags = {
     y: false,
 };
 
-/**
- * Converts RegexFlags object to a string representation (e.g., "gi")
- */
 export function flagsToString(flags: RegexFlags): string {
     return [
         flags.g ? 'g' : '',
@@ -162,19 +157,19 @@ export interface PatternToken {
     end: number;
     description?: string;
     children?: PatternToken[];
-    /** For quantifiers: index of the token being quantified in the parent array */
+
     targetIndex?: number;
-    /** For tokens in alternation: which branch (0 for first, 1 for second, etc.) */
+
     branchIndex?: number;
 }
 
 export interface RegexFlags {
-    g: boolean; // global
-    i: boolean; // ignore case
-    m: boolean; // multiline
-    s: boolean; // dotAll
-    u: boolean; // unicode
-    y: boolean; // sticky
+    g: boolean;
+    i: boolean;
+    m: boolean;
+    s: boolean;
+    u: boolean;
+    y: boolean;
 }
 
 export interface CharacterClassResult {

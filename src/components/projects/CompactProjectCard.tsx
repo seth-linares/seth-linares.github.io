@@ -38,7 +38,6 @@ function CompactProjectCard({
 
                 <p className="text-base-content/80 text-sm mb-4">{project.description}</p>
 
-                {/* Show top 2 highlights for other projects */}
                 {project.highlights && project.highlights.length > 0 && (
                     <div className="space-y-2 mb-4">
                         {project.highlights.slice(0, 2).map((highlight, highlightIndex) => (

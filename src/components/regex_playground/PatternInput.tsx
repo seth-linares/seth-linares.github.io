@@ -4,7 +4,6 @@ import type { FlagToggleProps, PatternInputProps, RegexFlags } from '@/types/reg
 import { useDebouncedValue } from '@/hooks/regex_playground/useDebouncedValue';
 import WarningIndicator from './WarningIndicator';
 
-// Enhanced flag descriptions with beginner-friendly explanations
 const FLAG_HELP: Record<keyof RegexFlags, { name: string; desc: string; example: string }> = {
     g: {
         name: 'Global',
@@ -65,11 +64,9 @@ function PatternInput({
     toggleFlag,
     warnings = [],
 }: PatternInputProps) {
-    // Use shared hook for debounce so spinner only shows while typing
     const debouncedPattern = useDebouncedValue(pattern, 300);
     const showLoading = pattern !== debouncedPattern;
 
-    // Memoize pattern change handler
     const handlePatternChange = useCallback(
         (e: React.ChangeEvent<HTMLTextAreaElement>) => setPattern(e.target.value),
         [setPattern]
@@ -104,7 +101,7 @@ function PatternInput({
                         onChange={handlePatternChange}
                         aria-label="Regex pattern input"
                     />
-                    {/* Loading indicator during debounce */}
+
                     {showLoading && (
                         <div className="absolute top-2 right-2">
                             <div

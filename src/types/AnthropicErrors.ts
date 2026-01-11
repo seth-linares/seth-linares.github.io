@@ -14,7 +14,6 @@ import {
     UnprocessableEntityError,
 } from '@anthropic-ai/sdk';
 
-// Tuple array for error mapping to avoid key duplication
 const ERROR_MAP = [
     [
         BadRequestError,
@@ -103,7 +102,6 @@ export const formatAnthropicError = (error: AnthropicError): string => {
 
     const errorMessage = error.message;
     const hasStatusCode = /^\d{3}\s+/.test(errorMessage);
-    // Always include the original error message for debugging
     return hasStatusCode
         ? errorMessage.substring(4)
         : errorMessage || 'An unexpected error occurred';

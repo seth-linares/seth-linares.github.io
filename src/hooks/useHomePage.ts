@@ -13,11 +13,9 @@ function useHomePage() {
         element?.scrollIntoView({ behavior: 'smooth' });
     };
 
-    // Handle scrolling when navigated from another page
     useEffect(() => {
         const state = location.state as { scrollTo?: string } | null;
         if (state?.scrollTo) {
-            // Small delay to ensure DOM is ready
             const timer = setTimeout(() => {
                 scrollToSection(state.scrollTo!);
             }, 100);
@@ -25,7 +23,6 @@ function useHomePage() {
         }
     }, [location.state]);
 
-    // Tools section data - currently just one tool
     const toolsData = {
         title: 'Developer Tools',
         description: 'Practical tools built to solve real development challenges',

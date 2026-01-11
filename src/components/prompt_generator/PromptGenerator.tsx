@@ -56,7 +56,6 @@ function PromptGenerator() {
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             >
                 <div className="card-body space-y-6">
-                    {/* Header Area with API Key Button */}
                     <div className="flex items-center justify-between">
                         <motion.h2
                             className="card-title text-3xl font-bold flex items-center gap-2"
@@ -82,7 +81,6 @@ function PromptGenerator() {
                     </div>
                     <div className="divider m-0"></div>
 
-                    {/* API Key Form - Collapsible */}
                     {!apiKey && isApiKeyFormExpanded && (
                         <ApiKeyForm
                             apiKeyInput={apiKeyInput}
@@ -98,11 +96,10 @@ function PromptGenerator() {
                         exit={{ opacity: 0, y: -20 }}
                         className="space-y-6"
                     >
-                        {/* Text Input Area */}
                         <form onSubmit={handleSubmitTokens} className="space-y-4">
                             <div className="form-control w-full">
                                 <motion.textarea
-                                    className="textarea textarea-bordered min-h-[200px] text-lg transition-all duration-200 focus:textarea-primary w-full"
+                                    className="textarea textarea-bordered min-h-50 text-lg transition-all duration-200 focus:textarea-primary w-full"
                                     value={promptInput}
                                     onChange={(e) => setPromptInput(e.target.value)}
                                     placeholder="Enter your prompt text..."
@@ -113,7 +110,6 @@ function PromptGenerator() {
                             </div>
                         </form>
 
-                        {/* Actions Area */}
                         <div className="flex flex-wrap gap-6 items-start justify-between">
                             <div className="w-full md:w-1/3">
                                 <FileUploader />
@@ -121,7 +117,7 @@ function PromptGenerator() {
                             <div className="flex items-center ml-auto gap-2">
                                 <button
                                     type="button"
-                                    className={`btn gap-2 min-w-[300px] btn-animated ${!apiKey ? 'btn-ghost' : 'btn-primary'}`}
+                                    className={`btn gap-2 min-w-75 btn-animated ${!apiKey ? 'btn-ghost' : 'btn-primary'}`}
                                     onClick={handleSubmitTokens}
                                     disabled={!apiKey || (!promptInput && !fileText)}
                                 >
@@ -139,10 +135,8 @@ function PromptGenerator() {
                             </div>
                         </div>
 
-                        {/* Token Count Display */}
                         <TokenCountDisplay tokenCount={tokenCount} />
 
-                        {/* Generated Prompt Display */}
                         <GeneratedPromptDisplay
                             generatedPrompt={generatedPrompt}
                             showGeneratedPrompt={showGeneratedPrompt}

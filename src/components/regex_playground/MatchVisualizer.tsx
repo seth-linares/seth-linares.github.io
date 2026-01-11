@@ -11,10 +11,8 @@ function MatchVisualizer({
     activeGlobalIndex,
     onScrollToActive = true,
 }: MatchVisualizerProps) {
-    // Ref to the currently active match for auto-scroll
     const activeRef = useRef<HTMLSpanElement | null>(null);
 
-    // Use useEffect instead of useMemo for side effects
     useEffect(() => {
         if (!onScrollToActive) return;
         if (typeof activeGlobalIndex !== 'number') return;
@@ -27,7 +25,6 @@ function MatchVisualizer({
         }
     }, [activeGlobalIndex, onScrollToActive]);
 
-    // Compute global index offsets per test block - memoized to prevent recalculation
     const blockOffsets = useMemo(() => {
         const offsets: number[] = [];
         let base = 0;
@@ -112,7 +109,6 @@ function MatchVisualizer({
                                     {parts}
                                 </pre>
 
-                                {/* Details: show captured groups for each match */}
                                 <div className="mt-2 space-y-1">
                                     {res.matches.map((m, idx) => (
                                         <div

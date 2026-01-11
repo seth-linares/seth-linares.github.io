@@ -8,22 +8,14 @@ import type {
     RegexFlags,
 } from '@/types/regex';
 
-/**
- * Parser configuration limits to prevent performance issues and stack overflow
- */
 const PARSER_LIMITS = {
-    /** Maximum nesting depth for groups to prevent stack overflow */
     MAX_NESTING_DEPTH: 50,
-    /** Quantifier values above this threshold trigger performance warnings */
+
     LARGE_QUANTIFIER_THRESHOLD: 10000,
-    /** Nesting depth above this threshold triggers performance warnings */
+
     DEEP_NESTING_WARNING_THRESHOLD: 10,
 } as const;
 
-/**
- * Unicode property descriptions for \p{...} escape sequences
- * Maps property names to beginner-friendly descriptions
- */
 const UNICODE_PROPERTY_DESCRIPTIONS: Record<string, string> = {
     // General categories
     Letter: 'any letter in any language',
@@ -75,35 +67,22 @@ const UNICODE_PROPERTY_DESCRIPTIONS: Record<string, string> = {
     White_Space: 'whitespace characters',
 };
 
-/**
- * Gets a beginner-friendly description for a Unicode property escape
- */
 function getUnicodePropertyDescription(property: string, isNegated: boolean): string {
     const baseDesc = UNICODE_PROPERTY_DESCRIPTIONS[property] || `Unicode property "${property}"`;
     return isNegated ? `Matches any character that is NOT ${baseDesc}` : `Matches ${baseDesc}`;
 }
 
-/**
- * Checks if a character class inner content contains actual ranges (e.g., a-z)
- * Excludes escaped hyphens (\-) and hyphens at start/end (which are literal)
- */
 function hasCharacterRange(inner: string): boolean {
-    // Empty or single char can't have ranges
     if (inner.length < 3) return false;
 
-    // Check for actual range pattern: char-char where hyphen is not escaped
-    // and not at start or end position
     for (let i = 1; i < inner.length - 1; i++) {
         if (inner[i] === '-') {
-            // Check if the hyphen is escaped (preceded by backslash)
-            // Need to handle multiple backslashes: \\\- vs \\-
             let backslashCount = 0;
             let j = i - 1;
             while (j >= 0 && inner[j] === '\\') {
                 backslashCount++;
                 j--;
             }
-            // If odd number of backslashes, the hyphen is escaped
             if (backslashCount % 2 === 0) {
                 return true;
             }
@@ -112,10 +91,6 @@ function hasCharacterRange(inner: string): boolean {
     return false;
 }
 
-/**
- * Parses a character class starting at the given position.
- * Handles edge cases like []], [^]], [\d\w], [-a], [a-].
- */
 function parseCharacterClass(pattern: string, start: number): CharacterClassResult | null {
     if (pattern[start] !== '[') return null;
 
@@ -128,12 +103,10 @@ function parseCharacterClass(pattern: string, start: number): CharacterClassResu
         pos++;
     }
 
-    // Handle special case where ] is first character (literal ])
     if (pos < pattern.length && pattern[pos] === ']') {
         pos++;
     }
 
-    // Parse the character class content
     let escaped = false;
     while (pos < pattern.length) {
         const c = pattern[pos];
@@ -157,9 +130,8 @@ function parseCharacterClass(pattern: string, start: number): CharacterClassResu
         pos++;
     }
 
-    // Check if we found the closing ]
     if (pos >= pattern.length || pattern[pos] !== ']') {
-        return null; // Invalid character class
+        return null;
     }
 
     const value = pattern.slice(start, pos + 1);
@@ -169,7 +141,6 @@ function parseCharacterClass(pattern: string, start: number): CharacterClassResu
         ? 'Matches any character NOT in the set'
         : 'Matches any single character in the set';
 
-    // Add more specific description based on content
     if (inner.includes('\\d') || inner.includes('\\w') || inner.includes('\\s')) {
         description += ' (includes escape sequences)';
     } else if (hasCharacterRange(inner)) {
@@ -183,16 +154,12 @@ function parseCharacterClass(pattern: string, start: number): CharacterClassResu
     };
 }
 
-/**
- * Parses escape sequences including character escapes, hex, unicode, etc.
- */
 function parseEscapeSequence(pattern: string, start: number): EscapeResult | null {
     if (pattern[start] !== '\\') return null;
     if (start + 1 >= pattern.length) return null;
 
     const next = pattern[start + 1];
 
-    // Basic character class escapes
     const basicEscapes: Record<string, string> = {
         d: 'Matches any digit (0-9)',
         D: 'Matches any non-digit',
@@ -262,9 +229,7 @@ function parseEscapeSequence(pattern: string, start: number): EscapeResult | nul
         }
     }
 
-    // Unicode escapes \uNNNN and \u{NNNNNN}
     if (next === 'u') {
-        // Check for extended syntax \u{NNNNNN} FIRST (before basic \uNNNN)
         if (start + 2 < pattern.length && pattern[start + 2] === '{') {
             let pos = start + 3;
             while (pos < pattern.length && pattern[pos] !== '}') {
@@ -291,10 +256,8 @@ function parseEscapeSequence(pattern: string, start: number): EscapeResult | nul
                     }
                 }
             }
-            // Malformed \u{ - fall through to basic handling or treat as invalid
         }
 
-        // Basic \uNNNN (4 hex digits)
         if (start + 6 <= pattern.length) {
             const unicode = pattern.slice(start + 2, start + 6);
             if (/^[0-9A-Fa-f]{4}$/.test(unicode)) {
@@ -324,14 +287,12 @@ function parseEscapeSequence(pattern: string, start: number): EscapeResult | nul
         }
     }
 
-    // Unicode property escapes \p{...} and \P{...}
     if (
         (next === 'p' || next === 'P') &&
         start + 2 < pattern.length &&
         pattern[start + 2] === '{'
     ) {
         let pos = start + 3;
-        // Find the closing brace, allowing property names like "Script=Latin"
         while (pos < pattern.length && pattern[pos] !== '}') {
             pos++;
         }
@@ -346,7 +307,6 @@ function parseEscapeSequence(pattern: string, start: number): EscapeResult | nul
                 };
             }
         }
-        // Malformed property escape - treat as literal
         return {
             value: pattern.slice(start, start + 2),
             end: start + 2,
@@ -366,7 +326,6 @@ function parseEscapeSequence(pattern: string, start: number): EscapeResult | nul
         }
     }
 
-    // Named backreferences \k<name>
     if (next === 'k' && start + 2 < pattern.length && pattern[start + 2] === '<') {
         let pos = start + 3;
         while (pos < pattern.length && pattern[pos] !== '>') {
@@ -382,7 +341,6 @@ function parseEscapeSequence(pattern: string, start: number): EscapeResult | nul
         }
     }
 
-    // Numbered backreferences \1, \2, etc.
     if (/[1-9]/.test(next)) {
         let pos = start + 1;
         while (pos < pattern.length && /[0-9]/.test(pattern[pos])) {
@@ -395,7 +353,6 @@ function parseEscapeSequence(pattern: string, start: number): EscapeResult | nul
         };
     }
 
-    // Default: treat as literal escaped character
     return {
         value: pattern.slice(start, start + 2),
         end: start + 2,
@@ -403,16 +360,12 @@ function parseEscapeSequence(pattern: string, start: number): EscapeResult | nul
     };
 }
 
-/**
- * Parses various group types including lookarounds, named groups, etc.
- */
 function parseGroup(
     pattern: string,
     start: number,
     flags: RegexFlags,
     depth: number = 0
 ): GroupResult | null {
-    // Prevent excessive nesting that could cause stack overflow
     if (depth > PARSER_LIMITS.MAX_NESTING_DEPTH) {
         throw new Error(
             `Pattern too deeply nested (max depth: ${PARSER_LIMITS.MAX_NESTING_DEPTH})`
@@ -425,7 +378,6 @@ function parseGroup(
     let groupName: string | undefined;
     let description = 'Capturing group';
 
-    // Check for special group types starting with ?
     if (pos < pattern.length && pattern[pos] === '?') {
         pos++;
         if (pos < pattern.length) {
@@ -464,7 +416,6 @@ function parseGroup(
                             description =
                                 'Negative lookbehind - matches if NOT preceded by this pattern';
                         } else {
-                            // Named capture group (?<name>...)
                             const nameStart = pos;
                             while (pos < pattern.length && pattern[pos] !== '>') {
                                 pos++;
@@ -480,7 +431,6 @@ function parseGroup(
                     break;
 
                 default:
-                    // Handle inline modifiers like (?i:...) if needed
                     groupType = 'non-capturing';
                     description = 'Non-capturing group with modifiers';
                     break;
@@ -488,7 +438,6 @@ function parseGroup(
         }
     }
 
-    // Find the matching closing parenthesis
     let parenDepth = 1;
     let escaped = false;
 
@@ -513,7 +462,7 @@ function parseGroup(
     }
 
     if (parenDepth > 0) {
-        return null; // Unclosed group
+        return null;
     }
 
     const value = pattern.slice(start, pos);
@@ -521,8 +470,8 @@ function parseGroup(
         groupType === 'capturing'
             ? start + 1
             : groupName
-              ? start + groupName.length + 4 // (?<name>
-              : start + 3; // (?:, (?=, etc.
+              ? start + groupName.length + 4
+              : start + 3;
     const inner = pattern.slice(innerStart, pos - 1);
 
     return {
@@ -535,26 +484,22 @@ function parseGroup(
     };
 }
 
-/**
- * Parses {m,n} style quantifiers with lazy support
- */
 function parseQuantifier(pattern: string, start: number): QuantifierResult | null {
     if (pattern[start] !== '{') return null;
 
     let pos = start + 1;
     let content = '';
 
-    // Extract the quantifier content
     while (pos < pattern.length && pattern[pos] !== '}') {
         content += pattern[pos];
         pos++;
     }
 
     if (pos >= pattern.length || pattern[pos] !== '}') {
-        return null; // Invalid quantifier
+        return null;
     }
 
-    pos++; // Move past }
+    pos++;
 
     // Check for lazy modifier
     let lazy = false;
@@ -563,7 +508,6 @@ function parseQuantifier(pattern: string, start: number): QuantifierResult | nul
         pos++;
     }
 
-    // Parse the quantifier content
     let description = 'Quantifier';
 
     if (!content) {
@@ -589,7 +533,6 @@ function parseQuantifier(pattern: string, start: number): QuantifierResult | nul
             const max = parts[1].trim();
 
             if (min === '' && max !== '') {
-                // {,n} - up to n times (non-standard)
                 if (/^\d+$/.test(max)) {
                     description = `Matches up to ${max} times`;
                 } else {
@@ -603,7 +546,6 @@ function parseQuantifier(pattern: string, start: number): QuantifierResult | nul
                     description = `Invalid quantifier min value "${min}"`;
                 }
             } else if (min !== '' && max !== '') {
-                // {n,m} - between n and m times
                 if (/^\d+$/.test(min) && /^\d+$/.test(max)) {
                     const minNum = parseInt(min);
                     const maxNum = parseInt(max);
@@ -638,45 +580,25 @@ function parseQuantifier(pattern: string, start: number): QuantifierResult | nul
     };
 }
 
-/**
- * Checks if a group's content has a required literal boundary (prefix OR suffix) that prevents backtracking.
- * Patterns like (?:-[a-z]+)* are safe because '-' MUST match first.
- * Patterns like (?:\d{1,3}\.){3} are safe because '\.' MUST match at the end of each repetition.
- */
 function hasRequiredLiteralBoundary(groupContent: string): boolean {
-    // Skip non-capturing group prefix if present
     const content = groupContent.replace(/^\?:/, '');
 
-    // Check for required literal PREFIX (start of group)
-    // The key is that the FIRST element must NOT be quantified at all.
-
-    // Starts with escaped character NOT quantified (like \. in \.[a-z]+)
     if (/^\\[.dDwWsS](?![*+?{])/.test(content)) {
         return true;
     }
 
-    // Starts with a plain literal char NOT followed by any quantifier
-    // e.g., '-' in -[a-z]+ is a required prefix, but 'a' in a+ is NOT
     if (/^[a-zA-Z0-9\-_.,:;!@#$%&=<>'"/](?![*+?{])/.test(content)) {
         return true;
     }
 
-    // Starts with a character class NOT followed by any quantifier
-    // e.g., [A-Z] in [A-Z][a-z]+ is required, but [a-z] in [a-z]+ is NOT
     if (/^\[[^\]]+\](?![*+?{])/.test(content)) {
         return true;
     }
 
-    // Check for required literal SUFFIX (end of group)
-    // e.g., \d{1,3}\. has \. at the end which creates an unambiguous boundary
-
-    // Ends with escaped character (like \. in \d{1,3}\.)
     if (/\\[.dDwWsS]$/.test(content)) {
         return true;
     }
 
-    // Ends with a plain literal char not preceded by a quantifier
-    // e.g., 'x' at end if not part of a quantifier like {1,3}
     if (/[a-zA-Z0-9\-_.,:;!@#$%&=<>'"/]$/.test(content) && !/[*+?}].$/.test(content)) {
         return true;
     }
@@ -689,8 +611,6 @@ function hasRequiredLiteralBoundary(groupContent: string): boolean {
  * Patterns like ([^"\\]|\\.)* are safe because the alternatives can never overlap.
  */
 function areAlternativesDisjoint(alt1: string, alt2: string): boolean {
-    // Negated char class vs escaped sequence - these are commonly disjoint
-    // e.g., [^"\\] can't match what \\. matches (backslash + any char)
     const negatedClassPattern = /^\[\^/;
     const escapedPattern = /^\\\\/;
 
@@ -701,7 +621,6 @@ function areAlternativesDisjoint(alt1: string, alt2: string): boolean {
         return true;
     }
 
-    // Two different literal characters are disjoint
     const literalChar1 = alt1.match(/^[a-zA-Z0-9]$/);
     const literalChar2 = alt2.match(/^[a-zA-Z0-9]$/);
     if (literalChar1 && literalChar2 && alt1 !== alt2) {
@@ -711,14 +630,9 @@ function areAlternativesDisjoint(alt1: string, alt2: string): boolean {
     return false;
 }
 
-/**
- * Detects potentially dangerous regex patterns that could cause ReDoS (Regular Expression Denial of Service)
- */
 function detectPotentialReDoS(pattern: string): string[] {
     const warnings: string[] = [];
 
-    // Nested quantifiers: (a+)+, (a*)+, etc.
-    // But skip if the group has a required literal boundary that prevents backtracking
     const groupWithQuantifier = /\((\?:)?([^)]+)\)([*+?]|\{[0-9,]+\})/g;
     let match;
     let foundNestedQuantifier = false;
@@ -727,14 +641,12 @@ function detectPotentialReDoS(pattern: string): string[] {
         const groupContent = match[2];
         const outerQuantifier = match[3];
 
-        // Check if inner content has a quantifier
         const hasInnerQuantifier = /[*+?]|\{[0-9,]+\}/.test(groupContent);
 
         if (
             hasInnerQuantifier &&
             (outerQuantifier === '*' || outerQuantifier === '+' || outerQuantifier.startsWith('{'))
         ) {
-            // This COULD be dangerous, but check for safe patterns
             if (!hasRequiredLiteralBoundary(groupContent)) {
                 warnings.push(
                     'Nested quantifiers like (a+)+ can be VERY slow on long text. Try simplifying - for example, (a+)+ can usually be replaced with just a+'
@@ -745,15 +657,12 @@ function detectPotentialReDoS(pattern: string): string[] {
         }
     }
 
-    // Alternation with quantifiers: (a|b)+
-    // But skip if alternatives are disjoint
     if (!foundNestedQuantifier) {
         const altWithQuantifier = /\((\?:)?([^)|]+)\|([^)]+)\)([*+?]|\{[0-9,]+\})/g;
         while ((match = altWithQuantifier.exec(pattern)) !== null) {
             const alt1 = match[2];
             const alt2 = match[3];
 
-            // Check if alternatives could overlap
             if (!areAlternativesDisjoint(alt1, alt2)) {
                 warnings.push(
                     'OR patterns with repeaters like (cat|car)+ can be slow if the options share characters. Consider rewriting as ca(t|r)+ if possible'
@@ -763,16 +672,12 @@ function detectPotentialReDoS(pattern: string): string[] {
         }
     }
 
-    // Multiple consecutive quantifiers (invalid but dangerous): a++, b**
-    // But NOT escaped characters like \+? (escaped plus followed by optional)
-    // Use negative lookbehind to exclude escaped characters
     if (/(?<!\\)[*+?][*+?]/.test(pattern)) {
         warnings.push(
             'Two quantifiers in a row (like ++ or *?) is invalid. Each quantifier should follow something to repeat, like a+ or \\d*'
         );
     }
 
-    // Very large quantifiers: {999999}
     const largeQuantifier = pattern.match(/\{(\d+)(?:,(\d+))?\}/g);
     if (largeQuantifier) {
         for (const quant of largeQuantifier) {
@@ -789,7 +694,6 @@ function detectPotentialReDoS(pattern: string): string[] {
         }
     }
 
-    // Deep nesting check (basic)
     let maxDepth = 0;
     let currentDepth = 0;
     for (const char of pattern) {
@@ -810,26 +714,20 @@ function detectPotentialReDoS(pattern: string): string[] {
     return warnings;
 }
 
-/**
- * Validates pattern for common issues and returns warnings
- */
 function validatePattern(tokens: PatternToken[]): string[] {
     const warnings: string[] = [];
 
-    // Count capturing groups and validate backreferences
     let capturingGroupCount = 0;
     const namedGroups = new Set<string>();
 
     function countGroups(tokens: PatternToken[]): void {
         tokens.forEach((token) => {
             if (token.type === 'group') {
-                // Only count capturing groups (not lookarounds)
                 if (
                     !token.description?.includes('lookahead') &&
                     !token.description?.includes('lookbehind')
                 ) {
                     if (token.description?.includes('Named capturing')) {
-                        // Extract group name from description
                         const nameMatch = token.description.match(/"([^"]+)"/);
                         if (nameMatch) {
                             const groupName = nameMatch[1];
@@ -846,7 +744,6 @@ function validatePattern(tokens: PatternToken[]): string[] {
                     }
                 }
 
-                // Recursively count groups in children
                 if (token.children) {
                     countGroups(token.children);
                 }
@@ -857,7 +754,6 @@ function validatePattern(tokens: PatternToken[]): string[] {
     function validateBackreferences(tokens: PatternToken[]): void {
         tokens.forEach((token) => {
             if (token.type === 'escape') {
-                // Check numbered backreferences
                 const numberedMatch = token.value.match(/^\\(\d+)$/);
                 if (numberedMatch) {
                     const refNum = parseInt(numberedMatch[1]);
@@ -868,7 +764,6 @@ function validatePattern(tokens: PatternToken[]): string[] {
                     }
                 }
 
-                // Check named backreferences
                 const namedMatch = token.value.match(/^\\k<([^>]+)>$/);
                 if (namedMatch) {
                     const refName = namedMatch[1];
@@ -880,7 +775,6 @@ function validatePattern(tokens: PatternToken[]): string[] {
                 }
             }
 
-            // Recursively validate in children
             if (token.children) {
                 validateBackreferences(token.children);
             }
@@ -890,26 +784,20 @@ function validatePattern(tokens: PatternToken[]): string[] {
     // First pass: count groups
     countGroups(tokens);
 
-    // Second pass: validate backreferences
     validateBackreferences(tokens);
 
-    // Validate character class ranges for invalid patterns like [z-a]
     function validateCharacterClassRanges(token: PatternToken): void {
         if (token.type !== 'character-class') return;
 
-        // Extract inner content (remove [ ] and optional ^ for negation)
         let inner = token.value.slice(1, -1);
         if (inner.startsWith('^')) {
             inner = inner.slice(1);
         }
 
-        // Handle special case: ] as first char is literal
         if (inner.startsWith(']')) {
             inner = inner.slice(1);
         }
 
-        // Find ranges and validate them
-        // A range is char-char where the hyphen is not at start/end and not escaped
         let i = 0;
         while (i < inner.length) {
             // Skip escaped characters
@@ -918,22 +806,15 @@ function validatePattern(tokens: PatternToken[]): string[] {
                 continue;
             }
 
-            // Check for hyphen that could be a range
             if (inner[i] === '-' && i > 0 && i < inner.length - 1) {
-                // Get the character before the hyphen
                 const startChar = inner[i - 1];
-                // Handle if previous char was an escape sequence
                 if (i >= 2 && inner[i - 2] === '\\') {
-                    // This is an escaped char like \d- which isn't a valid range start
                     i++;
                     continue;
                 }
 
-                // Get the character after the hyphen
                 const endChar = inner[i + 1];
-                // Handle if next char is escaped
                 if (endChar === '\\' && i + 2 < inner.length) {
-                    // Escaped char after hyphen - not a simple range
                     i++;
                     continue;
                 }
@@ -949,10 +830,8 @@ function validatePattern(tokens: PatternToken[]): string[] {
         }
     }
 
-    // Check for other pattern issues
     function checkPatternIssues(tokens: PatternToken[]): void {
         tokens.forEach((token, index) => {
-            // Check for quantifiers on anchors (usually invalid)
             if (token.type === 'anchor' && index + 1 < tokens.length) {
                 const nextToken = tokens[index + 1];
                 if (nextToken.type === 'quantifier') {
@@ -962,7 +841,6 @@ function validatePattern(tokens: PatternToken[]): string[] {
                 }
             }
 
-            // Check for quantifiers on lookarounds (usually invalid)
             if (
                 token.type === 'group' &&
                 token.description?.includes('look') &&
@@ -976,12 +854,10 @@ function validatePattern(tokens: PatternToken[]): string[] {
                 }
             }
 
-            // Check for invalid character class ranges
             if (token.type === 'character-class') {
                 validateCharacterClassRanges(token);
             }
 
-            // Recursively check children
             if (token.children) {
                 checkPatternIssues(token.children);
             }
@@ -1000,7 +876,6 @@ function enhanceDescriptions(tokens: PatternToken[], flags?: RegexFlags): Patter
     const enhanced = tokens.map((token, index) => {
         let enhancedDescription = token.description;
 
-        // Enhance group descriptions when followed by quantifiers
         if (token.type === 'group' && index + 1 < tokens.length) {
             const nextToken = tokens[index + 1];
             if (nextToken.type === 'quantifier') {
@@ -1017,7 +892,6 @@ function enhanceDescriptions(tokens: PatternToken[], flags?: RegexFlags): Patter
             }
         }
 
-        // Enhance word boundary descriptions based on context
         if (token.type === 'escape' && (token.value === '\\b' || token.value === '\\B')) {
             const prevToken = index > 0 ? tokens[index - 1] : null;
             const nextToken = index + 1 < tokens.length ? tokens[index + 1] : null;
@@ -1035,7 +909,6 @@ function enhanceDescriptions(tokens: PatternToken[], flags?: RegexFlags): Patter
             }
         }
 
-        // Enhance escape sequences in specific contexts
         if (token.type === 'escape' && token.value === '\\d') {
             if (index + 1 < tokens.length && tokens[index + 1].type === 'quantifier') {
                 const quantifier = tokens[index + 1];
@@ -1049,7 +922,6 @@ function enhanceDescriptions(tokens: PatternToken[], flags?: RegexFlags): Patter
             }
         }
 
-        // Enhance character class descriptions based on content and flags
         if (token.type === 'character-class') {
             if (
                 token.value.includes('0-9') &&
@@ -1069,14 +941,12 @@ function enhanceDescriptions(tokens: PatternToken[], flags?: RegexFlags): Patter
             }
         }
 
-        // Enhance dot descriptions based on context and flags
         if (token.type === 'wildcard' && token.value === '.') {
             if (
                 index > 0 &&
                 tokens[index - 1].type === 'escape' &&
                 tokens[index - 1].value === '\\'
             ) {
-                // This shouldn't happen with proper parsing, but just in case
                 enhancedDescription = 'Literal dot character (escaped)';
             } else if (index + 1 < tokens.length && tokens[index + 1].type === 'quantifier') {
                 const quantifier = tokens[index + 1];
@@ -1092,7 +962,6 @@ function enhanceDescriptions(tokens: PatternToken[], flags?: RegexFlags): Patter
             }
         }
 
-        // Add flag-specific enhancements
         if (flags) {
             if (token.type === 'literal' && /[a-zA-Z]/.test(token.value) && flags.i) {
                 enhancedDescription += ' (case-insensitive)';
@@ -1111,7 +980,6 @@ function enhanceDescriptions(tokens: PatternToken[], flags?: RegexFlags): Patter
             }
         }
 
-        // Recursively enhance children
         const enhancedChildren = token.children
             ? enhanceDescriptions(token.children, flags)
             : token.children;
@@ -1167,7 +1035,6 @@ function parseRegexPatternInternal(
                 }
             }
 
-            // Escape sequences like \d, \w, \s, \n, \t, etc.
             if (char === '\\' && i + 1 < pattern.length) {
                 const escapeResult = parseEscapeSequence(pattern, i);
                 if (escapeResult) {
@@ -1183,7 +1050,6 @@ function parseRegexPatternInternal(
                 }
             }
 
-            // Quantifiers *, +, ?, and {m,n} with lazy support
             if (char === '*' || char === '+' || char === '?') {
                 let quantifierEnd = i + 1;
                 let lazy = false;
@@ -1212,7 +1078,6 @@ function parseRegexPatternInternal(
                     start,
                     end: quantifierEnd,
                     description,
-                    // Link to the token being quantified (previous token)
                     targetIndex: tokens.length > 0 ? tokens.length - 1 : undefined,
                 });
                 i = quantifierEnd;
@@ -1227,7 +1092,6 @@ function parseRegexPatternInternal(
                         start,
                         end: quantifierResult.end,
                         description: quantifierResult.description,
-                        // Link to the token being quantified (previous token)
                         targetIndex: tokens.length > 0 ? tokens.length - 1 : undefined,
                     });
                     i = quantifierResult.end;
@@ -1256,7 +1120,6 @@ function parseRegexPatternInternal(
                 continue;
             }
 
-            // Groups (...) - supports all group types
             if (char === '(') {
                 const groupResult = parseGroup(pattern, i, resolvedFlags, depth);
                 if (groupResult) {
@@ -1312,7 +1175,6 @@ function parseRegexPatternInternal(
             });
             i++;
         } catch {
-            // Error recovery: treat as unknown/literal token
             tokens.push({
                 type: 'unknown',
                 value: char,
@@ -1324,7 +1186,6 @@ function parseRegexPatternInternal(
         }
     }
 
-    // Annotate alternation branches if alternation exists
     return annotateAlternationBranches(tokens);
 }
 
@@ -1340,10 +1201,9 @@ function annotateAlternationBranches(tokens: PatternToken[]): PatternToken[] {
     return tokens.map((token) => {
         if (token.type === 'alternation') {
             currentBranch++;
-            return token; // Don't annotate the pipe itself
+            return token;
         }
 
-        // Recursively annotate children (for groups containing alternation)
         const annotatedChildren = token.children
             ? annotateAlternationBranches(token.children)
             : token.children;

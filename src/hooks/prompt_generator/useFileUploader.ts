@@ -4,8 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import useFileContext from './useFileContext';
 import { readFileAsText, generateUniqueName } from '@/utils/fileHelpers';
 
-// Set max file size to 10MB (change to 5 * 1024 * 1024 for 5MB)
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // Set max file size to 10MB
 
 const useFileUploader = () => {
     const { files, setFileText, setFiles, setFileContents } = useFileContext();
@@ -22,7 +21,6 @@ const useFileUploader = () => {
                     setIsLoading(true);
                     setError(null);
 
-                    // Initialize with already uploaded file names.
                     const currentNames = new Set(files.map((file) => file.name));
                     const existingNames = new Set(currentNames);
                     const fileContentMap = new Map<string, string>();
@@ -44,7 +42,6 @@ const useFileUploader = () => {
                         console.info('Skipped files:', skippedFiles);
                     }
 
-                    // Batch read and process valid files (allowing duplicate names with unique suffixes)
                     const results = await Promise.allSettled(
                         validFiles.map(async (file) => {
                             const content = await readFileAsText(file);
@@ -53,7 +50,6 @@ const useFileUploader = () => {
                         })
                     );
 
-                    // Filter out rejected promises and process successful ones
                     const successfulResults = results.filter(
                         (
                             result
@@ -69,10 +65,9 @@ const useFileUploader = () => {
 
                     const newCombinedContents = successfulResults
                         .map((result) => result.value.content)
-                        .filter((content) => content) // Remove any undefined/null values
+                        .filter((content) => content)
                         .join('\n');
 
-                    // Create new File objects with unique names.
                     const uniqueFiles = Array.from(fileContentMap.entries()).map(
                         ([uniqueName, content]) => {
                             return new File([content], uniqueName, { type: 'text/plain' });

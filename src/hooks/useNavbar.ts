@@ -35,7 +35,6 @@ export function useNavbar(): NavbarState {
     const [pullTabHintShown, setPullTabHintShown] = useState(false);
     const [isManuallyShown, setIsManuallyShown] = useState(false);
 
-    // Refs for managing state without causing re-renders
     const lastScrollY = useRef(0);
     const scrollDirection = useRef<'up' | 'down' | null>(null);
     const isNavigating = useRef(false);
@@ -71,7 +70,6 @@ export function useNavbar(): NavbarState {
         setIsMobileMenuOpen(false);
     }, []);
 
-    // Simplified navbar visibility logic
     const updateNavbarVisibility = useCallback(() => {
         const currentScrollY = scrollY.get();
         const velocity = scrollVelocity.get();
@@ -90,7 +88,6 @@ export function useNavbar(): NavbarState {
             return;
         }
 
-        // If manually shown, keep visible until significant scroll down
         if (isManuallyShown) {
             if (velocity > NAVBAR_CONFIG.VELOCITY_THRESHOLD && scrollDirection.current === 'down') {
                 setIsManuallyShown(false);
@@ -109,13 +106,11 @@ export function useNavbar(): NavbarState {
         lastScrollY.current = currentScrollY;
     }, [scrollY, scrollVelocity, rawNavbarVisibility, isManuallyShown]);
 
-    // Show navbar manually (from pull tab)
     const showNavbar = useCallback(() => {
         setIsManuallyShown(true);
         rawNavbarVisibility.set(1);
     }, [rawNavbarVisibility]);
 
-    // Simple scroll-position-based section detection
     const updateActiveSection = useCallback(() => {
         if (!isHomePage || isNavigating.current) return;
 
@@ -123,13 +118,11 @@ export function useNavbar(): NavbarState {
         const windowHeight = window.innerHeight;
         const documentHeight = document.documentElement.scrollHeight;
 
-        // At bottom of page = contact section
         if (scrollTop + windowHeight >= documentHeight - 50) {
             setActiveSection('contact');
             return;
         }
 
-        // Find section whose top is closest to viewport top (with navbar offset)
         let closestSection: string | null = null;
         let closestDistance = Infinity;
 
@@ -138,7 +131,6 @@ export function useNavbar(): NavbarState {
             if (element) {
                 const rect = element.getBoundingClientRect();
                 const distance = Math.abs(rect.top - NAVBAR_CONFIG.NAVBAR_OFFSET);
-                // Section must be at or above the navbar offset point
                 if (rect.top <= NAVBAR_CONFIG.NAVBAR_OFFSET + 100 && distance < closestDistance) {
                     closestDistance = distance;
                     closestSection = sectionId;
@@ -146,7 +138,6 @@ export function useNavbar(): NavbarState {
             }
         });
 
-        // Set activeSection even if null (hero area = no section active)
         setActiveSection(closestSection);
     }, [isHomePage]);
 
@@ -154,24 +145,21 @@ export function useNavbar(): NavbarState {
     const navigateToSection = useCallback(
         (sectionId: string) => {
             if (isHomePage) {
-                // Lock section updates during navigation
                 isNavigating.current = true;
                 setActiveSection(sectionId);
 
                 // Scroll to section
                 const element = document.getElementById(sectionId);
                 if (element) {
-                    const yOffset = -100; // Account for navbar height
+                    const yOffset = -100;
                     const y = element.getBoundingClientRect().top + window.pageYOffset + yOffset;
                     window.scrollTo({ top: y, behavior: 'smooth' });
                 }
 
-                // Clear navigation lock after scroll animation
                 setTimeout(() => {
                     isNavigating.current = false;
                 }, 1000);
             } else {
-                // Navigate to home page with scroll target
                 navigate('/', { state: { scrollTo: sectionId } });
             }
 
@@ -180,16 +168,13 @@ export function useNavbar(): NavbarState {
         [isHomePage, navigate, closeMobileMenu]
     );
 
-    // Handle navigation from other pages
     useEffect(() => {
         if (isHomePage && location.state?.scrollTo) {
             const targetSection = location.state.scrollTo;
-            // Small delay to ensure DOM is ready
             setTimeout(() => {
                 navigateToSection(targetSection);
             }, 100);
 
-            // Clear the state to prevent re-scrolling
             window.history.replaceState({}, document.title);
         }
     }, [isHomePage, location.state, navigateToSection]);

@@ -16,15 +16,12 @@ export const useFileContextProvider = () => {
 
             setFiles((prevFiles) => {
                 const newFiles = prevFiles.filter((_, i) => i !== index);
-                // Update fileContents after files are removed
                 setFileContents((prevContents) => {
                     const newContents = new Map(prevContents);
-                    // Only remove this specific file's content
                     newContents.delete(fileToRemove.name);
                     return newContents;
                 });
 
-                // Update combined fileText based on remaining files in fileContents
                 Promise.all(newFiles.map((file) => readFileAsText(file))).then((contents) => {
                     setFileText(contents.join('\n'));
                 });
@@ -35,10 +32,8 @@ export const useFileContextProvider = () => {
         [files]
     );
 
-    // Memoize the active file names to avoid recalculating on every generatePrompt call
     const activeFileNames = useMemo(() => new Set(files.map((f) => f.name)), [files]);
 
-    // Memoize the filtered file contents to avoid recalculating
     const activeFileContents = useMemo(
         () =>
             Array.from(fileContents.entries()).filter(([fileName]) =>
@@ -51,13 +46,11 @@ export const useFileContextProvider = () => {
         (userPrompt: string) => {
             let prompt = '';
 
-            // Add file contents with code fence blocks using memoized filtered contents
             activeFileContents.forEach(([fileName, content]) => {
                 const language = getLanguageFromExtension(fileName);
                 prompt += `## \`${fileName}\`\n\n\`\`\`\`${language}\n${content}\n\`\`\`\`\n\n`;
             });
 
-            // Add separator and user prompt if provided
             if (userPrompt.trim()) {
                 prompt += `---\n\n## User Prompt:\n\n${userPrompt.trim()}\n`;
             }
