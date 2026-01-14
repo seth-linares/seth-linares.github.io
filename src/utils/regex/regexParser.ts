@@ -606,10 +606,7 @@ function hasRequiredLiteralBoundary(groupContent: string): boolean {
     return false;
 }
 
-/**
- * Checks if two alternatives in an alternation are disjoint (can't match the same input).
- * Patterns like ([^"\\]|\\.)* are safe because the alternatives can never overlap.
- */
+
 function areAlternativesDisjoint(alt1: string, alt2: string): boolean {
     const negatedClassPattern = /^\[\^/;
     const escapedPattern = /^\\\\/;
@@ -869,9 +866,7 @@ function validatePattern(tokens: PatternToken[]): string[] {
     return warnings;
 }
 
-/**
- * Enhances token descriptions based on context for better user understanding
- */
+
 function enhanceDescriptions(tokens: PatternToken[], flags?: RegexFlags): PatternToken[] {
     const enhanced = tokens.map((token, index) => {
         let enhancedDescription = token.description;
@@ -994,9 +989,7 @@ function enhanceDescriptions(tokens: PatternToken[], flags?: RegexFlags): Patter
     return enhanced;
 }
 
-/**
- * Internal parser with depth tracking for recursion safety
- */
+
 function parseRegexPatternInternal(
     pattern: string,
     flags?: Partial<RegexFlags>,
@@ -1189,10 +1182,7 @@ function parseRegexPatternInternal(
     return annotateAlternationBranches(tokens);
 }
 
-/**
- * Annotates tokens with branchIndex for alternation patterns
- * For example: cat|dog results in c,a,t having branchIndex 0 and d,o,g having branchIndex 1
- */
+
 function annotateAlternationBranches(tokens: PatternToken[]): PatternToken[] {
     const hasAlternation = tokens.some((t) => t.type === 'alternation');
     if (!hasAlternation) return tokens;
@@ -1216,10 +1206,7 @@ function annotateAlternationBranches(tokens: PatternToken[]): PatternToken[] {
     });
 }
 
-/**
- * Very lightweight regex pattern parser for visual explanation.
- * This is not a full RFC parser; it covers common constructs used in the playground.
- */
+
 export function parseRegexPattern(pattern: string, flags?: Partial<RegexFlags>): PatternToken[] {
     const resolvedFlags: RegexFlags = {
         g: false,
@@ -1234,9 +1221,7 @@ export function parseRegexPattern(pattern: string, flags?: Partial<RegexFlags>):
     return enhanceDescriptions(tokens, resolvedFlags);
 }
 
-/**
- * Enhanced parser that returns both tokens and analysis warnings
- */
+
 export function parseRegexPatternWithWarnings(
     pattern: string,
     flags?: Partial<RegexFlags>
@@ -1254,9 +1239,7 @@ export function parseRegexPatternWithWarnings(
     };
 }
 
-/**
- * Basic parser without context enhancements (for performance-critical cases)
- */
+
 export function parseRegexPatternBasic(
     pattern: string,
     flags?: Partial<RegexFlags>

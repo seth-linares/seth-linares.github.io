@@ -440,9 +440,7 @@ export function getBeginnerDescription(token: PatternToken): BeginnerDescription
     };
 }
 
-/**
- * Format a beginner description for display
- */
+
 export function formatBeginnerDescription(token: PatternToken): string {
     const desc = getBeginnerDescription(token);
     if (desc.example) {
@@ -451,23 +449,17 @@ export function formatBeginnerDescription(token: PatternToken): string {
     return desc.simple;
 }
 
-/**
- * Get just the simple description (no example)
- */
+
 export function getSimpleDescription(token: PatternToken): string {
     return getBeginnerDescription(token).simple;
 }
 
-/**
- * Get just the example (if any)
- */
+
 export function getDescriptionExample(token: PatternToken): string | undefined {
     return getBeginnerDescription(token).example;
 }
 
-/**
- * Get just the tip (if any)
- */
+
 export function getDescriptionTip(token: PatternToken): string | undefined {
     return getBeginnerDescription(token).tip;
 }
