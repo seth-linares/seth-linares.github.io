@@ -2,7 +2,7 @@ import { FileCheckpoint, UseGeneratedPromptDisplayProps } from '@/types/componen
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { FiFileText, FiSettings } from 'react-icons/fi';
 import {
-    SiCss3,
+    SiCss,
     SiHtml5,
     SiJavascript,
     SiJson,
@@ -30,7 +30,7 @@ export const getFileIconAndStyle = (fileName: string) => {
         case 'json':
             return { icon: SiJson, badgeClass: 'badge-warning' };
         case 'css':
-            return { icon: SiCss3, badgeClass: 'badge-info' };
+            return { icon: SiCss, badgeClass: 'badge-info' };
         case 'html':
             return { icon: SiHtml5, badgeClass: 'badge-error' };
         case 'config':
