@@ -606,7 +606,6 @@ function hasRequiredLiteralBoundary(groupContent: string): boolean {
     return false;
 }
 
-
 function areAlternativesDisjoint(alt1: string, alt2: string): boolean {
     const negatedClassPattern = /^\[\^/;
     const escapedPattern = /^\\\\/;
@@ -866,7 +865,6 @@ function validatePattern(tokens: PatternToken[]): string[] {
     return warnings;
 }
 
-
 function enhanceDescriptions(tokens: PatternToken[], flags?: RegexFlags): PatternToken[] {
     const enhanced = tokens.map((token, index) => {
         let enhancedDescription = token.description;
@@ -988,7 +986,6 @@ function enhanceDescriptions(tokens: PatternToken[], flags?: RegexFlags): Patter
 
     return enhanced;
 }
-
 
 function parseRegexPatternInternal(
     pattern: string,
@@ -1182,7 +1179,6 @@ function parseRegexPatternInternal(
     return annotateAlternationBranches(tokens);
 }
 
-
 function annotateAlternationBranches(tokens: PatternToken[]): PatternToken[] {
     const hasAlternation = tokens.some((t) => t.type === 'alternation');
     if (!hasAlternation) return tokens;
@@ -1206,7 +1202,6 @@ function annotateAlternationBranches(tokens: PatternToken[]): PatternToken[] {
     });
 }
 
-
 export function parseRegexPattern(pattern: string, flags?: Partial<RegexFlags>): PatternToken[] {
     const resolvedFlags: RegexFlags = {
         g: false,
@@ -1220,7 +1215,6 @@ export function parseRegexPattern(pattern: string, flags?: Partial<RegexFlags>):
     const tokens = parseRegexPatternInternal(pattern, flags, 0);
     return enhanceDescriptions(tokens, resolvedFlags);
 }
-
 
 export function parseRegexPatternWithWarnings(
     pattern: string,
@@ -1238,7 +1232,6 @@ export function parseRegexPatternWithWarnings(
         warnings: [...redosWarnings, ...validationWarnings],
     };
 }
-
 
 export function parseRegexPatternBasic(
     pattern: string,

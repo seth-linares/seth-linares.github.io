@@ -11,15 +11,7 @@ const NAVBAR_CONFIG = {
     VELOCITY_THRESHOLD: 300,
     DEBOUNCE_DELAY: 50,
     NAVBAR_OFFSET: 120,
-    SECTIONS: [
-        'about',
-        'experience',
-        'projects',
-        'skills',
-        'education',
-        'tools',
-        'contact',
-    ] as const,
+    SECTIONS: ['about', 'tools', 'projects', 'contact'] as const,
 };
 
 export function useNavbar(): NavbarState {

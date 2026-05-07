@@ -98,11 +98,8 @@ function Navbar() {
     const navigationItems = useMemo(
         () => [
             { id: 'about', label: 'About' },
-            { id: 'experience', label: 'Experience' },
-            { id: 'projects', label: 'Projects' },
-            { id: 'skills', label: 'Skills' },
-            { id: 'education', label: 'Education' },
             { id: 'tools', label: 'Tools' },
+            { id: 'projects', label: 'Projects' },
             { id: 'contact', label: 'Contact' },
         ],
         []

@@ -440,7 +440,6 @@ export function getBeginnerDescription(token: PatternToken): BeginnerDescription
     };
 }
 
-
 export function formatBeginnerDescription(token: PatternToken): string {
     const desc = getBeginnerDescription(token);
     if (desc.example) {
@@ -449,16 +448,13 @@ export function formatBeginnerDescription(token: PatternToken): string {
     return desc.simple;
 }
 
-
 export function getSimpleDescription(token: PatternToken): string {
     return getBeginnerDescription(token).simple;
 }
 
-
 export function getDescriptionExample(token: PatternToken): string | undefined {
     return getBeginnerDescription(token).example;
 }
-
 
 export function getDescriptionTip(token: PatternToken): string | undefined {
     return getBeginnerDescription(token).tip;
