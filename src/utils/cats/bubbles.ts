@@ -4,6 +4,7 @@
 // setMessage helper that writes one onto a cat. Self-contained — bubble
 // content can be tweaked here without touching the simulation tick.
 
+import { rng } from './rng';
 import type { CatState } from './types';
 
 // Each event maps to a tiny pool of phrases; `setMessage` picks one at random
@@ -95,6 +96,6 @@ export const BUBBLE_DEFAULT_MS = 2000;
 // which keeps bubble flicker low without needing an explicit suppress check.
 export function setMessage(cat: CatState, event: BubbleEvent, durationMs = BUBBLE_DEFAULT_MS) {
     const pool = BUBBLE_POOLS[event];
-    cat.message = pool[Math.floor(Math.random() * pool.length)];
+    cat.message = pool[Math.floor(rng.next() * pool.length)];
     cat.messageUntil = performance.now() + durationMs;
 }

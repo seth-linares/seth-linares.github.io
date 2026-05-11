@@ -60,3 +60,19 @@ export function writeBubble(
     const bubbleY = cat.y - ctx.catSize / 2 - Math.round(ctx.catSize * 0.35);
     bubbleEl.style.transform = `translate(${cat.x}px, ${bubbleY}px)`;
 }
+
+// Interactive-overlay transform write. The interactive overlay's per-cat
+// divs sit at the cat's top-left and are sized to the sprite, so they catch
+// pointer events when feature code attaches listeners (petting, hover-info,
+// per-cat clicks). Translate-only — no scale or flip, since hover hit-tests
+// shouldn't change shape with the cat's facing.
+export function writeInteractive(
+    cat: CatState,
+    interactiveEl: HTMLDivElement | null,
+    ctx: TickContext
+): void {
+    if (!interactiveEl) return;
+    interactiveEl.style.transform = `translate(${cat.x - ctx.catSize / 2}px, ${
+        cat.y - ctx.catSize / 2
+    }px)`;
+}

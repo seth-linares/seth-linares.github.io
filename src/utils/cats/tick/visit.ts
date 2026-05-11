@@ -11,6 +11,7 @@ import {
     STARTLE_DURATION_MS,
     VISIT_OFFSET,
 } from '../constants';
+import { rng } from '../rng';
 import { pickNearbyTarget } from '../targets';
 import { asDoc, type CatState } from '../types';
 import type { TickContext } from './types';
@@ -68,7 +69,7 @@ export function updateVisit(cat: CatState, ctx: TickContext): void {
     // its own urgent state.
     cat.run = {
         kind: 'idle',
-        idleUntil: ctx.now + MEETUP_PAUSE_MS + Math.random() * 1500,
+        idleUntil: ctx.now + MEETUP_PAUSE_MS + rng.next() * 1500,
         sitAt: ctx.now + 600,
     };
     cat.lastMeetupAt = ctx.now;

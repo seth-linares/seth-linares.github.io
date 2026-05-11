@@ -17,6 +17,7 @@
 import { useAnimatedCats } from '@/hooks/useAnimatedCats';
 import { CAT_PALETTES } from '@/types/pixel-cat';
 import CatTray from './cats/CatTray';
+import InteractiveOverlay from './cats/InteractiveOverlay';
 import PixelCat from './PixelCat';
 
 interface Props {
@@ -44,6 +45,7 @@ function AnimatedCats({ count = 8, catSize = 56, opacity = 0.85 }: Props) {
         messages,
         catRefs,
         bubbleRefs,
+        interactiveRefs,
         enabled,
         count: activeCount,
         maxCount,
@@ -98,6 +100,12 @@ function AnimatedCats({ count = 8, catSize = 56, opacity = 0.85 }: Props) {
                     </div>
                 ))}
             </div>
+
+            <InteractiveOverlay
+                activeCount={activeCount}
+                catSize={catSize}
+                interactiveRefs={interactiveRefs}
+            />
 
             <CatTray
                 spawn={spawn}

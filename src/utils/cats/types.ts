@@ -77,6 +77,10 @@ export interface CatState {
     walkFrame: number;
     behavior: CatBehavior;
     palette: CatPalette;
+    // Cat's display name (e.g. "Mochi"). Picked at construction via
+    // names.pickName(), stable for the life of this CatState. Surfaced via
+    // AnimatedCatsState.names for future hover-tooltip code.
+    name: string;
     // ── Social-system cooldowns (read across multiple states) ───────────
     nextSocialCheck: number;
     // Timestamp of the last frame where the cat made meaningful forward
@@ -116,11 +120,20 @@ export interface AnimatedCatsState {
     // no bubble for that cat right now; the renderer hides the bubble div
     // via opacity in that case rather than unmounting.
     messages: (string | null)[];
+    // Per-cat display name, stable for the cat's lifetime. Future hover-info
+    // UI reads names[i]. Lockstep with palettes — `spawn`/`removeLast`/
+    // `reset` keep both arrays in sync.
+    names: string[];
     catRefs: RefObject<(HTMLDivElement | null)[]>;
     // Bubble overlay refs, in lockstep with catRefs. The rAF loop writes a
     // translate-only transform to each bubble element each frame — no flip,
     // so the text always reads upright regardless of the cat's facing.
     bubbleRefs: RefObject<(HTMLDivElement | null)[]>;
+    // Interactive overlay refs. Per-cat divs in a `z-15` overlay that
+    // intercepts pointer events when feature code attaches listeners. The
+    // rAF loop keeps their transforms in lockstep with catRefs so they
+    // always sit over the cat's current position.
+    interactiveRefs: RefObject<(HTMLDivElement | null)[]>;
     enabled: boolean;
     // Current live cat count — can grow past the initial prop via the spawn
     // button or shift+click.

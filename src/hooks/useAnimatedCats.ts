@@ -44,7 +44,12 @@ import {
     stepMovement,
     updateStuckCheck,
 } from '@/utils/cats/tick/movement';
-import { updateAnimation, writeBubble, writeCatTransform } from '@/utils/cats/tick/animation';
+import {
+    updateAnimation,
+    writeBubble,
+    writeCatTransform,
+    writeInteractive,
+} from '@/utils/cats/tick/animation';
 import { publishThrottled } from '@/utils/cats/tick/publish';
 import { updateSocialPick } from '@/utils/cats/tick/social';
 import { updateVisit } from '@/utils/cats/tick/visit';
@@ -64,6 +69,7 @@ import {
 export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): AnimatedCatsState {
     const catRefs = useRef<(HTMLDivElement | null)[]>([]);
     const bubbleRefs = useRef<(HTMLDivElement | null)[]>([]);
+    const interactiveRefs = useRef<(HTMLDivElement | null)[]>([]);
     const statesRef = useRef<CatState[]>([]);
     // Cursor is cached in VIEWPORT coords (raw clientX/clientY) — converted
     // to doc coords ONCE per frame in the tick. Storing viewport means
@@ -97,6 +103,12 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
     const [palettes, setPalettes] = useState<CatPalette[]>(() =>
         Array.from({ length: count }, (_, i) => paletteForIndex(i))
     );
+    // Names are pushed in lockstep with palettes; the simulation generates
+    // them via the factory at construction time, so this state just mirrors
+    // the per-cat name for consumption by hover/tooltip UI. The placeholders
+    // here get replaced at first effect-init (when factory-driven cats land
+    // in statesRef) — see the initial-state-once block below.
+    const [names, setNames] = useState<string[]>(() => Array(count).fill(''));
 
     // Imperative spawn API used by both the in-effect shift+click handler AND
     // the drag-to-place tray. Pushes directly into statesRef.current (so the
@@ -141,6 +153,7 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
             setActiveCount(states.length);
             setPalettes((prev) => [...prev, palette]);
             setMessages((prev) => [...prev, newCat.message]);
+            setNames((prev) => [...prev, newCat.name]);
             return true;
         },
         [catSize]
@@ -153,16 +166,19 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
         setActiveCount(states.length);
         setPalettes((prev) => prev.slice(0, -1));
         setMessages((prev) => prev.slice(0, -1));
+        setNames((prev) => prev.slice(0, -1));
         return true;
     }, []);
 
     const reset = useCallback(() => {
-        statesRef.current = Array.from({ length: count }, (_, i) =>
+        const fresh = Array.from({ length: count }, (_, i) =>
             spawnRandomCat(i, docDimsRef.current, catSize)
         );
+        statesRef.current = fresh;
         setActiveCount(count);
         setPalettes(Array.from({ length: count }, (_, i) => paletteForIndex(i)));
         setMessages(Array(count).fill(null));
+        setNames(fresh.map((c) => c.name));
     }, [count, catSize]);
 
     useEffect(() => {
@@ -196,6 +212,10 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
             statesRef.current = Array.from({ length: count }, (_, i) =>
                 spawnRandomCat(i, docDimsRef.current, catSize)
             );
+            // Names get assigned by the factory at construction time; surface
+            // them into React state now so consumers see the real names from
+            // the first render rather than the empty placeholders.
+            setNames(statesRef.current.map((c) => c.name));
         }
 
         // Throttle remeasures to one per frame; ResizeObserver can fire
@@ -319,6 +339,7 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
                 updateAnimation(cat, stepDist);
                 writeCatTransform(el, cat, ctx);
                 writeBubble(cat, bubbleRefs.current[i], ctx);
+                writeInteractive(cat, interactiveRefs.current[i], ctx);
             }
 
             lastPosesPushed = publishThrottled(
@@ -347,8 +368,10 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
         poses,
         palettes,
         messages,
+        names,
         catRefs,
         bubbleRefs,
+        interactiveRefs,
         enabled,
         count: activeCount,
         maxCount: MAX_CATS,

@@ -29,6 +29,7 @@ import {
     STUCK_THRESHOLD_MS,
     VISIT_SPEED,
 } from '../constants';
+import { rng } from '../rng';
 import {
     pickClearTarget,
     pickEscapeTarget,
@@ -185,7 +186,7 @@ export function stepMovement(
                             idleUntil:
                                 ctx.now +
                                 IDLE_MIN_MS +
-                                Math.random() * (IDLE_MAX_MS - IDLE_MIN_MS),
+                                rng.next() * (IDLE_MAX_MS - IDLE_MIN_MS),
                             sitAt: ctx.now + SIT_AFTER_MS,
                         };
                     }

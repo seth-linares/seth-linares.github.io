@@ -8,6 +8,7 @@
 // accidentally mixing viewport/clientX-Y coords into these helpers.
 
 import { NAVBAR_HEIGHT, NAVBAR_TOP_PAD, TARGET_MAX_DIST, TARGET_MIN_DIST } from './constants';
+import { rng } from './rng';
 import { asDoc, type CatState, type DocDims, type DocPos, type ObstacleRect } from './types';
 
 export function getDocDims(): DocDims {
@@ -22,8 +23,8 @@ export function pickTarget(catSize: number, dims: DocDims): { x: DocPos; y: DocP
     const inset = catSize + 20;
     const topInset = Math.max(inset, NAVBAR_HEIGHT + catSize / 2 + NAVBAR_TOP_PAD);
     return {
-        x: asDoc(inset + Math.random() * Math.max(1, dims.width - inset * 2)),
-        y: asDoc(topInset + Math.random() * Math.max(1, dims.height - topInset - inset)),
+        x: asDoc(inset + rng.next() * Math.max(1, dims.width - inset * 2)),
+        y: asDoc(topInset + rng.next() * Math.max(1, dims.height - topInset - inset)),
     };
 }
 
@@ -38,8 +39,8 @@ export function pickNearbyTarget(
 ): { x: DocPos; y: DocPos } {
     const inset = catSize + 20;
     const topInset = Math.max(inset, NAVBAR_HEIGHT + catSize / 2 + NAVBAR_TOP_PAD);
-    const angle = Math.random() * Math.PI * 2;
-    const dist = TARGET_MIN_DIST + Math.random() * (TARGET_MAX_DIST - TARGET_MIN_DIST);
+    const angle = rng.next() * Math.PI * 2;
+    const dist = TARGET_MIN_DIST + rng.next() * (TARGET_MAX_DIST - TARGET_MIN_DIST);
     const x = fromX + Math.cos(angle) * dist;
     const y = fromY + Math.sin(angle) * dist;
     const minX = inset;
