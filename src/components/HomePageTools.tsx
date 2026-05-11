@@ -73,14 +73,14 @@ function HomePageTools() {
     };
 
     return (
-        <div className="min-h-screen bg-base-100 pt-16 relative">
+        <div className="min-h-screen bg-base-100 pt-16 relative isolate">
             <AnimatedCats />
 
             {/* ── Hero: Hi I'm Seth + live regex ─────────────────── */}
             <section className="relative">
                 <div className="container mx-auto max-w-5xl px-4 py-10 lg:py-16">
                     <div className="flex flex-col lg:flex-row gap-8 items-start">
-                        <div className="lg:w-2/5 lg:sticky lg:top-24">
+                        <div className="lg:w-2/5 lg:sticky lg:top-24" data-cat-obstacle>
                             <p className="text-xs font-mono text-primary uppercase tracking-widest mb-2">
                                 ◆ try something I built ─ live
                             </p>
@@ -140,7 +140,10 @@ function HomePageTools() {
                         </div>
 
                         <div className="lg:w-3/5 w-full">
-                            <div className="bg-neutral text-neutral-content rounded-xl border border-neutral-content/10 shadow-2xl overflow-hidden font-mono text-sm">
+                            <div
+                                className="bg-neutral text-neutral-content rounded-xl border border-neutral-content/10 shadow-2xl overflow-hidden font-mono text-sm"
+                                data-cat-obstacle
+                            >
                                 <div className="flex items-center gap-2 px-4 py-2 bg-neutral-content/10 border-b border-neutral-content/10">
                                     <div className="flex gap-1.5">
                                         <span className="w-2.5 h-2.5 rounded-full bg-error/80" />
@@ -224,7 +227,9 @@ function HomePageTools() {
                 <p className="text-base-content/70 mb-4 font-mono text-sm">
                     # the longer answer — auto-typing, click to skip.
                 </p>
-                <TerminalHero />
+                <div data-cat-obstacle>
+                    <TerminalHero />
+                </div>
             </section>
 
             {/* ── Tools grid ─────────────────────────────────────── */}
@@ -237,6 +242,7 @@ function HomePageTools() {
                     <Link
                         to="/regex-playground"
                         className="group block bg-base-200 rounded-xl p-6 border border-base-300 hover:border-primary hover:shadow-lg transition-all relative overflow-hidden"
+                        data-cat-obstacle
                     >
                         <div className="absolute top-0 right-0 px-2 py-0.5 bg-success/20 text-success text-[10px] font-mono uppercase rounded-bl">
                             live
@@ -265,6 +271,7 @@ function HomePageTools() {
                     <Link
                         to="/prompt-generator"
                         className="group block bg-base-200 rounded-xl p-6 border border-base-300 hover:border-primary hover:shadow-lg transition-all relative overflow-hidden"
+                        data-cat-obstacle
                     >
                         <div className="absolute top-0 right-0 px-2 py-0.5 bg-success/20 text-success text-[10px] font-mono uppercase rounded-bl">
                             live
@@ -303,7 +310,11 @@ function HomePageTools() {
                 </p>
                 <div className="space-y-8">
                     {featuredProjects.map((p) => (
-                        <article key={p.id} className="border-l-4 border-primary pl-6 py-1">
+                        <article
+                            key={p.id}
+                            className="border-l-4 border-primary pl-6 py-1"
+                            data-cat-obstacle
+                        >
                             <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
                                 <div>
                                     <h3 className="text-xl font-bold">{p.title}</h3>
@@ -348,7 +359,7 @@ function HomePageTools() {
                 className="container mx-auto max-w-5xl px-4 pb-16 relative scroll-mt-24"
             >
                 <AsciiDivider label="end of page" />
-                <div className="text-center">
+                <div className="text-center" data-cat-obstacle>
                     <p className="font-mono text-sm text-base-content/60 mb-2">
                         # ↓ if you read this far, send a note.
                     </p>
@@ -381,8 +392,8 @@ function HomePageTools() {
                         </a>
                     </div>
                     <p className="font-mono text-xs text-base-content/40 mt-8">
-                        ── try moving your cursor through the page · the cats are not part of the
-                        rendering pipeline ──
+                        ── move cursor to scare them · drag one from the tray to spawn · the cats
+                        are not part of the rendering pipeline ──
                     </p>
                 </div>
             </section>
