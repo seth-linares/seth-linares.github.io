@@ -1,556 +1,85 @@
 // src/hooks/useAnimatedCats.ts
 //
-// Logic for the wandering pixel cats: simulation state, rAF loop, and cursor/click
-// handlers. The component (AnimatedCats.tsx) only owns the JSX.
+// Top-level state + rAF lifecycle for the animated-cats overlay. Pure helpers,
+// types, constants, palette tables, bubble pools, and the initial-state
+// factory all live under `src/utils/cats/*` — this file is now focused on
+// React state plumbing, refs, the imperative API (spawn / removeLast / reset),
+// and the per-frame tick. The tick body still lives inline; a follow-up
+// commit splits it into phase functions under `src/utils/cats/tick/*`.
 //
-// Cats live in DOCUMENT coords, not viewport: the overlay is positioned absolutely
-// over the full page, cats roam the whole document, and you scroll past them.
-// Cursor proximity is computed in doc coords by adding window.scrollX/Y to
-// clientX/clientY each frame.
-//
-// Cover handling: cats render BEHIND content (z-index negative on the overlay), so
-// when they walk under a content block they're hidden from view. Elements marked
-// `[data-cat-obstacle]` are tracked as obstacle rects (measured in doc coords on
-// init, resize, and via a ResizeObserver on documentElement so they stay accurate
-// when content reflows — e.g. the typewriter terminal growing). When a cat's bbox
-// overlaps any obstacle the simulation boosts its speed (COVER_SPEED_MULT) and
-// kicks it out of any idle pause so it doesn't linger out-of-sight.
-//
-// Personality (paired with coat color via PALETTE_BEHAVIORS):
-//   chill   — wanders aimlessly, doesn't seek out other cats
-//   playful — periodically picks a nearby cat and walks over to "visit"; on contact
-//             both pause briefly then go their separate ways
-//   shy     — startles when another cat gets too close (or when clicked nearby)
+// Cats live in DOCUMENT coords, not viewport: the overlay is positioned
+// absolutely over the full page, cats roam the whole document, and you scroll
+// past them. Cursor proximity is computed in doc coords by adding
+// window.scrollX/Y to clientX/clientY each frame.
 //
 // Reactions:
 //   cursor — flee within FLEE_RADIUS until cursor leaves SAFE_RADIUS
-//   click  — clicks within CLICK_STARTLE_RADIUS startle nearby cats
+//   click  — clicks within CLICK_STARTLE_RADIUS startle nearby cats; shift+click spawns
+//   resize — re-measure obstacles + clamp every cat into new bounds
 //   scroll — no reaction; cats are doc-anchored so the page just slides past them
-
-import { useCallback, useEffect, useRef, useState, type RefObject } from 'react';
-import { CAT_PALETTES, type CatPalette, type CatPose } from '@/types/pixel-cat';
-
-type CatBehavior = 'chill' | 'playful' | 'shy';
-type CatRunState = 'walking' | 'idle' | 'fleeing' | 'visiting' | 'startled';
-
-interface CatState {
-    x: number;
-    y: number;
-    targetX: number;
-    targetY: number;
-    speed: number;
-    facingLeft: boolean;
-    state: CatRunState;
-    behavior: CatBehavior;
-    idleUntil: number;
-    sitAt: number;
-    distSinceFrame: number;
-    walkFrame: number;
-    palette: CatPalette;
-    visitTarget: number | null;
-    nextSocialCheck: number;
-    startleUntil: number;
-    // Timestamp of the last frame where the cat made meaningful forward
-    // progress (stepDist > 0.1). Used by the stuck-detection safety net to
-    // force a fresh target pick when avoidance + target geometry conspire to
-    // leave a walking cat pinned in place for too long.
-    lastProgressAt: number;
-    // Timestamp of the last completed meetup. Read by the social-pick logic
-    // to skip cats whose last meetup was within MEETUP_COOLDOWN_MS, so a
-    // playful cat doesn't immediately re-cluster onto a freshly-met chill cat.
-    // 0 means "no recent meetup".
-    lastMeetupAt: number;
-    // Tomodachi-style speech bubble. `message` is the current phrase (or null
-    // when nothing is on screen) and `messageUntil` is the performance.now()
-    // ms timestamp after which the bubble expires. Overwriting `message` IS
-    // the replacement contract — a fresh event simply clobbers any prior
-    // bubble. The rAF loop clears expired entries at the top of each frame.
-    message: string | null;
-    messageUntil: number;
-}
-
-interface DocDims {
-    width: number;
-    height: number;
-}
-
-interface ObstacleRect {
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-}
-
-interface UseAnimatedCatsParams {
-    count: number;
-    catSize: number;
-}
-
-export interface AnimatedCatsState {
-    poses: CatPose[];
-    palettes: CatPalette[];
-    // Per-cat speech-bubble text. Same length as poses/palettes. `null` means
-    // no bubble for that cat right now; the renderer hides the bubble div via
-    // opacity in that case rather than unmounting, so enter/exit transitions
-    // can be CSS-only.
-    messages: (string | null)[];
-    catRefs: RefObject<(HTMLDivElement | null)[]>;
-    // Bubble overlay refs, in lockstep with catRefs. The rAF loop writes a
-    // translate-only transform to each bubble element each frame — no flip,
-    // so the text always reads upright regardless of the cat's facing.
-    bubbleRefs: RefObject<(HTMLDivElement | null)[]>;
-    enabled: boolean;
-    // Current live cat count — can grow past the initial prop via the spawn button
-    // or shift+click. Returned so the renderer knows how many <div>s to mount.
-    count: number;
-    // Maximum live cats; caller may surface this in UI (e.g., "8/16").
-    maxCount: number;
-    // Spawn a new cat at the given DOCUMENT coordinates. Optionally pass a palette
-    // key from CAT_PALETTES so the caller can pick the coat (and the personality
-    // that's keyed to it in PALETTE_BEHAVIORS). Returns false if the cap was hit.
-    spawn: (docX: number, docY: number, paletteKey?: string) => boolean;
-    // Remove the most-recently-added cat. Returns false if no cats remain.
-    removeLast: () => boolean;
-    // Replace the whole simulation with a fresh set of initial cats (palette
-    // cycle + random positions). Wipes any user-spawned cats and any removals.
-    reset: () => void;
-    // True when activeCount matches the prop'd initial count — useful for
-    // disabling the reset button when it would visibly look like a no-op.
-    isAtInitialCount: boolean;
-}
-
-const FLEE_RADIUS = 50;
-const SAFE_RADIUS = 150;
-const FLEE_SPEED = 2.0;
-const STARTLE_SPEED = 5.0;
-const WALK_SPEED = 0.55;
-const VISIT_SPEED = 0.85; // visiting cats walk a bit faster — they have somewhere to be
-const IDLE_MIN_MS = 2600;
-const IDLE_MAX_MS = 6500;
-const SIT_AFTER_MS = 450; // sit pose appears quickly so idle reads as "resting"
-// Walk targets are picked WITHIN this radius of the cat's current position so transits
-// don't span the whole document — keeps the idle/walk ratio feeling balanced.
-const TARGET_MIN_DIST = 120;
-const TARGET_MAX_DIST = 380;
-const WALK_PIXELS_PER_FRAME = 14;
-const RUN_PIXELS_PER_FRAME = 8;
-const WALK_CYCLE_LEN = 6;
-const RUN_CYCLE_LEN = 6;
-
-const CLICK_STARTLE_RADIUS = 180;
-const STARTLE_DURATION_MS = 700;
-
-// Playful cats periodically scan for a friend within VISIT_RADIUS to walk over to.
-const VISIT_RADIUS = 320;
-const MEETUP_DISTANCE = 56; // close enough to count as "met"
-const VISIT_OFFSET = 36; // sit beside, not on top of, the other cat
-const SOCIAL_CHECK_INTERVAL_MS = 2400;
-const MEETUP_PAUSE_MS = 1800;
-
-const PUSH_POSE_MS = 90; // throttle React re-renders for pose changes
-
-// Cover handling: cats are tracked against `[data-cat-obstacle]` rects. When a
-// cat's bbox overlaps one it's "in cover" (rendered behind content, so visually
-// obscured) — the simulation responds by multiplying speed and forcing idle cats
-// to start walking again so they don't sit hidden for long.
-const OBSTACLE_SELECTOR = '[data-cat-obstacle]';
-const COVER_SPEED_MULT = 2.4;
-// Navbar is fixed at top (h-16, z-50) and renders ABOVE the cat overlay, so cats
-// that wander into the top NAVBAR_HEIGHT pixels of the doc are invisibly trapped
-// behind it. Reserve that strip in every target picker and the per-frame clamp.
-const NAVBAR_HEIGHT = 64;
-const NAVBAR_TOP_PAD = 4;
-
-// Cat-cat steering: target pickers refuse to place a destination within
-// CAT_SPACING_RADIUS of another cat (so two cats can't independently pick the
-// same gap), AND each frame's seek velocity is blended in velocity-space with
-// an avoidance vector — the component of seek that points INTO a neighbor gets
-// cancelled before the cat moves. That's the key behavioral fix: previously
-// the old post-hoc position shove was reactive and weaker than the next
-// frame's seek, so two cats would walk into each other, get nudged apart, and
-// immediately walk into each other again. With seek+avoid combined in velocity
-// space they no longer fight on alternating frames.
 //
-// CAT_SPACING_RADIUS must be > MEETUP_DISTANCE so playful cats can still close
-// the gap when explicitly visiting (the visiting-pair exemption disables
-// avoidance between the visitor and its target).
-const CAT_SPACING_RADIUS = 80;
-const AVOID_STRENGTH = 1.2;
-const AVOID_FALLOFF_POW = 2;
-const STUCK_THRESHOLD_MS = 500;
-// Idle cats no longer move toward a target, so the velocity-space avoidance
-// above never fires for them. Without this gentle position shove, two cats
-// that go idle in overlapping positions (meetup completion, simultaneous
-// tray-spawn drops, or chance) stay perfectly stacked forever. Squared-falloff
-// means very weak push at the meetup-pair distance and stronger near full
-// overlap — meetup pairs drift naturally apart without being snapped away.
-const IDLE_SEPARATION_STRENGTH = 0.5;
-// Playful cats won't pick a target whose last meetup is within this window.
-// Prevents 3-cat cascade clusters where two playful cats serially visit the
-// same chill/shy cat right after a meetup completes.
-const MEETUP_COOLDOWN_MS = 6000;
+// Personality (paired with coat color via PALETTE_BEHAVIORS):
+//   chill   — wanders aimlessly, doesn't seek out other cats
+//   playful — periodically picks a nearby cat and walks over to "visit"
+//   shy     — startles when another cat gets too close (or when clicked nearby)
 
-// Hard cap so a user mashing shift+click can't drown the rAF in cats.
-const MAX_CATS = 16;
-
-const PALETTE_KEYS = ['orange', 'black', 'gray', 'siamese'] as const;
-// Personality is keyed by coat color so the same color is recognizably the same cat.
-const PALETTE_BEHAVIORS: Record<string, CatBehavior> = {
-    orange: 'chill',
-    black: 'playful',
-    gray: 'chill',
-    siamese: 'shy',
-};
-
-// Tomodachi-style speech bubbles. Each event maps to a tiny pool of phrases;
-// `setMessage` picks one at random when the corresponding state transition
-// fires. Pools are deliberately short — adding/tweaking content here is the
-// expected way to change the feel of the cats without touching the simulation.
-type BubbleEvent =
-    | 'visit_start'
-    | 'meetup_friendly'
-    | 'meetup_shy'
-    | 'meetup_rebuffed'
-    | 'flee_start'
-    | 'startle'
-    | 'spawned';
-
-const BUBBLE_POOLS: Record<BubbleEvent, readonly string[]> = {
-    visit_start: [
-        'hi!',
-        '♪',
-        'wait up!',
-        'hey!!',
-        'wanna play?',
-        'yoohoo',
-        'psst',
-        'scoot over',
-        'incoming',
-        'sup',
-        'henlo',
-        'guess who',
-        'tag ur it',
-        'boop time',
-        'omw',
-    ],
-    meetup_friendly: [
-        '♪',
-        'purr',
-        'hang time',
-        ':)',
-        '♪♪',
-        'bestie',
-        'we vibin',
-        '<3',
-        'snuggle',
-        'mlem',
-        'headbonk',
-        'co-loafing',
-        'soft hours',
-        'good cat',
-        'nap buddy',
-        'best day',
-        'two cats',
-        'blep',
-        'cozy',
-        'paw five',
-    ],
-    meetup_shy: [
-        'eek!',
-        'no!',
-        'go away',
-        'yikes!',
-        'back off',
-        'no touchy',
-        'space pls',
-        'STRANGER',
-        'nope nope',
-    ],
-    meetup_rebuffed: [
-        'oh!',
-        'okay…',
-        'rude',
-        'sheesh',
-        'wow ok',
-        'harsh',
-        'fine.',
-        'ur loss',
-        'next time',
-    ],
-    flee_start: ['ah!', 'eep!', 'gah', 'yipe', 'scatter!', 'nope!', 'skedaddle', 'human!!'],
-    startle: ['!', '!!', '!?', '?!', 'rude!', 'wha-', 'hey!!', 'spooked'],
-    spawned: ['hi!', 'new cat', '♪', 'hello', 'ta-da', 'sup', 'henlo', "i'm here", 'behold'],
-};
-
-const BUBBLE_DEFAULT_MS = 2000;
-
-function paletteForIndex(i: number): CatPalette {
-    return CAT_PALETTES[PALETTE_KEYS[i % PALETTE_KEYS.length]];
-}
-
-function behaviorForIndex(i: number): CatBehavior {
-    return PALETTE_BEHAVIORS[PALETTE_KEYS[i % PALETTE_KEYS.length]] ?? 'chill';
-}
-
-// Set a speech bubble on a cat. Overwriting is the replacement contract — a
-// new event simply clobbers the previous bubble, including ones that haven't
-// expired yet. Most state transitions in the simulation are guarded so they
-// only fire once per "episode" (e.g. entering flee state, starting a visit),
-// which keeps bubble flicker low without needing an explicit suppress check.
-function setMessage(cat: CatState, event: BubbleEvent, durationMs = BUBBLE_DEFAULT_MS) {
-    const pool = BUBBLE_POOLS[event];
-    cat.message = pool[Math.floor(Math.random() * pool.length)];
-    cat.messageUntil = performance.now() + durationMs;
-}
-
-function getDocDims(): DocDims {
-    const docEl = document.documentElement;
-    return {
-        width: Math.max(docEl.scrollWidth, docEl.clientWidth, window.innerWidth),
-        height: Math.max(docEl.scrollHeight, docEl.clientHeight, window.innerHeight),
-    };
-}
-
-function pickTarget(catSize: number, dims: DocDims) {
-    const inset = catSize + 20;
-    const topInset = Math.max(inset, NAVBAR_HEIGHT + catSize / 2 + NAVBAR_TOP_PAD);
-    return {
-        x: inset + Math.random() * Math.max(1, dims.width - inset * 2),
-        y: topInset + Math.random() * Math.max(1, dims.height - topInset - inset),
-    };
-}
-
-// Pick a target near the cat's current position rather than anywhere in the doc.
-// Falls back to global random if the local pick lands outside the safe area.
-function pickNearbyTarget(catSize: number, fromX: number, fromY: number, dims: DocDims) {
-    const inset = catSize + 20;
-    const topInset = Math.max(inset, NAVBAR_HEIGHT + catSize / 2 + NAVBAR_TOP_PAD);
-    const angle = Math.random() * Math.PI * 2;
-    const dist = TARGET_MIN_DIST + Math.random() * (TARGET_MAX_DIST - TARGET_MIN_DIST);
-    const x = fromX + Math.cos(angle) * dist;
-    const y = fromY + Math.sin(angle) * dist;
-    const minX = inset;
-    const maxX = dims.width - inset;
-    const minY = topInset;
-    const maxY = dims.height - inset;
-    if (x < minX || x > maxX || y < minY || y > maxY) {
-        return pickTarget(catSize, dims);
-    }
-    return { x, y };
-}
-
-// When a cat is overlapping one or more obstacles, aim past the nearest edge of
-// the overlapping set that ACTUALLY escapes after viewport clamping — so cats
-// stuck near a near-full-width obstacle (like the hero text block) don't aim
-// horizontally only to be clamped back inside. Considers all four edges per
-// overlapping obstacle, clamps each to doc bounds, and keeps only candidates
-// whose final bbox clears the cover. Returns null if the cat isn't actually
-// overlapping anything OR if no valid escape exists (caller falls back to
-// pickNearbyTarget).
-function pickEscapeTarget(
-    catX: number,
-    catY: number,
-    catSize: number,
-    dims: DocDims,
-    obstacles: ObstacleRect[]
-): { x: number; y: number } | null {
-    const halfSize = catSize / 2;
-    const catL = catX - halfSize;
-    const catT = catY - halfSize;
-    const catR = catX + halfSize;
-    const catB = catY + halfSize;
-    const inset = catSize + 20;
-    const topInset = Math.max(inset, NAVBAR_HEIGHT + halfSize + NAVBAR_TOP_PAD);
-    // Just enough buffer to land outside the obstacle's bbox; tighter gaps in dense
-    // layouts (e.g. between project cards) can't accommodate a wider clearance.
-    const buffer = halfSize + 4;
-
-    // Collect every obstacle the cat is currently inside.
-    const covers: ObstacleRect[] = [];
-    for (let k = 0; k < obstacles.length; k++) {
-        const o = obstacles[k];
-        if (catL < o.x + o.w && catR > o.x && catT < o.y + o.h && catB > o.y) {
-            covers.push(o);
-        }
-    }
-    if (covers.length === 0) return null;
-
-    // Generate one candidate per (cover × edge), clamp it, then keep only those
-    // that actually exit ALL current covers. Pick the shortest-move winner.
-    let bestDist = Infinity;
-    let bestX = 0;
-    let bestY = 0;
-    let foundValid = false;
-
-    for (const o of covers) {
-        const candidates = [
-            { x: o.x - buffer, y: catY, d: catX - o.x }, // left
-            { x: o.x + o.w + buffer, y: catY, d: o.x + o.w - catX }, // right
-            { x: catX, y: o.y - buffer, d: catY - o.y }, // top
-            { x: catX, y: o.y + o.h + buffer, d: o.y + o.h - catY }, // bottom
-        ];
-        for (const c of candidates) {
-            const cx = Math.max(inset, Math.min(dims.width - inset, c.x));
-            const cy = Math.max(topInset, Math.min(dims.height - inset, c.y));
-            const nL = cx - halfSize;
-            const nT = cy - halfSize;
-            const nR = cx + halfSize;
-            const nB = cy + halfSize;
-            // Validate against ALL obstacles, not just the current covers — otherwise
-            // a cat can hop straight from one obstacle into an adjacent one and end
-            // up oscillating between escape edges.
-            let lands_in_obstacle = false;
-            for (let m = 0; m < obstacles.length; m++) {
-                const oc = obstacles[m];
-                if (nL < oc.x + oc.w && nR > oc.x && nT < oc.y + oc.h && nB > oc.y) {
-                    lands_in_obstacle = true;
-                    break;
-                }
-            }
-            if (lands_in_obstacle) continue;
-            if (c.d < bestDist) {
-                bestDist = c.d;
-                bestX = cx;
-                bestY = cy;
-                foundValid = true;
-            }
-        }
-    }
-
-    if (!foundValid) return null;
-    return { x: bestX, y: bestY };
-}
-
-function rectContainsBbox(
-    x: number,
-    y: number,
-    halfSize: number,
-    obstacles: ObstacleRect[]
-): boolean {
-    const L = x - halfSize;
-    const T = y - halfSize;
-    const R = x + halfSize;
-    const B = y + halfSize;
-    for (let k = 0; k < obstacles.length; k++) {
-        const o = obstacles[k];
-        if (L < o.x + o.w && R > o.x && T < o.y + o.h && B > o.y) return true;
-    }
-    return false;
-}
-
-// Sample a few intermediate points along the straight-line path from→to and
-// return true if every point's bbox is in clear space. Used to avoid picking
-// targets whose path would dive through cover unnecessarily.
-function pathIsClear(
-    fromX: number,
-    fromY: number,
-    toX: number,
-    toY: number,
-    catSize: number,
-    obstacles: ObstacleRect[]
-): boolean {
-    const halfSize = catSize / 2;
-    const SAMPLES = 6;
-    for (let i = 1; i <= SAMPLES; i++) {
-        const t = i / SAMPLES;
-        const x = fromX + (toX - fromX) * t;
-        const y = fromY + (toY - fromY) * t;
-        if (rectContainsBbox(x, y, halfSize, obstacles)) return false;
-    }
-    return true;
-}
-
-// True when (x, y) is within `radius` of any other cat in `states`, treating
-// (x, y) as the new candidate position for `states[selfIdx]`. The visiting
-// pair is exempt — if selfIdx is visiting j (or j is visiting selfIdx), they
-// must be allowed to close to MEETUP_DISTANCE; otherwise CAT_SPACING_RADIUS
-// would smother the meetup behavior. Distance-squared compared against
-// radius² to avoid a per-call sqrt.
-function tooCloseToOtherCat(
-    x: number,
-    y: number,
-    selfIdx: number,
-    states: CatState[],
-    radius: number
-): boolean {
-    const radiusSq = radius * radius;
-    const self = states[selfIdx];
-    for (let j = 0; j < states.length; j++) {
-        if (j === selfIdx) continue;
-        const other = states[j];
-        // Skip the partner of an active visit so visitors can still arrive.
-        if (self && self.visitTarget === j) continue;
-        if (other.visitTarget === selfIdx) continue;
-        const dx = x - other.x;
-        const dy = y - other.y;
-        if (dx * dx + dy * dy < radiusSq) return true;
-    }
-    return false;
-}
-
-// Random doc-coord target that's also not inside any obstacle. When `states`
-// is provided, also rejects targets within `spacing` of another cat (modulo
-// the visiting-pair exemption in tooCloseToOtherCat). Falls back to a plain
-// random target after enough failed attempts so the simulation never stalls.
-function pickClearTarget(
-    catSize: number,
-    dims: DocDims,
-    obstacles: ObstacleRect[],
-    states?: CatState[],
-    selfIdx?: number,
-    spacing?: number,
-    attempts = 12
-): { x: number; y: number } {
-    const halfSize = catSize / 2;
-    for (let i = 0; i < attempts; i++) {
-        const t = pickTarget(catSize, dims);
-        if (rectContainsBbox(t.x, t.y, halfSize, obstacles)) continue;
-        if (
-            states !== undefined &&
-            selfIdx !== undefined &&
-            spacing !== undefined &&
-            tooCloseToOtherCat(t.x, t.y, selfIdx, states, spacing)
-        ) {
-            continue;
-        }
-        return t;
-    }
-    return pickTarget(catSize, dims);
-}
-
-// Cat is currently standing in a gap; pick a NEARBY target that's also in a gap
-// AND reachable via a straight-line path that stays in clear space. When
-// `states` is provided, also rejects targets within `spacing` of another cat
-// so two cats can't independently pick the same destination. Falls through to
-// plain pickNearbyTarget if no clear nearby pick is found within the budget.
-function pickNearbyClearTarget(
-    catSize: number,
-    fromX: number,
-    fromY: number,
-    dims: DocDims,
-    obstacles: ObstacleRect[],
-    states?: CatState[],
-    selfIdx?: number,
-    spacing?: number,
-    attempts = 10
-): { x: number; y: number } {
-    const halfSize = catSize / 2;
-    for (let i = 0; i < attempts; i++) {
-        const t = pickNearbyTarget(catSize, fromX, fromY, dims);
-        if (rectContainsBbox(t.x, t.y, halfSize, obstacles)) continue;
-        if (!pathIsClear(fromX, fromY, t.x, t.y, catSize, obstacles)) continue;
-        if (
-            states !== undefined &&
-            selfIdx !== undefined &&
-            spacing !== undefined &&
-            tooCloseToOtherCat(t.x, t.y, selfIdx, states, spacing)
-        ) {
-            continue;
-        }
-        return t;
-    }
-    return pickNearbyTarget(catSize, fromX, fromY, dims);
-}
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { CAT_PALETTES, type CatPalette, type CatPose } from '@/types/pixel-cat';
+import {
+    AVOID_FALLOFF_POW,
+    AVOID_STRENGTH,
+    CAT_SPACING_RADIUS,
+    CLICK_STARTLE_RADIUS,
+    COVER_SPEED_MULT,
+    FLEE_RADIUS,
+    FLEE_SPEED,
+    IDLE_MAX_MS,
+    IDLE_MIN_MS,
+    IDLE_SEPARATION_STRENGTH,
+    MAX_CATS,
+    MEETUP_COOLDOWN_MS,
+    MEETUP_DISTANCE,
+    MEETUP_PAUSE_MS,
+    NAVBAR_HEIGHT,
+    NAVBAR_TOP_PAD,
+    OBSTACLE_SELECTOR,
+    PUSH_POSE_MS,
+    RUN_CYCLE_LEN,
+    RUN_PIXELS_PER_FRAME,
+    SAFE_RADIUS,
+    SIT_AFTER_MS,
+    SOCIAL_CHECK_INTERVAL_MS,
+    STARTLE_DURATION_MS,
+    STARTLE_SPEED,
+    VISIT_OFFSET,
+    VISIT_RADIUS,
+    VISIT_SPEED,
+    WALK_CYCLE_LEN,
+    WALK_PIXELS_PER_FRAME,
+    STUCK_THRESHOLD_MS,
+} from '@/utils/cats/constants';
+import { setMessage } from '@/utils/cats/bubbles';
+import { createInitialCatState, spawnRandomCat } from '@/utils/cats/factory';
+import {
+    PALETTE_BEHAVIORS,
+    behaviorForIndex,
+    paletteForIndex,
+} from '@/utils/cats/palette';
+import {
+    getDocDims,
+    pickClearTarget,
+    pickEscapeTarget,
+    pickNearbyClearTarget,
+    pickNearbyTarget,
+    tooCloseToOtherCat,
+} from '@/utils/cats/targets';
+import type {
+    AnimatedCatsState,
+    CatState,
+    DocDims,
+    ObstacleRect,
+    UseAnimatedCatsParams,
+} from '@/utils/cats/types';
 
 export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): AnimatedCatsState {
     const catRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -621,41 +150,28 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
                 idx,
                 CAT_SPACING_RADIUS
             );
-            states.push({
+            const newCat = createInitialCatState({
                 x: docX,
                 y: docY,
                 targetX: target.x,
                 targetY: target.y,
-                speed: WALK_SPEED * (0.75 + Math.random() * 0.5),
-                facingLeft: target.x < docX,
-                state: 'walking',
                 behavior,
-                idleUntil: 0,
-                sitAt: 0,
-                distSinceFrame: 0,
-                walkFrame: Math.floor(Math.random() * WALK_CYCLE_LEN),
                 palette,
-                visitTarget: null,
-                nextSocialCheck:
-                    performance.now() + Math.random() * SOCIAL_CHECK_INTERVAL_MS,
-                startleUntil: 0,
-                lastProgressAt: performance.now(),
-                lastMeetupAt: 0,
-                message: null,
-                messageUntil: 0,
             });
+            states.push(newCat);
             // Greet on spawn — both shift+click and the drag tray route here.
-            setMessage(states[idx], 'spawned');
+            setMessage(newCat, 'spawned');
             setActiveCount(states.length);
             setPalettes((prev) => [...prev, palette]);
-            setMessages((prev) => [...prev, states[idx].message]);
+            setMessages((prev) => [...prev, newCat.message]);
             return true;
         },
         [catSize]
     );
 
     // Remove the most-recently-added cat. Pops from statesRef and drops the last
-    // palette so the React renderer (which reads palettes[i]) shrinks in lockstep.
+    // palette/message so the React renderer (which reads palettes[i]) shrinks in
+    // lockstep.
     const removeLast = useCallback((): boolean => {
         const states = statesRef.current;
         if (states.length === 0) return false;
@@ -670,42 +186,11 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
     // spawns and any prior removals; cats jump to new random positions since
     // there's no meaningful way to preserve identity here.
     const reset = useCallback(() => {
-        statesRef.current = Array.from({ length: count }, (_, i) => {
-            const start = pickTarget(catSize, docDimsRef.current);
-            const target = pickNearbyTarget(
-                catSize,
-                start.x,
-                start.y,
-                docDimsRef.current
-            );
-            return {
-                x: start.x,
-                y: start.y,
-                targetX: target.x,
-                targetY: target.y,
-                speed: WALK_SPEED * (0.75 + Math.random() * 0.5),
-                facingLeft: target.x < start.x,
-                state: 'walking' as const,
-                behavior: behaviorForIndex(i),
-                idleUntil: 0,
-                sitAt: 0,
-                distSinceFrame: 0,
-                walkFrame: Math.floor(Math.random() * WALK_CYCLE_LEN),
-                palette: paletteForIndex(i),
-                visitTarget: null,
-                nextSocialCheck:
-                    performance.now() + Math.random() * SOCIAL_CHECK_INTERVAL_MS,
-                startleUntil: 0,
-                lastProgressAt: performance.now(),
-                lastMeetupAt: 0,
-                message: null,
-                messageUntil: 0,
-            };
-        });
-        setActiveCount(count);
-        setPalettes(
-            Array.from({ length: count }, (_, i) => paletteForIndex(i))
+        statesRef.current = Array.from({ length: count }, (_, i) =>
+            spawnRandomCat(i, docDimsRef.current, catSize)
         );
+        setActiveCount(count);
+        setPalettes(Array.from({ length: count }, (_, i) => paletteForIndex(i)));
         setMessages(Array(count).fill(null));
     }, [count, catSize]);
 
@@ -741,36 +226,9 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
         // shift+click spawns push directly into statesRef.current without going
         // through this init path.
         if (statesRef.current.length === 0) {
-            statesRef.current = Array.from({ length: count }, (_, i) => {
-                const start = pickTarget(catSize, docDimsRef.current);
-                // Initial target is nearby so cats don't beeline across the whole
-                // doc on first wake — they settle into local roaming and drift
-                // over time.
-                const target = pickNearbyTarget(catSize, start.x, start.y, docDimsRef.current);
-                return {
-                    x: start.x,
-                    y: start.y,
-                    targetX: target.x,
-                    targetY: target.y,
-                    speed: WALK_SPEED * (0.75 + Math.random() * 0.5),
-                    facingLeft: target.x < start.x,
-                    state: 'walking' as const,
-                    behavior: behaviorForIndex(i),
-                    idleUntil: 0,
-                    sitAt: 0,
-                    distSinceFrame: 0,
-                    walkFrame: Math.floor(Math.random() * WALK_CYCLE_LEN),
-                    palette: paletteForIndex(i),
-                    visitTarget: null,
-                    nextSocialCheck:
-                        performance.now() + Math.random() * SOCIAL_CHECK_INTERVAL_MS,
-                    startleUntil: 0,
-                    lastProgressAt: performance.now(),
-                    lastMeetupAt: 0,
-                    message: null,
-                    messageUntil: 0,
-                };
-            });
+            statesRef.current = Array.from({ length: count }, (_, i) =>
+                spawnRandomCat(i, docDimsRef.current, catSize)
+            );
         }
 
         // Throttle remeasures to one per frame; ResizeObserver can fire repeatedly
@@ -943,10 +401,6 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
                     now >= cat.nextSocialCheck
                 ) {
                     cat.nextSocialCheck = now + SOCIAL_CHECK_INTERVAL_MS;
-                    // The cat just considered a visit and its own recent meetup
-                    // also makes it a poor visitor — skip the search entirely
-                    // when on cooldown. The pause is shorter than the cooldown
-                    // so the cat will be back to walking before it tries again.
                     if (now - cat.lastMeetupAt >= MEETUP_COOLDOWN_MS) {
                         let nearestIdx = -1;
                         let nearestDist = VISIT_RADIUS;
@@ -1104,15 +558,7 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
                         // Idle but not waking up yet. Velocity-space avoidance
                         // only runs in the seek branch below (which is skipped
                         // for idle cats), so without this pass two cats that
-                        // go idle in overlapping positions — meetup cascade,
-                        // simultaneous tray-spawn drops, or random init — stay
-                        // perfectly stacked forever. Squared falloff over the
-                        // full CAT_SPACING_RADIUS gives a near-zero push at
-                        // 60+px and a meaningful push only as overlap grows,
-                        // so meetup pairs at ~36px drift apart gently while
-                        // truly stacked cats separate faster. Visit-pair
-                        // exemption is symmetric with the walking-state one
-                        // so an in-progress visit isn't shoved off course.
+                        // go idle in overlapping positions stay stacked forever.
                         const radiusSq = CAT_SPACING_RADIUS * CAT_SPACING_RADIUS;
                         let pushX = 0;
                         let pushY = 0;
@@ -1230,12 +676,6 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
                         // toward the target, which the target attraction would
                         // immediately undo the next frame — that's what caused
                         // the "keep retrying to go into one another" oscillation.
-                        // Here we:
-                        //   1) compute the avoidance push from neighbors,
-                        //   2) project seek onto the avoid direction and CANCEL
-                        //      the component pointing INTO the cluster, so the
-                        //      target attraction can no longer fight avoidance,
-                        //   3) add the avoid push, then clamp to max speed.
                         // Visiting cats and frantic states bypass this so meetups
                         // and flee/startle motion are unaffected.
                         if (
@@ -1250,9 +690,6 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
                             for (let j = 0; j < states.length; j++) {
                                 if (j === i) continue;
                                 const other = states[j];
-                                // Visiting pair exemption — symmetric, mirrors
-                                // tooCloseToOtherCat — so playful cats can still
-                                // close to MEETUP_DISTANCE for a successful visit.
                                 if (cat.visitTarget === j) continue;
                                 if (other.visitTarget === i) continue;
                                 const dxN = cat.x - other.x;
@@ -1307,9 +744,7 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
 
                 // Stuck-detection safety net. Avoidance can briefly cancel seek
                 // velocity in tight clusters; if a walking cat keeps making no
-                // progress for STUCK_THRESHOLD_MS we force a fresh target. Idle
-                // / visiting / flee / startle don't have this problem because
-                // they either don't have a walk target or bypass avoidance.
+                // progress for STUCK_THRESHOLD_MS we force a fresh target.
                 if (stepDist > 0.1) {
                     cat.lastProgressAt = now;
                 } else if (
