@@ -8,5 +8,5 @@
     "jsxSingleQuote": false,
     "arrowParens": "always",
     "printWidth": 100,
-    "endOfLine": "auto"
+    "endOfLine": "lf"
 }
