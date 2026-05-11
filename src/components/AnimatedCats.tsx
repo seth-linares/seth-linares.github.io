@@ -1,19 +1,26 @@
 // src/components/AnimatedCats.tsx
 //
 // Wandering pixel cats overlay. All simulation logic lives in useAnimatedCats; this
-// component owns the cat <div>s and the drag-to-place tray in the bottom-right.
+// component owns the cat <div>s, the speech-bubble overlay, and the drag-to-place
+// tray in the bottom-right.
 //
 // Mount this inside a positioned wrapper that has `isolate` (creates a stacking
-// context). The overlay is `absolute inset-0 -z-10`, so cats sit behind sibling
-// content but above the wrapper's background. Cats are doc-anchored, so the wrapper
-// must span the full page height (e.g. min-h-screen on a homepage root).
+// context). Two sibling overlays:
+//   - cats overlay at `-z-10`: cats sit behind page content (so they walk under
+//     [data-cat-obstacle] blocks).
+//   - bubbles overlay at `z-10`: speech bubbles sit ABOVE page content, so a
+//     hidden cat still announces what it's up to. Tomodachi-style.
+// Cats are doc-anchored, so the wrapper must span the full page height (e.g.
+// min-h-screen on a homepage root).
 //
 // Spawn UX: a tray of four cat sprites lives at the bottom-right of the viewport.
 // Each sprite is draggable — press, drag onto the page, release. A semi-transparent
 // "ghost cat" follows the pointer during the drag so it's obvious what's being
 // placed. Release over the tray (or press Esc) cancels. PointerEvents are used so
 // the same gesture works for mouse and touch. Shift+click anywhere still routes
-// through the same spawn path as a power-user shortcut. Capped at MAX_CATS.
+// through the same spawn path as a power-user shortcut. Capped at MAX_CATS. Each
+// tray sprite's `title` attr names the personality so curious users can discover
+// why each coat behaves the way it does.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAnimatedCats } from '@/hooks/useAnimatedCats';
@@ -31,11 +38,36 @@ const TRAY_ATTR = 'data-cat-tray';
 // internally to seed PALETTE_BEHAVIORS, so picking a coat also picks personality.
 const SPAWN_PALETTES = ['orange', 'black', 'gray', 'siamese'] as const;
 
+// Personality hint surfaced via tooltip on each tray sprite. Coat → behavior
+// mapping mirrors PALETTE_BEHAVIORS inside the hook — keep these in sync.
+const PERSONALITY_LABEL: Record<string, string> = {
+    orange: 'orange · chill',
+    black: 'black · playful',
+    gray: 'gray · chill',
+    siamese: 'siamese · shy',
+};
+
+// Tiny speech-bubble used by the per-cat overlay. Pure presentation. The
+// bubble's parent <div> handles translation via the rAF loop; this inner
+// element centers itself horizontally over that anchor with -translate-x-1/2.
+function CatBubble({ text }: { text: string | null }) {
+    if (!text) return null;
+    return (
+        <div
+            className="relative -translate-x-1/2 inline-block text-base font-pixel leading-none tracking-wide text-base-content/95 bg-base-100/95 backdrop-blur-sm border border-base-300 rounded-md px-2 py-0.5 shadow-md whitespace-nowrap after:content-[''] after:absolute after:left-1/2 after:-translate-x-1/2 after:-bottom-[5px] after:w-2 after:h-2 after:bg-base-100/95 after:border-r after:border-b after:border-base-300 after:rotate-45"
+        >
+            {text}
+        </div>
+    );
+}
+
 function AnimatedCats({ count = 8, catSize = 56, opacity = 0.85 }: Props) {
     const {
         poses,
         palettes,
+        messages,
         catRefs,
+        bubbleRefs,
         enabled,
         count: activeCount,
         maxCount,
@@ -142,6 +174,28 @@ function AnimatedCats({ count = 8, catSize = 56, opacity = 0.85 }: Props) {
                 ))}
             </div>
 
+            {/* Speech-bubble overlay. Sibling of the cats overlay but at z-10 so
+                bubbles render ABOVE [data-cat-obstacle] blocks — a cat hidden
+                under the typewriter terminal still gets to "talk". The rAF loop
+                writes a translate-only transform to each entry per frame; the
+                inner CatBubble handles horizontal centering and fades via
+                CSS opacity. aria-hidden because bubbles are decorative flavor;
+                the tray's role=status row remains the AT announcement surface. */}
+            <div className="absolute inset-0 pointer-events-none z-10" aria-hidden="true">
+                {Array.from({ length: activeCount }).map((_, i) => (
+                    <div
+                        key={i}
+                        ref={(el) => {
+                            bubbleRefs.current[i] = el;
+                        }}
+                        className="absolute top-0 left-0 will-change-transform transition-opacity duration-200"
+                        style={{ opacity: messages[i] ? 1 : 0 }}
+                    >
+                        <CatBubble text={messages[i] ?? null} />
+                    </div>
+                ))}
+            </div>
+
             {dragKey && (
                 <div
                     ref={ghostRef}
@@ -190,11 +244,11 @@ function AnimatedCats({ count = 8, catSize = 56, opacity = 0.85 }: Props) {
                                 setDragKey(key);
                             }}
                             style={{ touchAction: 'none' }}
-                            aria-label={`Drag onto the page to spawn a ${key} cat`}
+                            aria-label={`Drag onto the page to spawn a ${PERSONALITY_LABEL[key] ?? key} cat`}
                             title={
                                 atCap
                                     ? `Cat limit reached (${activeCount}/${maxCount})`
-                                    : `Drag onto the page · ${key}`
+                                    : `${PERSONALITY_LABEL[key] ?? key} · drag to spawn`
                             }
                             className={`p-1 rounded-lg transition-all ${
                                 atCap

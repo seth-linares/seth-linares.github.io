@@ -60,6 +60,13 @@ interface CatState {
     // playful cat doesn't immediately re-cluster onto a freshly-met chill cat.
     // 0 means "no recent meetup".
     lastMeetupAt: number;
+    // Tomodachi-style speech bubble. `message` is the current phrase (or null
+    // when nothing is on screen) and `messageUntil` is the performance.now()
+    // ms timestamp after which the bubble expires. Overwriting `message` IS
+    // the replacement contract — a fresh event simply clobbers any prior
+    // bubble. The rAF loop clears expired entries at the top of each frame.
+    message: string | null;
+    messageUntil: number;
 }
 
 interface DocDims {
@@ -82,7 +89,16 @@ interface UseAnimatedCatsParams {
 export interface AnimatedCatsState {
     poses: CatPose[];
     palettes: CatPalette[];
+    // Per-cat speech-bubble text. Same length as poses/palettes. `null` means
+    // no bubble for that cat right now; the renderer hides the bubble div via
+    // opacity in that case rather than unmounting, so enter/exit transitions
+    // can be CSS-only.
+    messages: (string | null)[];
     catRefs: RefObject<(HTMLDivElement | null)[]>;
+    // Bubble overlay refs, in lockstep with catRefs. The rAF loop writes a
+    // translate-only transform to each bubble element each frame — no flip,
+    // so the text always reads upright regardless of the cat's facing.
+    bubbleRefs: RefObject<(HTMLDivElement | null)[]>;
     enabled: boolean;
     // Current live cat count — can grow past the initial prop via the spawn button
     // or shift+click. Returned so the renderer knows how many <div>s to mount.
@@ -186,12 +202,105 @@ const PALETTE_BEHAVIORS: Record<string, CatBehavior> = {
     siamese: 'shy',
 };
 
+// Tomodachi-style speech bubbles. Each event maps to a tiny pool of phrases;
+// `setMessage` picks one at random when the corresponding state transition
+// fires. Pools are deliberately short — adding/tweaking content here is the
+// expected way to change the feel of the cats without touching the simulation.
+type BubbleEvent =
+    | 'visit_start'
+    | 'meetup_friendly'
+    | 'meetup_shy'
+    | 'meetup_rebuffed'
+    | 'flee_start'
+    | 'startle'
+    | 'spawned';
+
+const BUBBLE_POOLS: Record<BubbleEvent, readonly string[]> = {
+    visit_start: [
+        'hi!',
+        '♪',
+        'wait up!',
+        'hey!!',
+        'wanna play?',
+        'yoohoo',
+        'psst',
+        'scoot over',
+        'incoming',
+        'sup',
+        'henlo',
+        'guess who',
+        'tag ur it',
+        'boop time',
+        'omw',
+    ],
+    meetup_friendly: [
+        '♪',
+        'purr',
+        'hang time',
+        ':)',
+        '♪♪',
+        'bestie',
+        'we vibin',
+        '<3',
+        'snuggle',
+        'mlem',
+        'headbonk',
+        'co-loafing',
+        'soft hours',
+        'good cat',
+        'nap buddy',
+        'best day',
+        'two cats',
+        'blep',
+        'cozy',
+        'paw five',
+    ],
+    meetup_shy: [
+        'eek!',
+        'no!',
+        'go away',
+        'yikes!',
+        'back off',
+        'no touchy',
+        'space pls',
+        'STRANGER',
+        'nope nope',
+    ],
+    meetup_rebuffed: [
+        'oh!',
+        'okay…',
+        'rude',
+        'sheesh',
+        'wow ok',
+        'harsh',
+        'fine.',
+        'ur loss',
+        'next time',
+    ],
+    flee_start: ['ah!', 'eep!', 'gah', 'yipe', 'scatter!', 'nope!', 'skedaddle', 'human!!'],
+    startle: ['!', '!!', '!?', '?!', 'rude!', 'wha-', 'hey!!', 'spooked'],
+    spawned: ['hi!', 'new cat', '♪', 'hello', 'ta-da', 'sup', 'henlo', "i'm here", 'behold'],
+};
+
+const BUBBLE_DEFAULT_MS = 2000;
+
 function paletteForIndex(i: number): CatPalette {
     return CAT_PALETTES[PALETTE_KEYS[i % PALETTE_KEYS.length]];
 }
 
 function behaviorForIndex(i: number): CatBehavior {
     return PALETTE_BEHAVIORS[PALETTE_KEYS[i % PALETTE_KEYS.length]] ?? 'chill';
+}
+
+// Set a speech bubble on a cat. Overwriting is the replacement contract — a
+// new event simply clobbers the previous bubble, including ones that haven't
+// expired yet. Most state transitions in the simulation are guarded so they
+// only fire once per "episode" (e.g. entering flee state, starting a visit),
+// which keeps bubble flicker low without needing an explicit suppress check.
+function setMessage(cat: CatState, event: BubbleEvent, durationMs = BUBBLE_DEFAULT_MS) {
+    const pool = BUBBLE_POOLS[event];
+    cat.message = pool[Math.floor(Math.random() * pool.length)];
+    cat.messageUntil = performance.now() + durationMs;
 }
 
 function getDocDims(): DocDims {
@@ -445,6 +554,7 @@ function pickNearbyClearTarget(
 
 export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): AnimatedCatsState {
     const catRefs = useRef<(HTMLDivElement | null)[]>([]);
+    const bubbleRefs = useRef<(HTMLDivElement | null)[]>([]);
     const statesRef = useRef<CatState[]>([]);
     const mouseRef = useRef<{ vx: number; vy: number } | null>(null);
     const docDimsRef = useRef<DocDims>({ width: 0, height: 0 });
@@ -456,6 +566,9 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
     // newly-pushed cats).
     const [activeCount, setActiveCount] = useState(count);
     const [poses, setPoses] = useState<CatPose[]>(() => Array(count).fill('idle'));
+    // Per-cat speech-bubble text. Pushed at the same throttled cadence as
+    // poses (PUSH_POSE_MS) — see the tick body for the equality-checked push.
+    const [messages, setMessages] = useState<(string | null)[]>(() => Array(count).fill(null));
     const [enabled, setEnabled] = useState(() => {
         if (typeof window === 'undefined') return false;
         return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -528,9 +641,14 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
                 startleUntil: 0,
                 lastProgressAt: performance.now(),
                 lastMeetupAt: 0,
+                message: null,
+                messageUntil: 0,
             });
+            // Greet on spawn — both shift+click and the drag tray route here.
+            setMessage(states[idx], 'spawned');
             setActiveCount(states.length);
             setPalettes((prev) => [...prev, palette]);
+            setMessages((prev) => [...prev, states[idx].message]);
             return true;
         },
         [catSize]
@@ -544,6 +662,7 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
         states.pop();
         setActiveCount(states.length);
         setPalettes((prev) => prev.slice(0, -1));
+        setMessages((prev) => prev.slice(0, -1));
         return true;
     }, []);
 
@@ -587,6 +706,7 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
         setPalettes(
             Array.from({ length: count }, (_, i) => paletteForIndex(i))
         );
+        setMessages(Array(count).fill(null));
     }, [count, catSize]);
 
     useEffect(() => {
@@ -647,6 +767,8 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
                     startleUntil: 0,
                     lastProgressAt: performance.now(),
                     lastMeetupAt: 0,
+                    message: null,
+                    messageUntil: 0,
                 };
             });
         }
@@ -697,6 +819,7 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
                     cat.targetY = cat.y + ((cat.y - cy) / norm) * 220;
                     cat.facingLeft = cat.x < cx;
                     cat.distSinceFrame = 0;
+                    setMessage(cat, 'startle', 1500);
                 }
             }
         };
@@ -767,6 +890,7 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
                     if (cat.state !== 'fleeing' && distM < FLEE_RADIUS) {
                         cat.state = 'fleeing';
                         cat.visitTarget = null;
+                        setMessage(cat, 'flee_start', 1500);
                     } else if (cat.state === 'fleeing' && distM > SAFE_RADIUS) {
                         cat.state = 'walking';
                         const t = pickNearbyClearTarget(
@@ -853,6 +977,7 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
                             cat.state = 'visiting';
                             cat.visitTarget = nearestIdx;
                             cat.idleUntil = 0;
+                            setMessage(cat, 'visit_start');
                         }
                     }
                 }
@@ -879,8 +1004,10 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
                                 tgt.targetY = tgt.y + (-dyv / dn) * 220;
                                 tgt.facingLeft = -dxv < 0;
                                 tgt.visitTarget = null;
+                                setMessage(tgt, 'meetup_shy', 1500);
                                 cat.state = 'walking';
                                 cat.visitTarget = null;
+                                setMessage(cat, 'meetup_rebuffed');
                                 const p = pickNearbyTarget(catSize, cat.x, cat.y, dims);
                                 cat.targetX = p.x;
                                 cat.targetY = p.y;
@@ -890,11 +1017,13 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
                                 cat.sitAt = now + 600;
                                 cat.visitTarget = null;
                                 cat.lastMeetupAt = now;
+                                setMessage(cat, 'meetup_friendly', 2500);
                                 if (tgt.state === 'walking' || tgt.state === 'idle') {
                                     tgt.state = 'idle';
                                     tgt.idleUntil = Math.max(tgt.idleUntil, now + MEETUP_PAUSE_MS);
                                     tgt.sitAt = now + 600;
                                     tgt.lastMeetupAt = now;
+                                    setMessage(tgt, 'meetup_friendly', 2500);
                                 }
                             }
                         } else {
@@ -1217,6 +1346,20 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
                 el.style.transform = `translate(${cat.x - catSize / 2}px, ${
                     cat.y - catSize / 2
                 }px) scale(${flipX * scale}, ${scale}) rotate(${tilt}deg)`;
+
+                // Speech bubble: clear expired messages, then translate the
+                // bubble element to sit above the cat. Translate-only (no
+                // scale/flip) so text always reads upright. The bubble's own
+                // CSS handles horizontal centering via -translate-x-1/2.
+                if (cat.message && now >= cat.messageUntil) {
+                    cat.message = null;
+                    cat.messageUntil = 0;
+                }
+                const bubbleEl = bubbleRefs.current[i];
+                if (bubbleEl) {
+                    const bubbleY = cat.y - catSize / 2 - Math.round(catSize * 0.35);
+                    bubbleEl.style.transform = `translate(${cat.x}px, ${bubbleY}px)`;
+                }
             }
 
             // Compute next poses and push to React if changed (throttled).
@@ -1242,6 +1385,22 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
                     }
                     return same ? prev : nextPoses;
                 });
+                // Mirror the poses push for bubble messages — same throttle
+                // clock, same equality short-circuit. React only re-renders
+                // the bubble overlay when a phrase appears/disappears/changes.
+                const nextMessages: (string | null)[] = states.map((cat) => cat.message);
+                setMessages((prev) => {
+                    let same = prev.length === nextMessages.length;
+                    if (same) {
+                        for (let k = 0; k < prev.length; k++) {
+                            if (prev[k] !== nextMessages[k]) {
+                                same = false;
+                                break;
+                            }
+                        }
+                    }
+                    return same ? prev : nextMessages;
+                });
                 lastPosesPushed = now;
             }
 
@@ -1262,7 +1421,9 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
     return {
         poses,
         palettes,
+        messages,
         catRefs,
+        bubbleRefs,
         enabled,
         count: activeCount,
         maxCount: MAX_CATS,

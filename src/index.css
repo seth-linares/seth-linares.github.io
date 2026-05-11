@@ -1,7 +1,16 @@
 /* src/index.css */
 
+/* Google Fonts must precede every other rule per the CSS @import spec
+   (incl. Tailwind's @import 'tailwindcss', which expands into rules). */
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 @import 'tailwindcss';
 @plugin "daisyui";
+
+/* Custom theme tokens — registers `font-pixel` as a Tailwind utility.
+   VT323 is the only pixel webfont we load; falls back through system mono. */
+@theme {
+    --font-pixel: 'VT323', ui-monospace, Consolas, 'Andale Mono', monospace;
+}
 
 @plugin "daisyui" {
     themes: all;
