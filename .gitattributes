@@ -1,0 +1,21 @@
+# Normalize all text files to LF on commit AND in the working tree.
+# Overrides each contributor's core.autocrlf, so Git for Windows checkouts
+# don't silently flip line endings and trigger Prettier reformatting churn.
+# `text=auto` lets Git detect binaries by content; explicit binary rules
+# below cover common assets where the heuristic might guess wrong.
+* text=auto eol=lf
+
+# Explicit binaries — never touch line endings, never diff inline.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.eot binary
+*.pdf binary
+*.zip binary
