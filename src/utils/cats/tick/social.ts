@@ -1,8 +1,8 @@
 // src/utils/cats/tick/social.ts
 //
 // Playful cats periodically decide to visit a nearby cat. This phase only
-// flips the state to `visiting` and sets `visitTarget`; the actual movement
-// toward the target and the meetup logic live in tick/visit.ts.
+// flips the state to `visiting` and stamps the visitTarget; the actual
+// movement toward the target and the meetup logic live in tick/visit.ts.
 //
 // Two cooldowns prevent visible cluster cascades:
 //  - skip cats that just finished a meetup (lastMeetupAt) so a freshly-met
@@ -22,7 +22,7 @@ import type { TickContext } from './types';
 
 export function updateSocialPick(cat: CatState, ctx: TickContext): void {
     if (cat.behavior !== 'playful') return;
-    if (cat.state !== 'walking' && cat.state !== 'idle') return;
+    if (cat.run.kind !== 'walking' && cat.run.kind !== 'idle') return;
     if (ctx.now < cat.nextSocialCheck) return;
 
     cat.nextSocialCheck = ctx.now + SOCIAL_CHECK_INTERVAL_MS;
@@ -37,13 +37,14 @@ export function updateSocialPick(cat: CatState, ctx: TickContext): void {
     for (let j = 0; j < ctx.states.length; j++) {
         if (j === ctx.i) continue;
         const other = ctx.states[j];
-        if (other.state === 'fleeing' || other.state === 'startled') continue;
+        if (other.run.kind === 'fleeing' || other.run.kind === 'startled') continue;
         if (ctx.now - other.lastMeetupAt < MEETUP_COOLDOWN_MS) continue;
         // Skip if another cat is already visiting this one.
         let alreadyTargeted = false;
         for (let k = 0; k < ctx.states.length; k++) {
             if (k === ctx.i || k === j) continue;
-            if (ctx.states[k].visitTarget === j) {
+            const candidate = ctx.states[k];
+            if (candidate.run.kind === 'visiting' && candidate.run.visitTarget === j) {
                 alreadyTargeted = true;
                 break;
             }
@@ -57,9 +58,15 @@ export function updateSocialPick(cat: CatState, ctx: TickContext): void {
     }
 
     if (nearestIdx >= 0) {
-        cat.state = 'visiting';
-        cat.visitTarget = nearestIdx;
-        cat.idleUntil = 0;
+        // Seed an initial visit target — visit.ts will overwrite next frame
+        // with the offset-from-target position, so the initial value here
+        // is a placeholder that just keeps the variant shape valid.
+        cat.run = {
+            kind: 'visiting',
+            visitTarget: nearestIdx,
+            targetX: cat.x,
+            targetY: cat.y,
+        };
         setMessage(cat, 'visit_start');
     }
 }

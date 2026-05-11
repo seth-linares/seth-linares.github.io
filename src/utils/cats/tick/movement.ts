@@ -8,9 +8,9 @@
 //  - idle: no target seek. Either wake up (cover or timer expired) and pick
 //    a new target, or apply a gentle separation push so two cats can't stay
 //    perfectly stacked.
-//  - non-idle: seek toward target. Combines seek with velocity-space
-//    avoidance — the component of seek that would point INTO a neighbor is
-//    cancelled before applying. Visiting / fleeing / startled bypass avoidance.
+//  - non-idle (walking | fleeing | visiting | startled): seek toward
+//    cat.run.targetX/targetY. Combines seek with velocity-space avoidance;
+//    visiting / fleeing / startled bypass avoidance.
 
 import {
     AVOID_FALLOFF_POW,
@@ -35,11 +35,11 @@ import {
     pickNearbyClearTarget,
     tooCloseToOtherCat,
 } from '../targets';
-import type { CatState } from '../types';
+import { asDoc, type CatState } from '../types';
 import type { TickContext } from './types';
 
 // Returns the per-frame step distance (hypot of stepX, stepY). Mutates cat
-// position, target, state, sitAt/idleUntil, facingLeft, and lastProgressAt.
+// position, run-state, facingLeft, and lastProgressAt.
 export function stepMovement(
     cat: CatState,
     ctx: TickContext,
@@ -48,15 +48,13 @@ export function stepMovement(
     let stepX = 0;
     let stepY = 0;
 
-    if (cat.state === 'idle') {
+    if (cat.run.kind === 'idle') {
         // If cover finds the cat sitting hidden, abandon the rest of the idle
         // window and start walking. Try the nearest cover edge first; fall
         // back to a far-off clear spot when no local escape exists. When
         // already visible, prefer a nearby target that stays in clear space.
-        if (inCover || ctx.now >= cat.idleUntil) {
-            cat.state = 'walking';
-            cat.sitAt = 0;
-            let t: { x: number; y: number };
+        if (inCover || ctx.now >= cat.run.idleUntil) {
+            let t: { x: typeof cat.x; y: typeof cat.y };
             if (inCover) {
                 t =
                     pickEscapeTarget(cat.x, cat.y, ctx.catSize, ctx.dims, ctx.obstacles) ??
@@ -80,8 +78,7 @@ export function stepMovement(
                     CAT_SPACING_RADIUS
                 );
             }
-            cat.targetX = t.x;
-            cat.targetY = t.y;
+            cat.run = { kind: 'walking', targetX: t.x, targetY: t.y };
             cat.lastProgressAt = ctx.now;
         } else {
             // Idle but not waking up yet. Velocity-space avoidance only runs
@@ -89,18 +86,17 @@ export function stepMovement(
             // without this pass two cats that go idle in overlapping
             // positions stay perfectly stacked forever. Squared falloff over
             // the full CAT_SPACING_RADIUS gives near-zero push at 60+px and
-            // a meaningful push only as overlap grows — meetup pairs at
-            // ~36px drift apart gently while truly stacked cats separate
-            // faster. Visit-pair exemption is symmetric with the walking
-            // case so an in-progress visit isn't shoved off course.
+            // a meaningful push only as overlap grows.
             const radiusSq = CAT_SPACING_RADIUS * CAT_SPACING_RADIUS;
             let pushX = 0;
             let pushY = 0;
             for (let j = 0; j < ctx.states.length; j++) {
                 if (j === ctx.i) continue;
                 const other = ctx.states[j];
-                if (cat.visitTarget === j) continue;
-                if (other.visitTarget === ctx.i) continue;
+                // An idle cat can't itself be visiting anyone — only the
+                // 'visiting' variant carries visitTarget — but other cats
+                // visiting us are exempt from the push.
+                if (other.run.kind === 'visiting' && other.run.visitTarget === ctx.i) continue;
                 const dxN = cat.x - other.x;
                 const dyN = cat.y - other.y;
                 const distSq = dxN * dxN + dyN * dyN;
@@ -110,20 +106,21 @@ export function stepMovement(
                 pushX += (dxN / distN) * falloff;
                 pushY += (dyN / distN) * falloff;
             }
-            cat.x += pushX * IDLE_SEPARATION_STRENGTH;
-            cat.y += pushY * IDLE_SEPARATION_STRENGTH;
+            cat.x = asDoc(cat.x + pushX * IDLE_SEPARATION_STRENGTH);
+            cat.y = asDoc(cat.y + pushY * IDLE_SEPARATION_STRENGTH);
         }
     } else {
-        const dx = cat.targetX - cat.x;
-        const dy = cat.targetY - cat.y;
+        // Non-idle: every remaining variant carries targetX/targetY.
+        const dx = cat.run.targetX - cat.x;
+        const dy = cat.run.targetY - cat.y;
         const dist = Math.hypot(dx, dy);
         let speed = cat.speed;
-        if (cat.state === 'fleeing') speed = FLEE_SPEED;
-        else if (cat.state === 'startled') speed = STARTLE_SPEED;
-        else if (cat.state === 'visiting') speed = VISIT_SPEED;
+        if (cat.run.kind === 'fleeing') speed = FLEE_SPEED;
+        else if (cat.run.kind === 'startled') speed = STARTLE_SPEED;
+        else if (cat.run.kind === 'visiting') speed = VISIT_SPEED;
         // Cover boost: cats out of sight should pop back into view fast.
         // Don't compound onto already-frantic states (flee/startle).
-        if (inCover && cat.state !== 'fleeing' && cat.state !== 'startled') {
+        if (inCover && cat.run.kind !== 'fleeing' && cat.run.kind !== 'startled') {
             speed *= COVER_SPEED_MULT;
         }
 
@@ -134,9 +131,15 @@ export function stepMovement(
             // cats are SUPPOSED to land next to their partner, and in-cover
             // cats have their own escape logic that doesn't go through idle.
             const arrivedBlocked =
-                cat.state === 'walking' &&
+                cat.run.kind === 'walking' &&
                 !inCover &&
-                tooCloseToOtherCat(cat.targetX, cat.targetY, ctx.i, ctx.states, MEETUP_DISTANCE);
+                tooCloseToOtherCat(
+                    cat.run.targetX,
+                    cat.run.targetY,
+                    ctx.i,
+                    ctx.states,
+                    MEETUP_DISTANCE
+                );
             if (arrivedBlocked) {
                 const t = pickNearbyClearTarget(
                     ctx.catSize,
@@ -148,13 +151,12 @@ export function stepMovement(
                     ctx.i,
                     CAT_SPACING_RADIUS
                 );
-                cat.targetX = t.x;
-                cat.targetY = t.y;
+                cat.run = { kind: 'walking', targetX: t.x, targetY: t.y };
                 cat.lastProgressAt = ctx.now;
             } else {
-                cat.x = cat.targetX;
-                cat.y = cat.targetY;
-                if (cat.state === 'walking') {
+                cat.x = cat.run.targetX;
+                cat.y = cat.run.targetY;
+                if (cat.run.kind === 'walking') {
                     if (inCover) {
                         // Reached the destination but still hidden — keep
                         // walking, aimed at the nearest exit edge or a
@@ -175,16 +177,17 @@ export function stepMovement(
                                 ctx.i,
                                 CAT_SPACING_RADIUS
                             );
-                        cat.targetX = t.x;
-                        cat.targetY = t.y;
+                        cat.run = { kind: 'walking', targetX: t.x, targetY: t.y };
                         cat.lastProgressAt = ctx.now;
                     } else {
-                        cat.state = 'idle';
-                        cat.idleUntil =
-                            ctx.now +
-                            IDLE_MIN_MS +
-                            Math.random() * (IDLE_MAX_MS - IDLE_MIN_MS);
-                        cat.sitAt = ctx.now + SIT_AFTER_MS;
+                        cat.run = {
+                            kind: 'idle',
+                            idleUntil:
+                                ctx.now +
+                                IDLE_MIN_MS +
+                                Math.random() * (IDLE_MAX_MS - IDLE_MIN_MS),
+                            sitAt: ctx.now + SIT_AFTER_MS,
+                        };
                     }
                 }
             }
@@ -194,17 +197,15 @@ export function stepMovement(
             let seekY = (dy / dist) * speed;
 
             // Cat-cat avoidance combined with seek in VELOCITY SPACE.
-            // Old code added a post-hoc position shove AFTER moving toward
-            // the target, which the target attraction would immediately undo
-            // the next frame — that caused the "keep retrying to go into one
-            // another" oscillation. Here we cancel the component of seek
-            // that points INTO neighbors before adding the avoid push.
             // Visiting cats and frantic states bypass this so meetups and
-            // flee/startle motion are unaffected.
+            // flee/startle motion are unaffected. Cat is necessarily
+            // 'walking' here (the only remaining variant after we exclude
+            // visiting/fleeing/startled), so it has no visitTarget of its
+            // own; the visit-pair exemption only checks the OTHER cats.
             if (
-                cat.state !== 'visiting' &&
-                cat.state !== 'fleeing' &&
-                cat.state !== 'startled'
+                cat.run.kind !== 'visiting' &&
+                cat.run.kind !== 'fleeing' &&
+                cat.run.kind !== 'startled'
             ) {
                 const radiusSq = CAT_SPACING_RADIUS * CAT_SPACING_RADIUS;
                 let avoidX = 0;
@@ -212,11 +213,9 @@ export function stepMovement(
                 for (let j = 0; j < ctx.states.length; j++) {
                     if (j === ctx.i) continue;
                     const other = ctx.states[j];
-                    // Visiting pair exemption — symmetric, mirrors
-                    // tooCloseToOtherCat — so playful cats can still close
-                    // to MEETUP_DISTANCE for a successful visit.
-                    if (cat.visitTarget === j) continue;
-                    if (other.visitTarget === ctx.i) continue;
+                    if (other.run.kind === 'visiting' && other.run.visitTarget === ctx.i) {
+                        continue;
+                    }
                     const dxN = cat.x - other.x;
                     const dyN = cat.y - other.y;
                     const distSq = dxN * dxN + dyN * dyN;
@@ -251,8 +250,8 @@ export function stepMovement(
             }
             stepX = seekX;
             stepY = seekY;
-            cat.x += stepX;
-            cat.y += stepY;
+            cat.x = asDoc(cat.x + stepX);
+            cat.y = asDoc(cat.y + stepY);
             if (Math.abs(stepX) > 0.05) cat.facingLeft = stepX < 0;
         }
     }
@@ -266,8 +265,8 @@ export function stepMovement(
 export function clampPosition(cat: CatState, ctx: TickContext): void {
     const inset = ctx.catSize / 2;
     const topClamp = NAVBAR_HEIGHT + inset + NAVBAR_TOP_PAD;
-    cat.x = Math.max(inset, Math.min(ctx.dims.width - inset, cat.x));
-    cat.y = Math.max(topClamp, Math.min(ctx.dims.height - inset, cat.y));
+    cat.x = asDoc(Math.max(inset, Math.min(ctx.dims.width - inset, cat.x)));
+    cat.y = asDoc(Math.max(topClamp, Math.min(ctx.dims.height - inset, cat.y)));
 }
 
 // Stuck-detection safety net. Avoidance can briefly cancel seek velocity in
@@ -280,7 +279,7 @@ export function updateStuckCheck(cat: CatState, ctx: TickContext, stepDist: numb
         cat.lastProgressAt = ctx.now;
         return;
     }
-    if (cat.state !== 'walking') return;
+    if (cat.run.kind !== 'walking') return;
     if (ctx.now - cat.lastProgressAt <= STUCK_THRESHOLD_MS) return;
     const t = pickNearbyClearTarget(
         ctx.catSize,
@@ -292,7 +291,6 @@ export function updateStuckCheck(cat: CatState, ctx: TickContext, stepDist: numb
         ctx.i,
         CAT_SPACING_RADIUS
     );
-    cat.targetX = t.x;
-    cat.targetY = t.y;
+    cat.run = { kind: 'walking', targetX: t.x, targetY: t.y };
     cat.lastProgressAt = ctx.now;
 }

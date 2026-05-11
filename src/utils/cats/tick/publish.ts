@@ -5,13 +5,36 @@
 // debounce updates to PUSH_POSE_MS (~11fps) — well below the 60fps rAF tick
 // but plenty smooth for sprite-frame changes.
 //
-// Returns the new throttle timestamp. The orchestrator owns the closure
-// variable and updates it from this return value.
+// The pose-from-state switch uses an exhaustiveness check via the `never`
+// trick: adding a new CatRunState variant (e.g. 'petting') without handling
+// it here is a TS error. That's the bug-prevention payoff of the
+// discriminated union.
 
 import type { Dispatch, SetStateAction } from 'react';
 import type { CatPose } from '@/types/pixel-cat';
 import { PUSH_POSE_MS, RUN_CYCLE_LEN, WALK_CYCLE_LEN } from '../constants';
 import type { CatState } from '../types';
+
+function poseForCat(cat: CatState, now: number): CatPose {
+    switch (cat.run.kind) {
+        case 'idle':
+            return cat.run.sitAt && now >= cat.run.sitAt ? 'sit' : 'idle';
+        case 'fleeing':
+        case 'startled':
+            return `run${cat.walkFrame % RUN_CYCLE_LEN}` as CatPose;
+        case 'walking':
+        case 'visiting':
+            return `walk${cat.walkFrame % WALK_CYCLE_LEN}` as CatPose;
+        default: {
+            // Exhaustiveness check: if a new CatRunState variant is added
+            // without handling it here, TS will error on the `never`
+            // assignment. That's the load-bearing safety net for the
+            // discriminated union.
+            const _exhaustive: never = cat.run;
+            return _exhaustive;
+        }
+    }
+}
 
 export function publishThrottled(
     now: number,
@@ -22,15 +45,7 @@ export function publishThrottled(
 ): number {
     if (now - lastPushed < PUSH_POSE_MS) return lastPushed;
 
-    const nextPoses: CatPose[] = states.map((cat) => {
-        if (cat.state === 'idle') {
-            return cat.sitAt && now >= cat.sitAt ? 'sit' : 'idle';
-        }
-        if (cat.state === 'fleeing' || cat.state === 'startled') {
-            return `run${cat.walkFrame % RUN_CYCLE_LEN}` as CatPose;
-        }
-        return `walk${cat.walkFrame % WALK_CYCLE_LEN}` as CatPose;
-    });
+    const nextPoses: CatPose[] = states.map((cat) => poseForCat(cat, now));
 
     setPoses((prev) => {
         let same = prev.length === nextPoses.length;

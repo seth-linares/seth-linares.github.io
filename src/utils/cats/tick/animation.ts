@@ -17,7 +17,7 @@ import type { TickContext } from './types';
 // vs run) so flee/startle look frantic.
 export function updateAnimation(cat: CatState, stepDist: number): void {
     cat.distSinceFrame += stepDist;
-    const isRunning = cat.state === 'fleeing' || cat.state === 'startled';
+    const isRunning = cat.run.kind === 'fleeing' || cat.run.kind === 'startled';
     const stride = isRunning ? RUN_PIXELS_PER_FRAME : WALK_PIXELS_PER_FRAME;
     const cycleLen = isRunning ? RUN_CYCLE_LEN : WALK_CYCLE_LEN;
     if (cat.distSinceFrame >= stride) {
@@ -34,10 +34,10 @@ export function writeCatTransform(
     cat: CatState,
     ctx: TickContext
 ): void {
-    const isRunning = cat.state === 'fleeing' || cat.state === 'startled';
+    const isRunning = cat.run.kind === 'fleeing' || cat.run.kind === 'startled';
     const flipX = cat.facingLeft ? -1 : 1;
     const tilt = isRunning ? (cat.facingLeft ? 6 : -6) : 0;
-    const scale = cat.state === 'startled' ? 1.18 : 1;
+    const scale = cat.run.kind === 'startled' ? 1.18 : 1;
     el.style.transform = `translate(${cat.x - ctx.catSize / 2}px, ${
         cat.y - ctx.catSize / 2
     }px) scale(${flipX * scale}, ${scale}) rotate(${tilt}deg)`;

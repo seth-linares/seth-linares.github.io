@@ -11,13 +11,12 @@ import {
     SAFE_RADIUS,
 } from '../constants';
 import { pickNearbyClearTarget } from '../targets';
-import type { CatState } from '../types';
+import { asDoc, type CatState } from '../types';
 import type { TickContext } from './types';
 
 // Phase 1: clear startled cats whose startle timer has elapsed.
 export function updateStartleExpiration(cat: CatState, ctx: TickContext): void {
-    if (cat.state !== 'startled' || ctx.now < cat.startleUntil) return;
-    cat.state = 'walking';
+    if (cat.run.kind !== 'startled' || ctx.now < cat.run.startleUntil) return;
     const t = pickNearbyClearTarget(
         ctx.catSize,
         cat.x,
@@ -28,8 +27,7 @@ export function updateStartleExpiration(cat: CatState, ctx: TickContext): void {
         ctx.i,
         CAT_SPACING_RADIUS
     );
-    cat.targetX = t.x;
-    cat.targetY = t.y;
+    cat.run = { kind: 'walking', targetX: t.x, targetY: t.y };
     cat.lastProgressAt = ctx.now;
 }
 
@@ -38,11 +36,10 @@ export function updateStartleExpiration(cat: CatState, ctx: TickContext): void {
 // hover. When the cursor leaves the page entirely (`mouseDoc === null`)
 // fleeing cats transition straight back to walking.
 export function updateCursorFlee(cat: CatState, ctx: TickContext): void {
-    if (cat.state === 'startled') return;
+    if (cat.run.kind === 'startled') return;
 
     if (!ctx.mouseDoc) {
-        if (cat.state !== 'fleeing') return;
-        cat.state = 'walking';
+        if (cat.run.kind !== 'fleeing') return;
         const t = pickNearbyClearTarget(
             ctx.catSize,
             cat.x,
@@ -53,8 +50,7 @@ export function updateCursorFlee(cat: CatState, ctx: TickContext): void {
             ctx.i,
             CAT_SPACING_RADIUS
         );
-        cat.targetX = t.x;
-        cat.targetY = t.y;
+        cat.run = { kind: 'walking', targetX: t.x, targetY: t.y };
         cat.lastProgressAt = ctx.now;
         return;
     }
@@ -63,12 +59,17 @@ export function updateCursorFlee(cat: CatState, ctx: TickContext): void {
     const dyM = cat.y - ctx.mouseDoc.y;
     const distM = Math.hypot(dxM, dyM);
 
-    if (cat.state !== 'fleeing' && distM < FLEE_RADIUS) {
-        cat.state = 'fleeing';
-        cat.visitTarget = null;
+    if (cat.run.kind !== 'fleeing' && distM < FLEE_RADIUS) {
+        // Seed initial flee target away from the cursor. The per-frame
+        // update below will keep it pointed away as the cursor moves.
+        const dn = Math.max(distM, 1);
+        cat.run = {
+            kind: 'fleeing',
+            targetX: asDoc(cat.x + (dxM / dn) * 220),
+            targetY: asDoc(cat.y + (dyM / dn) * 220),
+        };
         setMessage(cat, 'flee_start', 1500);
-    } else if (cat.state === 'fleeing' && distM > SAFE_RADIUS) {
-        cat.state = 'walking';
+    } else if (cat.run.kind === 'fleeing' && distM > SAFE_RADIUS) {
         const t = pickNearbyClearTarget(
             ctx.catSize,
             cat.x,
@@ -79,12 +80,14 @@ export function updateCursorFlee(cat: CatState, ctx: TickContext): void {
             ctx.i,
             CAT_SPACING_RADIUS
         );
-        cat.targetX = t.x;
-        cat.targetY = t.y;
+        cat.run = { kind: 'walking', targetX: t.x, targetY: t.y };
         cat.lastProgressAt = ctx.now;
     }
-    if (cat.state === 'fleeing' && distM > 0) {
-        cat.targetX = cat.x + (dxM / distM) * 220;
-        cat.targetY = cat.y + (dyM / distM) * 220;
+
+    // Track flee target each frame while fleeing so the cat keeps running
+    // directly away from the cursor.
+    if (cat.run.kind === 'fleeing' && distM > 0) {
+        cat.run.targetX = asDoc(cat.x + (dxM / distM) * 220);
+        cat.run.targetY = asDoc(cat.y + (dyM / distM) * 220);
     }
 }

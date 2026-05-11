@@ -1,52 +1,95 @@
 // src/utils/cats/types.ts
 //
-// Type-only module for the animated-cats simulation. Importing this file pulls
-// in zero runtime code — useful for tick phases and helpers that only need to
-// reference the shape of a CatState. Discriminated-union variants of
-// CatRunState arrive in a later refactor commit; this file currently mirrors
-// the flat union the simulation was originally written against.
+// Type-only module for the animated-cats simulation. Importing this file
+// pulls in zero runtime code (the toDoc/asDoc helpers ARE runtime but
+// inlined to nothing after a `number → number` cast).
+//
+// Two TS-level guarantees this file establishes:
+//   1. Discriminated union on CatRunState — each state owns its own
+//      transition data. Adding a new variant (e.g. 'petting') forces every
+//      `switch (cat.run.kind)` to handle it.
+//   2. Branded position types — DocPos (document coords) and ViewportPos
+//      (viewport / clientX-clientY coords) are nominally distinct from each
+//      other and from plain `number`. The single conversion seam is
+//      toDocX/toDocY which adds scrollX/Y. This prevents the "forgot to add
+//      scrollX" bug at compile time.
 
 import type { CatPalette, CatPose } from '@/types/pixel-cat';
 import type { RefObject } from 'react';
 
+// ── Coordinate brands ───────────────────────────────────────────────────
+// At runtime these are just numbers; the brand is a phantom property the
+// compiler tracks. `unique symbol` makes the brands nominally distinct.
+export type DocPos = number & { readonly __doc: unique symbol };
+export type ViewportPos = number & { readonly __vp: unique symbol };
+
+// Conversion seams. The branded inputs/outputs make these the ONLY place
+// where doc/viewport coords are explicitly mixed.
+export function toDocX(v: ViewportPos): DocPos {
+    return ((v as number) + window.scrollX) as DocPos;
+}
+export function toDocY(v: ViewportPos): DocPos {
+    return ((v as number) + window.scrollY) as DocPos;
+}
+
+// Tag a raw number as a doc-coord. Use sparingly — only at trusted sources
+// like target pickers and ResizeObserver measurements that produce doc coords
+// by construction.
+export function asDoc(v: number): DocPos {
+    return v as DocPos;
+}
+// Tag a raw number as a viewport-coord. Use at MouseEvent boundaries where
+// clientX/clientY come in.
+export function asViewport(v: number): ViewportPos {
+    return v as ViewportPos;
+}
+
+// ── Behavior & state machine ────────────────────────────────────────────
 export type CatBehavior = 'chill' | 'playful' | 'shy';
 
-export type CatRunState = 'walking' | 'idle' | 'fleeing' | 'visiting' | 'startled';
+// Discriminated union — each variant carries the state-specific data it
+// needs. Common fields (position, animation, social cooldowns) live directly
+// on CatState below.
+export type CatRunState =
+    | { kind: 'walking'; targetX: DocPos; targetY: DocPos }
+    | { kind: 'idle'; idleUntil: number; sitAt: number }
+    | { kind: 'fleeing'; targetX: DocPos; targetY: DocPos }
+    | {
+          kind: 'visiting';
+          visitTarget: number;
+          targetX: DocPos;
+          targetY: DocPos;
+      }
+    | {
+          kind: 'startled';
+          startleUntil: number;
+          targetX: DocPos;
+          targetY: DocPos;
+      };
 
 export interface CatState {
-    x: number;
-    y: number;
-    targetX: number;
-    targetY: number;
+    // ── Position (doc coords) + animation common to every state ─────────
+    x: DocPos;
+    y: DocPos;
     speed: number;
     facingLeft: boolean;
-    state: CatRunState;
-    behavior: CatBehavior;
-    idleUntil: number;
-    sitAt: number;
     distSinceFrame: number;
     walkFrame: number;
+    behavior: CatBehavior;
     palette: CatPalette;
-    visitTarget: number | null;
+    // ── Social-system cooldowns (read across multiple states) ───────────
     nextSocialCheck: number;
-    startleUntil: number;
     // Timestamp of the last frame where the cat made meaningful forward
-    // progress (stepDist > 0.1). Used by the stuck-detection safety net to
-    // force a fresh target pick when avoidance + target geometry conspire to
-    // leave a walking cat pinned in place for too long.
+    // progress (stepDist > 0.1). Used by the stuck-detection safety net.
     lastProgressAt: number;
     // Timestamp of the last completed meetup. Read by the social-pick logic
-    // to skip cats whose last meetup was within MEETUP_COOLDOWN_MS, so a
-    // playful cat doesn't immediately re-cluster onto a freshly-met chill cat.
-    // 0 means "no recent meetup".
+    // to skip cats whose last meetup was within MEETUP_COOLDOWN_MS.
     lastMeetupAt: number;
-    // Tomodachi-style speech bubble. `message` is the current phrase (or null
-    // when nothing is on screen) and `messageUntil` is the performance.now()
-    // ms timestamp after which the bubble expires. Overwriting `message` IS
-    // the replacement contract — a fresh event simply clobbers any prior
-    // bubble. The rAF loop clears expired entries at the top of each frame.
+    // ── Speech-bubble system (common — every state can have a bubble) ───
     message: string | null;
     messageUntil: number;
+    // ── State-specific via discriminated union ──────────────────────────
+    run: CatRunState;
 }
 
 export interface DocDims {
@@ -55,8 +98,8 @@ export interface DocDims {
 }
 
 export interface ObstacleRect {
-    x: number;
-    y: number;
+    x: DocPos;
+    y: DocPos;
     w: number;
     h: number;
 }
@@ -70,9 +113,8 @@ export interface AnimatedCatsState {
     poses: CatPose[];
     palettes: CatPalette[];
     // Per-cat speech-bubble text. Same length as poses/palettes. `null` means
-    // no bubble for that cat right now; the renderer hides the bubble div via
-    // opacity in that case rather than unmounting, so enter/exit transitions
-    // can be CSS-only.
+    // no bubble for that cat right now; the renderer hides the bubble div
+    // via opacity in that case rather than unmounting.
     messages: (string | null)[];
     catRefs: RefObject<(HTMLDivElement | null)[]>;
     // Bubble overlay refs, in lockstep with catRefs. The rAF loop writes a
@@ -80,19 +122,17 @@ export interface AnimatedCatsState {
     // so the text always reads upright regardless of the cat's facing.
     bubbleRefs: RefObject<(HTMLDivElement | null)[]>;
     enabled: boolean;
-    // Current live cat count — can grow past the initial prop via the spawn button
-    // or shift+click. Returned so the renderer knows how many <div>s to mount.
+    // Current live cat count — can grow past the initial prop via the spawn
+    // button or shift+click.
     count: number;
     // Maximum live cats; caller may surface this in UI (e.g., "8/16").
     maxCount: number;
-    // Spawn a new cat at the given DOCUMENT coordinates. Optionally pass a palette
-    // key from CAT_PALETTES so the caller can pick the coat (and the personality
-    // that's keyed to it in PALETTE_BEHAVIORS). Returns false if the cap was hit.
+    // Spawn a new cat at the given DOCUMENT coordinates. Returns false if
+    // the cap was hit.
     spawn: (docX: number, docY: number, paletteKey?: string) => boolean;
     // Remove the most-recently-added cat. Returns false if no cats remain.
     removeLast: () => boolean;
-    // Replace the whole simulation with a fresh set of initial cats (palette
-    // cycle + random positions). Wipes any user-spawned cats and any removals.
+    // Replace the whole simulation with a fresh set of initial cats.
     reset: () => void;
     // True when activeCount matches the prop'd initial count — useful for
     // disabling the reset button when it would visibly look like a no-op.

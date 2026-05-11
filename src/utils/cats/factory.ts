@@ -1,8 +1,8 @@
 // src/utils/cats/factory.ts
 //
 // One place to build a fresh CatState. Three call sites (initial mount, reset,
-// drag/shift+click spawn) used to duplicate this 20-line literal — bugs from
-// adding a field in one place and forgetting another were a real risk.
+// drag/shift+click spawn) used to duplicate the literal — bugs from adding a
+// field in one place and forgetting another were a real risk.
 //
 // Two flavors: `createInitialCatState` takes everything explicit (used by
 // spawn, which already knows position/palette/behavior). `spawnRandomCat`
@@ -13,44 +13,38 @@ import type { CatPalette } from '@/types/pixel-cat';
 import { SOCIAL_CHECK_INTERVAL_MS, WALK_CYCLE_LEN, WALK_SPEED } from './constants';
 import { behaviorForIndex, paletteForIndex } from './palette';
 import { pickNearbyTarget, pickTarget } from './targets';
-import type { CatBehavior, CatState, DocDims } from './types';
+import type { CatBehavior, CatState, DocDims, DocPos } from './types';
 
 interface CreateCatStateInput {
-    x: number;
-    y: number;
-    targetX: number;
-    targetY: number;
+    x: DocPos;
+    y: DocPos;
+    targetX: DocPos;
+    targetY: DocPos;
     behavior: CatBehavior;
     palette: CatPalette;
 }
 
-// Build a CatState in the default `walking` state with all timing fields
-// seeded against the current performance.now() clock. Use this when you've
-// already picked position, target, palette, and behavior (e.g., the
+// Build a CatState in the default `walking` run-state with all common timing
+// fields seeded against the current performance.now() clock. Use this when
+// you've already picked position, target, palette, and behavior (e.g., the
 // drag/shift+click spawn paths).
 export function createInitialCatState(input: CreateCatStateInput): CatState {
     const now = performance.now();
     return {
         x: input.x,
         y: input.y,
-        targetX: input.targetX,
-        targetY: input.targetY,
         speed: WALK_SPEED * (0.75 + Math.random() * 0.5),
         facingLeft: input.targetX < input.x,
-        state: 'walking',
-        behavior: input.behavior,
-        idleUntil: 0,
-        sitAt: 0,
         distSinceFrame: 0,
         walkFrame: Math.floor(Math.random() * WALK_CYCLE_LEN),
+        behavior: input.behavior,
         palette: input.palette,
-        visitTarget: null,
         nextSocialCheck: now + Math.random() * SOCIAL_CHECK_INTERVAL_MS,
-        startleUntil: 0,
         lastProgressAt: now,
         lastMeetupAt: 0,
         message: null,
         messageUntil: 0,
+        run: { kind: 'walking', targetX: input.targetX, targetY: input.targetY },
     };
 }
 

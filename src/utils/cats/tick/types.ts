@@ -4,7 +4,7 @@
 // orchestrator and passed to each phase function. Phases mutate the cat
 // in-place and may return small values (e.g., detectCover returns inCover).
 
-import type { CatState, DocDims, ObstacleRect } from '../types';
+import type { CatState, DocDims, DocPos, ObstacleRect } from '../types';
 
 export interface TickContext {
     // Current frame's performance.now() timestamp. Captured ONCE per frame so
@@ -18,8 +18,8 @@ export interface TickContext {
     // neighbor-iteration loops and to compute deterministic offsets.
     i: number;
     catSize: number;
-    // Cursor position in DOCUMENT coords (clientX + scrollX, clientY + scrollY)
-    // captured ONCE per frame so every cat sees the same cursor. `null` when
-    // the cursor has left the document.
-    mouseDoc: { x: number; y: number } | null;
+    // Cursor position in DOCUMENT coords. Computed ONCE per frame in the
+    // orchestrator via toDocX/toDocY — phases consume it pre-converted. `null`
+    // when the cursor has left the document.
+    mouseDoc: { x: DocPos; y: DocPos } | null;
 }
