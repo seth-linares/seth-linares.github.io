@@ -8,8 +8,12 @@ import { CAT_PALETTES, type CatPalette } from '@/types/pixel-cat';
 import type { CatBehavior } from './types';
 
 export const PALETTE_KEYS = ['orange', 'black', 'gray', 'siamese'] as const;
+// Nominal type for "a known palette coat". Use this anywhere a function takes
+// a palette identifier — passing a string typo now fails at the call site
+// instead of silently falling through to a default.
+export type PaletteKey = (typeof PALETTE_KEYS)[number];
 
-export const PALETTE_BEHAVIORS: Record<string, CatBehavior> = {
+export const PALETTE_BEHAVIORS: Record<PaletteKey, CatBehavior> = {
     orange: 'chill',
     black: 'playful',
     gray: 'chill',
@@ -21,5 +25,5 @@ export function paletteForIndex(i: number): CatPalette {
 }
 
 export function behaviorForIndex(i: number): CatBehavior {
-    return PALETTE_BEHAVIORS[PALETTE_KEYS[i % PALETTE_KEYS.length]] ?? 'chill';
+    return PALETTE_BEHAVIORS[PALETTE_KEYS[i % PALETTE_KEYS.length]];
 }

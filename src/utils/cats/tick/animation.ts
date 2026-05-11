@@ -10,14 +10,33 @@ import {
     WALK_CYCLE_LEN,
     WALK_PIXELS_PER_FRAME,
 } from '../constants';
-import type { CatState } from '../types';
+import type { CatRunState, CatState } from '../types';
 import type { TickContext } from './types';
+
+// True for the "running" sprite cycle (fleeing / startled use the run frames;
+// idle / walking / visiting use the walk frames). Exhaustive switch so adding
+// a CatRunState variant forces a deliberate decision about which cycle to use.
+function usesRunCycle(run: CatRunState): boolean {
+    switch (run.kind) {
+        case 'fleeing':
+        case 'startled':
+            return true;
+        case 'idle':
+        case 'walking':
+        case 'visiting':
+            return false;
+        default: {
+            const _exhaustive: never = run;
+            return _exhaustive;
+        }
+    }
+}
 
 // Advance the walk frame based on travel distance. Two cycle lengths (walk
 // vs run) so flee/startle look frantic.
 export function updateAnimation(cat: CatState, stepDist: number): void {
     cat.distSinceFrame += stepDist;
-    const isRunning = cat.run.kind === 'fleeing' || cat.run.kind === 'startled';
+    const isRunning = usesRunCycle(cat.run);
     const stride = isRunning ? RUN_PIXELS_PER_FRAME : WALK_PIXELS_PER_FRAME;
     const cycleLen = isRunning ? RUN_CYCLE_LEN : WALK_CYCLE_LEN;
     if (cat.distSinceFrame >= stride) {
@@ -29,12 +48,8 @@ export function updateAnimation(cat: CatState, stepDist: number): void {
 // Write the cat's transform to its overlay div. Includes the horizontal flip
 // for facing-direction, a small tilt while running, and a scale-bump while
 // startled. This is the ONLY place the cat overlay's transform is written.
-export function writeCatTransform(
-    el: HTMLDivElement,
-    cat: CatState,
-    ctx: TickContext
-): void {
-    const isRunning = cat.run.kind === 'fleeing' || cat.run.kind === 'startled';
+export function writeCatTransform(el: HTMLDivElement, cat: CatState, ctx: TickContext): void {
+    const isRunning = usesRunCycle(cat.run);
     const flipX = cat.facingLeft ? -1 : 1;
     const tilt = isRunning ? (cat.facingLeft ? 6 : -6) : 0;
     const scale = cat.run.kind === 'startled' ? 1.18 : 1;

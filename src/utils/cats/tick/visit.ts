@@ -5,12 +5,7 @@
 // give up; otherwise → both go idle for the meetup pause).
 
 import { setMessage } from '../bubbles';
-import {
-    MEETUP_DISTANCE,
-    MEETUP_PAUSE_MS,
-    STARTLE_DURATION_MS,
-    VISIT_OFFSET,
-} from '../constants';
+import { MEETUP_DISTANCE, MEETUP_PAUSE_MS, STARTLE_DURATION_MS, VISIT_OFFSET } from '../constants';
 import { rng } from '../rng';
 import { pickNearbyTarget } from '../targets';
 import { asDoc, type CatState } from '../types';
@@ -46,16 +41,18 @@ export function updateVisit(cat: CatState, ctx: TickContext): void {
 
     // Arrived. Outcome depends on target's personality.
     if (tgt.behavior === 'shy') {
-        // Shy target startles and dashes the opposite direction; visitor
-        // gives up and picks a new walk target.
+        // Shy target startles and dashes AWAY from the visitor; visitor gives
+        // up and picks a new walk target. dxv/dyv points visitor→target, so
+        // adding dxv/dn to the target's position moves it further along that
+        // direction — i.e. away from the visitor. (The earlier version had a
+        // sign inversion that moved the target TOWARD the visitor.)
         const dn = Math.max(distv, 1);
         tgt.run = {
             kind: 'startled',
             startleUntil: ctx.now + STARTLE_DURATION_MS,
-            targetX: asDoc(tgt.x + (-dxv / dn) * 220),
-            targetY: asDoc(tgt.y + (-dyv / dn) * 220),
+            targetX: asDoc(tgt.x + (dxv / dn) * 220),
+            targetY: asDoc(tgt.y + (dyv / dn) * 220),
         };
-        tgt.facingLeft = -dxv < 0;
         setMessage(tgt, 'meetup_shy', 1500);
 
         setMessage(cat, 'meetup_rebuffed');

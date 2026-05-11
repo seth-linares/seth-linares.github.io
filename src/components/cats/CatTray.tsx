@@ -13,10 +13,11 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CAT_PALETTES } from '@/types/pixel-cat';
+import { PALETTE_KEYS, type PaletteKey } from '@/utils/cats/palette';
 import PixelCat from '../PixelCat';
 
 interface Props {
-    spawn: (docX: number, docY: number, paletteKey?: string) => boolean;
+    spawn: (docX: number, docY: number, paletteKey?: PaletteKey) => boolean;
     removeLast: () => boolean;
     reset: () => void;
     activeCount: number;
@@ -26,14 +27,11 @@ interface Props {
 }
 
 const TRAY_ATTR = 'data-cat-tray';
-// The tray shows one draggable sprite per coat color — same keys the hook
-// uses internally to seed PALETTE_BEHAVIORS, so picking a coat also picks
-// personality.
-const SPAWN_PALETTES = ['orange', 'black', 'gray', 'siamese'] as const;
 
-// Personality hint surfaced via tooltip on each tray sprite. Coat → behavior
-// mapping mirrors PALETTE_BEHAVIORS inside the hook — keep these in sync.
-const PERSONALITY_LABEL: Record<string, string> = {
+// Personality hint surfaced via tooltip on each tray sprite. Typed against
+// PaletteKey so the keys here must match the canonical palette list — drop a
+// coat name in PALETTE_KEYS and TS errors at this declaration.
+const PERSONALITY_LABEL: Record<PaletteKey, string> = {
     orange: 'orange · chill',
     black: 'black · playful',
     gray: 'gray · chill',
@@ -59,11 +57,13 @@ function CatTray({
     //     reconcile) and pointerup reads paletteKey from the ref. That's the
     //     same pattern the rAF loop uses for cat positions, and it's why
     //     dragging stays smooth even with many PixelCat SVGs on the page.
-    const [dragKey, setDragKey] = useState<string | null>(null);
+    const [dragKey, setDragKey] = useState<PaletteKey | null>(null);
     const ghostRef = useRef<HTMLDivElement | null>(null);
-    const dragInfoRef = useRef<{ paletteKey: string; startX: number; startY: number } | null>(
-        null
-    );
+    const dragInfoRef = useRef<{
+        paletteKey: PaletteKey;
+        startX: number;
+        startY: number;
+    } | null>(null);
 
     const positionGhost = useCallback(
         (clientX: number, clientY: number) => {
@@ -92,11 +92,7 @@ function CatTray({
             const releasedOnTray = !!target?.closest(`[${TRAY_ATTR}]`);
             const info = dragInfoRef.current;
             if (info && !releasedOnTray) {
-                spawn(
-                    e.clientX + window.scrollX,
-                    e.clientY + window.scrollY,
-                    info.paletteKey
-                );
+                spawn(e.clientX + window.scrollX, e.clientY + window.scrollY, info.paletteKey);
             }
             dragInfoRef.current = null;
             setDragKey(null);
@@ -137,11 +133,7 @@ function CatTray({
                     }}
                     aria-hidden="true"
                 >
-                    <PixelCat
-                        pose="sit"
-                        palette={CAT_PALETTES[dragKey] ?? CAT_PALETTES.orange}
-                        size={ghostSize}
-                    />
+                    <PixelCat pose="sit" palette={CAT_PALETTES[dragKey]} size={ghostSize} />
                 </div>
             )}
 
@@ -154,7 +146,7 @@ function CatTray({
                         atCap ? 'opacity-50' : ''
                     }`}
                 >
-                    {SPAWN_PALETTES.map((key) => (
+                    {PALETTE_KEYS.map((key) => (
                         <button
                             key={key}
                             type="button"
@@ -175,11 +167,11 @@ function CatTray({
                                 setDragKey(key);
                             }}
                             style={{ touchAction: 'none' }}
-                            aria-label={`Drag onto the page to spawn a ${PERSONALITY_LABEL[key] ?? key} cat`}
+                            aria-label={`Drag onto the page to spawn a ${PERSONALITY_LABEL[key]} cat`}
                             title={
                                 atCap
                                     ? `Cat limit reached (${activeCount}/${maxCount})`
-                                    : `${PERSONALITY_LABEL[key] ?? key} · drag to spawn`
+                                    : `${PERSONALITY_LABEL[key]} · drag to spawn`
                             }
                             className={`p-1 rounded-lg transition-all ${
                                 atCap
@@ -193,20 +185,13 @@ function CatTray({
                         </button>
                     ))}
                     {/* Action divider + remove/reset controls */}
-                    <div
-                        className="w-px self-stretch bg-base-300 mx-0.5"
-                        aria-hidden="true"
-                    />
+                    <div className="w-px self-stretch bg-base-300 mx-0.5" aria-hidden="true" />
                     <button
                         type="button"
                         onClick={removeLast}
                         disabled={activeCount === 0}
                         aria-label="Remove the last cat"
-                        title={
-                            activeCount === 0
-                                ? 'No cats to remove'
-                                : 'Remove the last cat'
-                        }
+                        title={activeCount === 0 ? 'No cats to remove' : 'Remove the last cat'}
                         className="w-9 h-9 flex items-center justify-center rounded-lg text-base-content/70 hover:bg-base-200 hover:text-base-content active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent text-xl font-bold leading-none"
                     >
                         −
@@ -216,11 +201,7 @@ function CatTray({
                         onClick={reset}
                         disabled={isAtInitialCount && !dragKey}
                         aria-label="Reset to the default cats"
-                        title={
-                            isAtInitialCount
-                                ? 'Already at default'
-                                : 'Reset to default cats'
-                        }
+                        title={isAtInitialCount ? 'Already at default' : 'Reset to default cats'}
                         className="w-9 h-9 flex items-center justify-center rounded-lg text-base-content/70 hover:bg-base-200 hover:text-base-content active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent text-base leading-none"
                     >
                         <span aria-hidden="true">↺</span>

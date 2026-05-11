@@ -17,6 +17,7 @@ import {
     AVOID_STRENGTH,
     CAT_SPACING_RADIUS,
     COVER_SPEED_MULT,
+    FACING_DEADBAND,
     FLEE_SPEED,
     IDLE_MAX_MS,
     IDLE_MIN_MS,
@@ -36,16 +37,34 @@ import {
     pickNearbyClearTarget,
     tooCloseToOtherCat,
 } from '../targets';
-import { asDoc, type CatState } from '../types';
+import { asDoc, type CatRunState, type CatState } from '../types';
 import type { TickContext } from './types';
+
+// Per-state movement speed. Exhaustive switch so adding a new CatRunState
+// variant (e.g. 'petting') forces an explicit speed decision — the trailing
+// `never` assignment turns missing cases into a compile error.
+function speedForRun(run: CatRunState, base: number): number {
+    switch (run.kind) {
+        case 'idle':
+            return 0;
+        case 'walking':
+            return base;
+        case 'visiting':
+            return VISIT_SPEED;
+        case 'fleeing':
+            return FLEE_SPEED;
+        case 'startled':
+            return STARTLE_SPEED;
+        default: {
+            const _exhaustive: never = run;
+            return _exhaustive;
+        }
+    }
+}
 
 // Returns the per-frame step distance (hypot of stepX, stepY). Mutates cat
 // position, run-state, facingLeft, and lastProgressAt.
-export function stepMovement(
-    cat: CatState,
-    ctx: TickContext,
-    inCover: boolean
-): number {
+export function stepMovement(cat: CatState, ctx: TickContext, inCover: boolean): number {
     let stepX = 0;
     let stepY = 0;
 
@@ -56,17 +75,15 @@ export function stepMovement(
         // already visible, prefer a nearby target that stays in clear space.
         if (inCover || ctx.now >= cat.run.idleUntil) {
             let t: { x: typeof cat.x; y: typeof cat.y };
+            const avoid = {
+                states: ctx.states,
+                selfIdx: ctx.i,
+                spacing: CAT_SPACING_RADIUS,
+            };
             if (inCover) {
                 t =
                     pickEscapeTarget(cat.x, cat.y, ctx.catSize, ctx.dims, ctx.obstacles) ??
-                    pickClearTarget(
-                        ctx.catSize,
-                        ctx.dims,
-                        ctx.obstacles,
-                        ctx.states,
-                        ctx.i,
-                        CAT_SPACING_RADIUS
-                    );
+                    pickClearTarget(ctx.catSize, ctx.dims, ctx.obstacles, avoid);
             } else {
                 t = pickNearbyClearTarget(
                     ctx.catSize,
@@ -74,9 +91,7 @@ export function stepMovement(
                     cat.y,
                     ctx.dims,
                     ctx.obstacles,
-                    ctx.states,
-                    ctx.i,
-                    CAT_SPACING_RADIUS
+                    avoid
                 );
             }
             cat.run = { kind: 'walking', targetX: t.x, targetY: t.y };
@@ -115,10 +130,14 @@ export function stepMovement(
         const dx = cat.run.targetX - cat.x;
         const dy = cat.run.targetY - cat.y;
         const dist = Math.hypot(dx, dy);
-        let speed = cat.speed;
-        if (cat.run.kind === 'fleeing') speed = FLEE_SPEED;
-        else if (cat.run.kind === 'startled') speed = STARTLE_SPEED;
-        else if (cat.run.kind === 'visiting') speed = VISIT_SPEED;
+        // Face toward intent (the target) rather than this-frame motion.
+        // Avoidance can swing the actual step vector across zero in dense
+        // clusters; deriving facing from dx instead means the sprite tracks
+        // where the cat is HEADING, not the noisy step-by-step velocity. The
+        // FACING_DEADBAND keeps cats from flipping during the final approach
+        // when |dx| decays to zero.
+        if (Math.abs(dx) > FACING_DEADBAND) cat.facingLeft = dx < 0;
+        let speed = speedForRun(cat.run, cat.speed);
         // Cover boost: cats out of sight should pop back into view fast.
         // Don't compound onto already-frantic states (flee/startle).
         if (inCover && cat.run.kind !== 'fleeing' && cat.run.kind !== 'startled') {
@@ -148,9 +167,7 @@ export function stepMovement(
                     cat.y,
                     ctx.dims,
                     ctx.obstacles,
-                    ctx.states,
-                    ctx.i,
-                    CAT_SPACING_RADIUS
+                    { states: ctx.states, selfIdx: ctx.i, spacing: CAT_SPACING_RADIUS }
                 );
                 cat.run = { kind: 'walking', targetX: t.x, targetY: t.y };
                 cat.lastProgressAt = ctx.now;
@@ -163,30 +180,19 @@ export function stepMovement(
                         // walking, aimed at the nearest exit edge or a
                         // far-off clear spot if no edge escape works.
                         const t =
-                            pickEscapeTarget(
-                                cat.x,
-                                cat.y,
-                                ctx.catSize,
-                                ctx.dims,
-                                ctx.obstacles
-                            ) ??
-                            pickClearTarget(
-                                ctx.catSize,
-                                ctx.dims,
-                                ctx.obstacles,
-                                ctx.states,
-                                ctx.i,
-                                CAT_SPACING_RADIUS
-                            );
+                            pickEscapeTarget(cat.x, cat.y, ctx.catSize, ctx.dims, ctx.obstacles) ??
+                            pickClearTarget(ctx.catSize, ctx.dims, ctx.obstacles, {
+                                states: ctx.states,
+                                selfIdx: ctx.i,
+                                spacing: CAT_SPACING_RADIUS,
+                            });
                         cat.run = { kind: 'walking', targetX: t.x, targetY: t.y };
                         cat.lastProgressAt = ctx.now;
                     } else {
                         cat.run = {
                             kind: 'idle',
                             idleUntil:
-                                ctx.now +
-                                IDLE_MIN_MS +
-                                rng.next() * (IDLE_MAX_MS - IDLE_MIN_MS),
+                                ctx.now + IDLE_MIN_MS + rng.next() * (IDLE_MAX_MS - IDLE_MIN_MS),
                             sitAt: ctx.now + SIT_AFTER_MS,
                         };
                     }
@@ -253,7 +259,6 @@ export function stepMovement(
             stepY = seekY;
             cat.x = asDoc(cat.x + stepX);
             cat.y = asDoc(cat.y + stepY);
-            if (Math.abs(stepX) > 0.05) cat.facingLeft = stepX < 0;
         }
     }
 
@@ -282,16 +287,11 @@ export function updateStuckCheck(cat: CatState, ctx: TickContext, stepDist: numb
     }
     if (cat.run.kind !== 'walking') return;
     if (ctx.now - cat.lastProgressAt <= STUCK_THRESHOLD_MS) return;
-    const t = pickNearbyClearTarget(
-        ctx.catSize,
-        cat.x,
-        cat.y,
-        ctx.dims,
-        ctx.obstacles,
-        ctx.states,
-        ctx.i,
-        CAT_SPACING_RADIUS
-    );
+    const t = pickNearbyClearTarget(ctx.catSize, cat.x, cat.y, ctx.dims, ctx.obstacles, {
+        states: ctx.states,
+        selfIdx: ctx.i,
+        spacing: CAT_SPACING_RADIUS,
+    });
     cat.run = { kind: 'walking', targetX: t.x, targetY: t.y };
     cat.lastProgressAt = ctx.now;
 }

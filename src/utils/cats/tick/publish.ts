@@ -12,7 +12,7 @@
 
 import type { Dispatch, SetStateAction } from 'react';
 import type { CatPose } from '@/types/pixel-cat';
-import { PUSH_POSE_MS, RUN_CYCLE_LEN, WALK_CYCLE_LEN } from '../constants';
+import { PUSH_POSE_MS, RUN_POSES, WALK_POSES } from '../constants';
 import type { CatState } from '../types';
 
 function poseForCat(cat: CatState, now: number): CatPose {
@@ -21,10 +21,10 @@ function poseForCat(cat: CatState, now: number): CatPose {
             return cat.run.sitAt && now >= cat.run.sitAt ? 'sit' : 'idle';
         case 'fleeing':
         case 'startled':
-            return `run${cat.walkFrame % RUN_CYCLE_LEN}` as CatPose;
+            return RUN_POSES[cat.walkFrame % RUN_POSES.length];
         case 'walking':
         case 'visiting':
-            return `walk${cat.walkFrame % WALK_CYCLE_LEN}` as CatPose;
+            return WALK_POSES[cat.walkFrame % WALK_POSES.length];
         default: {
             // Exhaustiveness check: if a new CatRunState variant is added
             // without handling it here, TS will error on the `never`

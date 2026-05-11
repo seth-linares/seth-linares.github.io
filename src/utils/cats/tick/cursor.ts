@@ -5,11 +5,7 @@
 // inside FLEE_RADIUS, exiting outside SAFE_RADIUS).
 
 import { setMessage } from '../bubbles';
-import {
-    CAT_SPACING_RADIUS,
-    FLEE_RADIUS,
-    SAFE_RADIUS,
-} from '../constants';
+import { CAT_SPACING_RADIUS, FLEE_RADIUS, SAFE_RADIUS } from '../constants';
 import { pickNearbyClearTarget } from '../targets';
 import { asDoc, type CatState } from '../types';
 import type { TickContext } from './types';
@@ -17,16 +13,11 @@ import type { TickContext } from './types';
 // Phase 1: clear startled cats whose startle timer has elapsed.
 export function updateStartleExpiration(cat: CatState, ctx: TickContext): void {
     if (cat.run.kind !== 'startled' || ctx.now < cat.run.startleUntil) return;
-    const t = pickNearbyClearTarget(
-        ctx.catSize,
-        cat.x,
-        cat.y,
-        ctx.dims,
-        ctx.obstacles,
-        ctx.states,
-        ctx.i,
-        CAT_SPACING_RADIUS
-    );
+    const t = pickNearbyClearTarget(ctx.catSize, cat.x, cat.y, ctx.dims, ctx.obstacles, {
+        states: ctx.states,
+        selfIdx: ctx.i,
+        spacing: CAT_SPACING_RADIUS,
+    });
     cat.run = { kind: 'walking', targetX: t.x, targetY: t.y };
     cat.lastProgressAt = ctx.now;
 }
@@ -40,16 +31,11 @@ export function updateCursorFlee(cat: CatState, ctx: TickContext): void {
 
     if (!ctx.mouseDoc) {
         if (cat.run.kind !== 'fleeing') return;
-        const t = pickNearbyClearTarget(
-            ctx.catSize,
-            cat.x,
-            cat.y,
-            ctx.dims,
-            ctx.obstacles,
-            ctx.states,
-            ctx.i,
-            CAT_SPACING_RADIUS
-        );
+        const t = pickNearbyClearTarget(ctx.catSize, cat.x, cat.y, ctx.dims, ctx.obstacles, {
+            states: ctx.states,
+            selfIdx: ctx.i,
+            spacing: CAT_SPACING_RADIUS,
+        });
         cat.run = { kind: 'walking', targetX: t.x, targetY: t.y };
         cat.lastProgressAt = ctx.now;
         return;
@@ -70,16 +56,11 @@ export function updateCursorFlee(cat: CatState, ctx: TickContext): void {
         };
         setMessage(cat, 'flee_start', 1500);
     } else if (cat.run.kind === 'fleeing' && distM > SAFE_RADIUS) {
-        const t = pickNearbyClearTarget(
-            ctx.catSize,
-            cat.x,
-            cat.y,
-            ctx.dims,
-            ctx.obstacles,
-            ctx.states,
-            ctx.i,
-            CAT_SPACING_RADIUS
-        );
+        const t = pickNearbyClearTarget(ctx.catSize, cat.x, cat.y, ctx.dims, ctx.obstacles, {
+            states: ctx.states,
+            selfIdx: ctx.i,
+            spacing: CAT_SPACING_RADIUS,
+        });
         cat.run = { kind: 'walking', targetX: t.x, targetY: t.y };
         cat.lastProgressAt = ctx.now;
     }

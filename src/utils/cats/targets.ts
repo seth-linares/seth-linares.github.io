@@ -192,7 +192,18 @@ export function tooCloseToOtherCat(
     return false;
 }
 
-// Random doc-coord target that's also not inside any obstacle. When `states`
+// Avoidance options. `states + selfIdx + spacing` only make sense as a group
+// — passing one without the others used to silently skip avoidance. The
+// options bag forces them together: either provide all three (and optionally
+// `attempts`), or omit the bag entirely and skip avoidance explicitly.
+export interface AvoidanceOpts {
+    states: CatState[];
+    selfIdx: number;
+    spacing: number;
+    attempts?: number;
+}
+
+// Random doc-coord target that's also not inside any obstacle. When `avoid`
 // is provided, also rejects targets within `spacing` of another cat (modulo
 // the visiting-pair exemption in tooCloseToOtherCat). Falls back to a plain
 // random target after enough failed attempts so the simulation never stalls.
@@ -200,21 +211,14 @@ export function pickClearTarget(
     catSize: number,
     dims: DocDims,
     obstacles: ObstacleRect[],
-    states?: CatState[],
-    selfIdx?: number,
-    spacing?: number,
-    attempts = 12
+    avoid?: AvoidanceOpts
 ): { x: DocPos; y: DocPos } {
     const halfSize = catSize / 2;
+    const attempts = avoid?.attempts ?? 12;
     for (let i = 0; i < attempts; i++) {
         const t = pickTarget(catSize, dims);
         if (rectContainsBbox(t.x, t.y, halfSize, obstacles)) continue;
-        if (
-            states !== undefined &&
-            selfIdx !== undefined &&
-            spacing !== undefined &&
-            tooCloseToOtherCat(t.x, t.y, selfIdx, states, spacing)
-        ) {
+        if (avoid && tooCloseToOtherCat(t.x, t.y, avoid.selfIdx, avoid.states, avoid.spacing)) {
             continue;
         }
         return t;
@@ -224,7 +228,7 @@ export function pickClearTarget(
 
 // Cat is currently standing in a gap; pick a NEARBY target that's also in a
 // gap AND reachable via a straight-line path that stays in clear space. When
-// `states` is provided, also rejects targets within `spacing` of another cat
+// `avoid` is provided, also rejects targets within `spacing` of another cat
 // so two cats can't independently pick the same destination.
 export function pickNearbyClearTarget(
     catSize: number,
@@ -232,22 +236,15 @@ export function pickNearbyClearTarget(
     fromY: DocPos,
     dims: DocDims,
     obstacles: ObstacleRect[],
-    states?: CatState[],
-    selfIdx?: number,
-    spacing?: number,
-    attempts = 10
+    avoid?: AvoidanceOpts
 ): { x: DocPos; y: DocPos } {
     const halfSize = catSize / 2;
+    const attempts = avoid?.attempts ?? 10;
     for (let i = 0; i < attempts; i++) {
         const t = pickNearbyTarget(catSize, fromX, fromY, dims);
         if (rectContainsBbox(t.x, t.y, halfSize, obstacles)) continue;
         if (!pathIsClear(fromX, fromY, t.x, t.y, catSize, obstacles)) continue;
-        if (
-            states !== undefined &&
-            selfIdx !== undefined &&
-            spacing !== undefined &&
-            tooCloseToOtherCat(t.x, t.y, selfIdx, states, spacing)
-        ) {
+        if (avoid && tooCloseToOtherCat(t.x, t.y, avoid.selfIdx, avoid.states, avoid.spacing)) {
             continue;
         }
         return t;

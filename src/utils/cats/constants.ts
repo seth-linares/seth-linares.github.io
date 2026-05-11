@@ -5,6 +5,8 @@
 // `export const` rather than a frozen object so tree-shaking can drop unused
 // values and JIT can inline them at call sites.
 
+import type { CatPose } from '@/types/pixel-cat';
+
 // ── Cursor reactions ────────────────────────────────────────────────────
 export const FLEE_RADIUS = 50;
 export const SAFE_RADIUS = 150;
@@ -31,8 +33,28 @@ export const TARGET_MAX_DIST = 380;
 // ── Animation ───────────────────────────────────────────────────────────
 export const WALK_PIXELS_PER_FRAME = 14;
 export const RUN_PIXELS_PER_FRAME = 8;
-export const WALK_CYCLE_LEN = 6;
-export const RUN_CYCLE_LEN = 6;
+// Pose tuples for the walk / run sprite cycles. `satisfies readonly CatPose[]`
+// ensures every entry is a valid sprite name (renaming `walk5` in CatPose
+// now causes a compile error here). The cycle lengths are derived from the
+// arrays so they can never drift out of sync with the pose names.
+export const WALK_POSES = [
+    'walk0',
+    'walk1',
+    'walk2',
+    'walk3',
+    'walk4',
+    'walk5',
+] as const satisfies readonly CatPose[];
+export const RUN_POSES = [
+    'run0',
+    'run1',
+    'run2',
+    'run3',
+    'run4',
+    'run5',
+] as const satisfies readonly CatPose[];
+export const WALK_CYCLE_LEN = WALK_POSES.length;
+export const RUN_CYCLE_LEN = RUN_POSES.length;
 
 // ── Click startle ───────────────────────────────────────────────────────
 export const CLICK_STARTLE_RADIUS = 180;
@@ -85,6 +107,11 @@ export const CAT_SPACING_RADIUS = 80;
 export const AVOID_STRENGTH = 1.2;
 export const AVOID_FALLOFF_POW = 2;
 export const STUCK_THRESHOLD_MS = 500;
+// Facing direction is derived from delta-to-target, not this-frame motion.
+// Below this delta-to-target (in pixels) the cat keeps its previous facing —
+// prevents rapid scaleX flips during final-approach micro-motion and
+// avoidance-cancelled seek velocity in dense clusters.
+export const FACING_DEADBAND = 4;
 // Idle cats don't move toward a target, so the velocity-space avoidance
 // above never fires for them. Without this gentle position shove, two cats
 // that go idle in overlapping positions stay perfectly stacked forever.

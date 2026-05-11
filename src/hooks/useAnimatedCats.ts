@@ -35,15 +35,12 @@ import {
     PALETTE_BEHAVIORS,
     behaviorForIndex,
     paletteForIndex,
+    type PaletteKey,
 } from '@/utils/cats/palette';
 import { getDocDims, pickNearbyClearTarget, pickNearbyTarget } from '@/utils/cats/targets';
 import { detectCover } from '@/utils/cats/tick/cover';
 import { updateCursorFlee, updateStartleExpiration } from '@/utils/cats/tick/cursor';
-import {
-    clampPosition,
-    stepMovement,
-    updateStuckCheck,
-} from '@/utils/cats/tick/movement';
+import { clampPosition, stepMovement, updateStuckCheck } from '@/utils/cats/tick/movement';
 import {
     updateAnimation,
     writeBubble,
@@ -115,16 +112,12 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
     // rAF picks it up next tick) and bumps activeCount so React mounts a new
     // <div> for the cat.
     const spawn = useCallback(
-        (docX: number, docY: number, paletteKey?: string): boolean => {
+        (docX: number, docY: number, paletteKey?: PaletteKey): boolean => {
             const states = statesRef.current;
             if (states.length >= MAX_CATS) return false;
             const idx = states.length;
-            const palette = paletteKey
-                ? (CAT_PALETTES[paletteKey] ?? paletteForIndex(idx))
-                : paletteForIndex(idx);
-            const behavior = paletteKey
-                ? (PALETTE_BEHAVIORS[paletteKey] ?? 'chill')
-                : behaviorForIndex(idx);
+            const palette = paletteKey ? CAT_PALETTES[paletteKey] : paletteForIndex(idx);
+            const behavior = paletteKey ? PALETTE_BEHAVIORS[paletteKey] : behaviorForIndex(idx);
             // The spawn API takes plain numbers (DocPos is a TS-only brand);
             // tag them at this boundary so internal types check.
             const x = asDoc(docX);
@@ -135,9 +128,7 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
                 y,
                 docDimsRef.current,
                 obstaclesRef.current,
-                states,
-                idx,
-                CAT_SPACING_RADIUS
+                { states, selfIdx: idx, spacing: CAT_SPACING_RADIUS }
             );
             const newCat = createInitialCatState({
                 x,
@@ -342,13 +333,7 @@ export function useAnimatedCats({ count, catSize }: UseAnimatedCatsParams): Anim
                 writeInteractive(cat, interactiveRefs.current[i], ctx);
             }
 
-            lastPosesPushed = publishThrottled(
-                now,
-                states,
-                setPoses,
-                setMessages,
-                lastPosesPushed
-            );
+            lastPosesPushed = publishThrottled(now, states, setPoses, setMessages, lastPosesPushed);
 
             rafRef.current = requestAnimationFrame(tick);
         };

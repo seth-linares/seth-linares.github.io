@@ -16,6 +16,11 @@
 
 import type { CatPalette, CatPose } from '@/types/pixel-cat';
 import type { RefObject } from 'react';
+import type { PaletteKey } from './palette';
+
+// Re-export so consumers can write `spawn(x, y, 'orange')` against the
+// AnimatedCatsState surface without reaching into ./palette directly.
+export type { PaletteKey };
 
 // ── Coordinate brands ───────────────────────────────────────────────────
 // At runtime these are just numbers; the brand is a phantom property the
@@ -141,8 +146,9 @@ export interface AnimatedCatsState {
     // Maximum live cats; caller may surface this in UI (e.g., "8/16").
     maxCount: number;
     // Spawn a new cat at the given DOCUMENT coordinates. Returns false if
-    // the cap was hit.
-    spawn: (docX: number, docY: number, paletteKey?: string) => boolean;
+    // the cap was hit. paletteKey is the typed coat color — typos surface as
+    // a TS error rather than silently falling back to the index-cycle.
+    spawn: (docX: number, docY: number, paletteKey?: PaletteKey) => boolean;
     // Remove the most-recently-added cat. Returns false if no cats remain.
     removeLast: () => boolean;
     // Replace the whole simulation with a fresh set of initial cats.

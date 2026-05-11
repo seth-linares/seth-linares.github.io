@@ -20,10 +20,7 @@ interface Props {
 
 function InteractiveOverlay({ activeCount, catSize, interactiveRefs }: Props) {
     return (
-        <div
-            className="absolute inset-0 pointer-events-none z-[15]"
-            aria-hidden="true"
-        >
+        <div className="absolute inset-0 pointer-events-none z-[15]" aria-hidden="true">
             {Array.from({ length: activeCount }).map((_, i) => (
                 <div
                     key={i}
