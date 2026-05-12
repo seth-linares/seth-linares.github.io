@@ -11,6 +11,7 @@ import FileContextProvider from './contexts/FileContextProvider';
 
 const PromptGenerator = lazy(() => import('./components/prompt_generator/PromptGenerator'));
 const RegexPlayground = lazy(() => import('./components/regex_playground/RegexPlayground'));
+const SpriteDemo = lazy(() => import('./components/SpriteDemo'));
 
 const LoadingScreen = () => (
     <div className="h-screen w-full flex items-center justify-center bg-base-100">
@@ -75,6 +76,16 @@ const AnimatedRoutes = () => {
                     element={
                         <Layout>
                             <RegexPlayground />
+                        </Layout>
+                    }
+                />
+
+                {/* Unlinked sprite preview route — used to visually review new cat poses. */}
+                <Route
+                    path="/sprite-demo"
+                    element={
+                        <Layout>
+                            <SpriteDemo />
                         </Layout>
                     }
                 />

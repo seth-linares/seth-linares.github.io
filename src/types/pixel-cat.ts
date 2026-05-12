@@ -24,7 +24,10 @@ export type CatPose =
     | 'run3'
     | 'run4'
     | 'run5'
-    | 'sit';
+    | 'sit'
+    | 'loaf'
+    | 'sleep0'
+    | 'sleep1';
 
 export interface CatPalette {
     body: string;

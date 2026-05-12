@@ -251,6 +251,68 @@ const SIT_FRAME: string[] = [
     '....DDD......DD...',
 ];
 
+// Loaf pose — paws tucked completely under the body (the classic "bread loaf"
+// silhouette). Same head/back as sit; the legs are replaced by a continuous body
+// block that ends in a thin shadow line.
+const LOAF_FRAME: string[] = [
+    '.............BB...',
+    '.BB..........BPB..',
+    'B..B.........BBBB.',
+    'B..B........BBBEBB',
+    'B...........BBBBBB',
+    '.BB..BBBB..BBBBBB.',
+    '..BBBBBBBBBBBBBB..',
+    '..BBBBBBBBBBBBBBB.',
+    '..BBBBBBBBBBBBBBB.',
+    '..BBBBBBBBBBBBBBB.',
+    '..BBBBBBBBBBBBBBB.',
+    '..BBBBBBBBBBBBBBB.',
+    '...BBBBBBBBBBBBB..',
+    '...BBBBBBBBBBBBB..',
+    '....DDDDDDDDDDD...',
+];
+
+// Sleep cycle — 2 frames of a loafed, eyes-closed cat. Both frames replace the eye
+// `E` with a `DD` seam on the same row so it reads as a horizontal closed-eyelid line.
+// Frame 1 puffs the chest by swapping the inner gap on the chest row for body cells
+// (subtle breath inhale).
+const SLEEP_FRAMES: string[][] = [
+    [
+        '.............BB...',
+        '.BB..........BPB..',
+        'B..B.........BBBB.',
+        'B..B........BBDDBB',
+        'B...........BBBBBB',
+        '.BB..BBBB..BBBBBB.',
+        '..BBBBBBBBBBBBBB..',
+        '..BBBBBBBBBBBBBBB.',
+        '..BBBBBBBBBBBBBBB.',
+        '..BBBBBBBBBBBBBBB.',
+        '..BBBBBBBBBBBBBBB.',
+        '..BBBBBBBBBBBBBBB.',
+        '...BBBBBBBBBBBBB..',
+        '...BBBBBBBBBBBBB..',
+        '....DDDDDDDDDDD...',
+    ],
+    [
+        '.............BB...',
+        '.BB..........BPB..',
+        'B..B.........BBBB.',
+        'B..B........BBDDBB',
+        'B...........BBBBBB',
+        '.BB.BBBBBB.BBBBBB.',
+        '..BBBBBBBBBBBBBB..',
+        '..BBBBBBBBBBBBBBB.',
+        '..BBBBBBBBBBBBBBB.',
+        '..BBBBBBBBBBBBBBB.',
+        '..BBBBBBBBBBBBBBB.',
+        '..BBBBBBBBBBBBBBB.',
+        '...BBBBBBBBBBBBB..',
+        '...BBBBBBBBBBBBB..',
+        '....DDDDDDDDDDD...',
+    ],
+];
+
 const FRAMES: Record<CatPose, string[]> = {
     idle: WALK_FRAMES[0],
     walk0: WALK_FRAMES[0],
@@ -266,6 +328,9 @@ const FRAMES: Record<CatPose, string[]> = {
     run4: RUN_FRAMES[4],
     run5: RUN_FRAMES[5],
     sit: SIT_FRAME,
+    loaf: LOAF_FRAME,
+    sleep0: SLEEP_FRAMES[0],
+    sleep1: SLEEP_FRAMES[1],
 };
 
 interface Props {
