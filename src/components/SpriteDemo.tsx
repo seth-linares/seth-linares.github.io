@@ -21,10 +21,7 @@ const SLEEP_CYCLE: CatPose[] = ['sleep0', 'sleep1'];
 function useFrameCycle(frames: CatPose[], intervalMs: number): CatPose {
     const [i, setI] = useState(0);
     useEffect(() => {
-        const id = window.setInterval(
-            () => setI((n) => (n + 1) % frames.length),
-            intervalMs,
-        );
+        const id = window.setInterval(() => setI((n) => (n + 1) % frames.length), intervalMs);
         return () => window.clearInterval(id);
     }, [frames.length, intervalMs]);
     return frames[i];
@@ -96,9 +93,9 @@ export default function SpriteDemo() {
         <div className="container mx-auto px-4 py-8 max-w-6xl">
             <h1 className="text-3xl font-bold mb-2">Sprite Demo</h1>
             <p className="opacity-70 mb-6">
-                Preview every <code>CatPose</code> with the palette of your choice. Newly
-                added poses are highlighted. Animation cycles auto-play; adjust their speed
-                with the sliders below.
+                Preview every <code>CatPose</code> with the palette of your choice. Newly added
+                poses are highlighted. Animation cycles auto-play; adjust their speed with the
+                sliders below.
             </p>
 
             <div className="card bg-base-200 p-4 mb-8">
@@ -108,9 +105,7 @@ export default function SpriteDemo() {
                         <select
                             value={paletteName}
                             onChange={(e) =>
-                                setPaletteName(
-                                    e.target.value as keyof typeof CAT_PALETTES,
-                                )
+                                setPaletteName(e.target.value as keyof typeof CAT_PALETTES)
                             }
                             className="select select-bordered select-sm"
                         >
@@ -198,12 +193,7 @@ export default function SpriteDemo() {
                 <h2 className="text-xl font-semibold mb-4">Static poses</h2>
                 <div className="flex flex-wrap gap-3">
                     {STATIC_POSES.map(({ pose, isNew }) => (
-                        <PoseCard
-                            key={pose}
-                            pose={pose}
-                            palette={palette}
-                            isNew={isNew}
-                        />
+                        <PoseCard key={pose} pose={pose} palette={palette} isNew={isNew} />
                     ))}
                 </div>
             </section>
@@ -230,13 +220,7 @@ export default function SpriteDemo() {
                 <h2 className="text-xl font-semibold mb-4">Sleep frames</h2>
                 <div className="flex flex-wrap gap-3">
                     {SLEEP_CYCLE.map((p) => (
-                        <PoseCard
-                            key={p}
-                            pose={p}
-                            palette={palette}
-                            size={128}
-                            isNew
-                        />
+                        <PoseCard key={p} pose={p} palette={palette} size={128} isNew />
                     ))}
                 </div>
             </section>
