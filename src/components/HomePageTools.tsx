@@ -10,7 +10,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { siteData } from '@/personal-site-data';
-import { HiOutlineMail, HiOutlineDownload, HiOutlineSparkles, HiOutlineCode } from 'react-icons/hi';
+import {
+    HiOutlineMail,
+    HiOutlineDownload,
+    HiOutlineLockClosed,
+    HiOutlineCode,
+} from 'react-icons/hi';
 import { FiGithub, FiLinkedin, FiArrowRight } from 'react-icons/fi';
 import AnimatedCats from './AnimatedCats';
 import TerminalHero from './TerminalHero';
@@ -269,7 +274,7 @@ function HomePageTools() {
                     </Link>
 
                     <Link
-                        to="/prompt-generator"
+                        to="/crypto-playground"
                         className="group block bg-base-200 rounded-xl p-6 border border-base-300 hover:border-primary hover:shadow-lg transition-all relative overflow-hidden"
                         data-cat-obstacle
                     >
@@ -278,18 +283,19 @@ function HomePageTools() {
                         </div>
                         <div className="flex items-start justify-between mb-3">
                             <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                                <HiOutlineSparkles className="w-6 h-6 text-primary" />
+                                <HiOutlineLockClosed className="w-6 h-6 text-primary" />
                             </div>
                             <FiArrowRight className="w-5 h-5 text-base-content/40 group-hover:text-primary group-hover:translate-x-1 transition-all" />
                         </div>
                         <h3 className="text-xl font-bold mb-1 group-hover:text-primary transition-colors">
-                            Prompt Builder
+                            Crypto Playground
                         </h3>
                         <p className="text-base-content/70 text-sm">
-                            Compose prompts from files + text. Optional Anthropic token counting.
+                            Argon2id key derivation + AES-256-GCM, live in the browser. The PawPass
+                            stack, hands-on.
                         </p>
                         <div className="flex flex-wrap gap-1.5 mt-3">
-                            {['React', 'TypeScript', 'Anthropic SDK'].map((t) => (
+                            {['Web Crypto', 'Argon2id', 'AES-GCM'].map((t) => (
                                 <span key={t} className="badge badge-xs badge-outline font-mono">
                                     {t}
                                 </span>

@@ -28,15 +28,15 @@ function useHomePage() {
         description: 'Practical tools built to solve real development challenges',
         tools: [
             {
-                id: 'prompt-builder',
-                icon: '/icons/prompt-builder.svg',
-                title: 'Prompt Builder',
-                subtitle: 'AI Prompt Engineering Tool',
+                id: 'crypto-playground',
+                icon: '/icons/security-safe-shield.svg',
+                title: 'Crypto Playground',
+                subtitle: 'Argon2id + AES-256-GCM, in the browser',
                 description:
-                    'Build prompts by combining files and text with optional token counting. Perfect for LLM prompt engineering and context management.',
-                technologies: ['React', 'TypeScript', 'Anthropic API'],
-                link: '/prompt-generator',
-                linkText: 'Try It Now',
+                    'Stretch a passphrase into a key with Argon2id, then encrypt and authenticate it with AES-256-GCM — the same stack behind PawPass, running fully client-side.',
+                technologies: ['Web Crypto', 'Argon2id', 'AES-GCM'],
+                link: '/crypto-playground',
+                linkText: 'Open Playground',
             },
             {
                 id: 'regex-playground',

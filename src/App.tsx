@@ -7,9 +7,8 @@ import Navbar from './components/Navbar';
 import HomePage from './components/HomePage';
 import HomePageResume from './components/HomePageResume';
 import HomePageTools from './components/HomePageTools';
-import FileContextProvider from './contexts/FileContextProvider';
 
-const PromptGenerator = lazy(() => import('./components/prompt_generator/PromptGenerator'));
+const CryptoPlayground = lazy(() => import('./components/crypto_playground/CryptoPlayground'));
 const RegexPlayground = lazy(() => import('./components/regex_playground/RegexPlayground'));
 const SpriteDemo = lazy(() => import('./components/SpriteDemo'));
 
@@ -61,12 +60,10 @@ const AnimatedRoutes = () => {
                 />
 
                 <Route
-                    path="/prompt-generator"
+                    path="/crypto-playground"
                     element={
                         <Layout>
-                            <FileContextProvider>
-                                <PromptGenerator />
-                            </FileContextProvider>
+                            <CryptoPlayground />
                         </Layout>
                     }
                 />
