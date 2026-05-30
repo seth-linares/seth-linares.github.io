@@ -29,15 +29,9 @@ export default defineConfig({
       output: {
         manualChunks: {
           react: ['react', 'react-dom', 'react-router-dom'],
-          markdown: [
-            'react-markdown',
-            'remark-gfm',
-            'remark-supersub',
-            'rehype-highlight'
-          ],
           motion: ['motion'],
           icons: ['react-icons'],
-          anthropic: ['@anthropic-ai/sdk']
+          crypto: ['hash-wasm']
         },
       },
     },

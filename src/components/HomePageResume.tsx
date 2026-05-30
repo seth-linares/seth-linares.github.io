@@ -300,15 +300,15 @@ function HomePageResume() {
                                     </p>
                                 </Link>
                                 <Link
-                                    to="/prompt-generator"
+                                    to="/crypto-playground"
                                     className="border border-base-300 rounded-lg p-4 hover:border-primary hover:bg-base-200 transition-colors group"
                                 >
                                     <h3 className="font-bold text-sm group-hover:text-primary">
-                                        Prompt Builder →
+                                        Crypto Playground →
                                     </h3>
                                     <p className="text-xs text-base-content/70 mt-1">
-                                        Compose prompts from files + text, with optional token
-                                        counting.
+                                        Argon2id key derivation + AES-256-GCM encryption, live in
+                                        the browser.
                                     </p>
                                 </Link>
                             </div>

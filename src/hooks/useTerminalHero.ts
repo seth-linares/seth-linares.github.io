@@ -60,8 +60,8 @@ const ROUTES: Record<string, string> = {
     resume: '/resume',
     regex: '/regex-playground',
     'regex-playground': '/regex-playground',
-    prompt: '/prompt-generator',
-    'prompt-generator': '/prompt-generator',
+    crypto: '/crypto-playground',
+    'crypto-playground': '/crypto-playground',
     legacy: '/legacy',
 };
 
@@ -379,7 +379,7 @@ export default function useTerminalHero(): UseTerminalHero {
                     },
                     {
                         kind: 'out',
-                        text: '  cd <route>                   home · resume · regex · prompt · legacy (alias: open)',
+                        text: '  cd <route>                   home · resume · regex · crypto · legacy (alias: open)',
                         cls: 'text-base-content/80',
                     },
                     {
