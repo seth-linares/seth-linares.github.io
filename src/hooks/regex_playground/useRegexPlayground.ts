@@ -42,39 +42,77 @@ function hasNonDefaultFlags(flags: RegexFlags): boolean {
     );
 }
 
+type InitialPlaygroundState = {
+    pattern: string;
+    flags: RegexFlags;
+    flavor: RegexFlavor;
+    testStrings: string[];
+};
+
+function computeInitialState(): InitialPlaygroundState {
+    const urlState = parseInitialState();
+    const hasUrlParams =
+        urlState.pattern ||
+        (urlState.testStrings && urlState.testStrings.length > 1) ||
+        (urlState.flags && hasNonDefaultFlags(urlState.flags));
+
+    if (hasUrlParams) {
+        return {
+            pattern: urlState.pattern ?? '',
+            flags: urlState.flags ?? defaultFlags,
+            flavor: 'javascript',
+            testStrings: urlState.testStrings ?? [''],
+        };
+    }
+
+    if (typeof window !== 'undefined') {
+        try {
+            const saved = localStorage.getItem('regex_playground_state');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                return {
+                    pattern: typeof parsed.pattern === 'string' ? parsed.pattern : '',
+                    flags: parsed.flags ?? defaultFlags,
+                    flavor:
+                        typeof parsed.flavor === 'string'
+                            ? (parsed.flavor as RegexFlavor)
+                            : 'javascript',
+                    testStrings: Array.isArray(parsed.testStrings) ? parsed.testStrings : [''],
+                };
+            }
+        } catch (error) {
+            console.warn('Failed to load regex playground state from localStorage:', error);
+        }
+    }
+
+    return {
+        pattern: '',
+        flags: defaultFlags,
+        flavor: 'javascript',
+        testStrings: [''],
+    };
+}
+
 export function useRegexPlayground() {
-    const [pattern, setPattern] = useState('');
-    const [flags, setFlags] = useState<RegexFlags>(defaultFlags);
-    const [flavor, setFlavor] = useState<RegexFlavor>('javascript');
-    const [testStrings, setTestStrings] = useState<string[]>(['']);
-    const [explanation, setExplanation] = useState<PatternExplanation | null>(null);
-    const [error, setError] = useState<string | null>(null);
+    const [initial] = useState(computeInitialState);
+    const [pattern, setPattern] = useState(initial.pattern);
+    const [flags, setFlags] = useState<RegexFlags>(initial.flags);
+    const [flavor, setFlavor] = useState<RegexFlavor>(initial.flavor);
+    const [testStrings, setTestStrings] = useState<string[]>(initial.testStrings);
     const [activePatternId, setActivePatternId] = useState<string | null>(null);
-    const [activeMatchIndex, setActiveMatchIndex] = useState<number>(-1);
-    const [isInitialized, setIsInitialized] = useState(false);
+    const [activeMatchIndexRaw, setActiveMatchIndex] = useState<number>(-1);
 
     const debouncedPattern = useDebouncedValue(pattern, 300);
     const debouncedFlags = useDebouncedValue(flags, 300);
     const debouncedTests = useDebouncedValue(testStrings, 300);
 
-    const { matches, error: matchError } = useRegexMatcher(
-        debouncedPattern,
-        debouncedFlags,
-        debouncedTests
-    );
+    const { matches, error } = useRegexMatcher(debouncedPattern, debouncedFlags, debouncedTests);
 
-    // tool.
     useEffect(() => {
         window.scrollTo(0, 0);
     }, []);
 
     useEffect(() => {
-        setError(matchError);
-    }, [matchError]);
-
-    useEffect(() => {
-        if (!isInitialized) return;
-
         const params = new URLSearchParams();
         if (debouncedPattern) params.set('pattern', debouncedPattern);
         const f = flagsToString(debouncedFlags);
@@ -82,43 +120,10 @@ export function useRegexPlayground() {
         debouncedTests.forEach((t) => params.append('test', t));
 
         updateHashParams(params);
-    }, [debouncedPattern, debouncedFlags, debouncedTests, isInitialized]);
-
-    useEffect(() => {
-        if (isInitialized) return;
-
-        const urlState = parseInitialState();
-        const hasUrlParams =
-            urlState.pattern ||
-            (urlState.testStrings && urlState.testStrings.length > 1) ||
-            (urlState.flags && hasNonDefaultFlags(urlState.flags));
-
-        if (hasUrlParams) {
-            if (urlState.pattern !== undefined) setPattern(urlState.pattern);
-            if (urlState.flags) setFlags(urlState.flags);
-            if (urlState.testStrings) setTestStrings(urlState.testStrings);
-        } else {
-            try {
-                const saved = localStorage.getItem('regex_playground_state');
-                if (saved) {
-                    const parsed = JSON.parse(saved);
-                    if (typeof parsed.pattern === 'string') setPattern(parsed.pattern);
-                    if (parsed.flags) setFlags(parsed.flags);
-                    if (typeof parsed.flavor === 'string') setFlavor(parsed.flavor);
-                    if (Array.isArray(parsed.testStrings)) setTestStrings(parsed.testStrings);
-                }
-            } catch (error) {
-                console.warn('Failed to load regex playground state from localStorage:', error);
-            }
-        }
-
-        setIsInitialized(true);
-    }, [isInitialized]);
+    }, [debouncedPattern, debouncedFlags, debouncedTests]);
 
     useEffect(() => {
         const handleHashChange = () => {
-            if (!isInitialized) return;
-
             const newState = parseInitialState();
             if (newState.pattern !== undefined) setPattern(newState.pattern);
             if (newState.flags) setFlags(newState.flags);
@@ -127,12 +132,9 @@ export function useRegexPlayground() {
 
         window.addEventListener('hashchange', handleHashChange);
         return () => window.removeEventListener('hashchange', handleHashChange);
-    }, [isInitialized]);
+    }, []);
 
-    // Local storage persistence
     useEffect(() => {
-        if (!isInitialized) return;
-
         try {
             localStorage.setItem(
                 'regex_playground_state',
@@ -141,7 +143,7 @@ export function useRegexPlayground() {
         } catch (error) {
             console.warn('Failed to save regex playground state to localStorage:', error);
         }
-    }, [pattern, flags, flavor, testStrings, isInitialized]);
+    }, [pattern, flags, flavor, testStrings]);
 
     const toggleFlag = useCallback((k: keyof RegexFlags) => {
         setFlags((prev) => ({ ...prev, [k]: !prev[k] }));
@@ -163,12 +165,9 @@ export function useRegexPlayground() {
         setTestStrings((prev) => prev.filter((_, i) => i !== index));
     }, []);
 
-    useEffect(() => {
-        if (!debouncedPattern) {
-            setExplanation(null);
-            return;
-        }
-        setExplanation({
+    const explanation = useMemo<PatternExplanation | null>(() => {
+        if (!debouncedPattern) return null;
+        return {
             ast: [
                 {
                     type: 'pattern',
@@ -178,7 +177,7 @@ export function useRegexPlayground() {
                 },
             ],
             summary: 'Basic pattern preview. Detailed explanation coming in Phase 2.',
-        });
+        };
     }, [debouncedPattern]);
 
     const state: RegexPlaygroundState = useMemo(() => {
@@ -194,7 +193,6 @@ export function useRegexPlayground() {
         };
     }, [activePatternId, error, explanation, flavor, flags, matches, pattern, testStrings]);
 
-    // Generate shareable URL
     const shareUrl = useMemo(() => {
         if (typeof window === 'undefined') return '';
 
@@ -247,29 +245,27 @@ export function useRegexPlayground() {
         );
     }, [state.matches]);
 
-    useEffect(() => {
-        if (!allMatches.length) {
-            setActiveMatchIndex(-1);
-        } else if (activeMatchIndex >= allMatches.length) {
-            setActiveMatchIndex(0);
-        }
-    }, [allMatches.length, activeMatchIndex]);
+    const activeMatchIndex = !allMatches.length
+        ? -1
+        : activeMatchIndexRaw >= allMatches.length
+          ? 0
+          : activeMatchIndexRaw;
 
     const goPrev = useCallback(() => {
         if (!allMatches.length) return;
-        setActiveMatchIndex((prev) => {
-            if (prev === -1) return allMatches.length - 1;
-            return (prev - 1 + allMatches.length) % allMatches.length;
-        });
-    }, [allMatches.length]);
+        setActiveMatchIndex(
+            activeMatchIndex === -1
+                ? allMatches.length - 1
+                : (activeMatchIndex - 1 + allMatches.length) % allMatches.length
+        );
+    }, [allMatches.length, activeMatchIndex]);
 
     const goNext = useCallback(() => {
         if (!allMatches.length) return;
-        setActiveMatchIndex((prev) => {
-            if (prev === -1) return 0;
-            return (prev + 1) % allMatches.length;
-        });
-    }, [allMatches.length]);
+        setActiveMatchIndex(
+            activeMatchIndex === -1 ? 0 : (activeMatchIndex + 1) % allMatches.length
+        );
+    }, [allMatches.length, activeMatchIndex]);
 
     useEffect(() => {
         if (activeMatchIndex < 0) return;
@@ -282,8 +278,6 @@ export function useRegexPlayground() {
             window.setTimeout(() => el.removeAttribute('data-focused'), 600);
         }
     }, [activeMatchIndex]);
-
-    // Layout notes:
 
     return {
         state,

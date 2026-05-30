@@ -508,7 +508,7 @@ function parseQuantifier(pattern: string, start: number): QuantifierResult | nul
         pos++;
     }
 
-    let description = 'Quantifier';
+    let description: string;
 
     if (!content) {
         description = 'Empty quantifier (invalid)';
