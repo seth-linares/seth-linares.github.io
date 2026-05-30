@@ -23,9 +23,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
       - name: Install pnpm
+        # Version is read from the "packageManager" field in package.json.
+        # Do not also pass a `version:` here — action-setup errors on a
+        # mismatch ("Multiple versions of pnpm specified").
         uses: pnpm/action-setup@v6
-        with:
-          version: 10
       - name: Set up Node
         uses: actions/setup-node@v6
         with:
