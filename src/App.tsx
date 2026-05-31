@@ -2,14 +2,13 @@
 
 import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { Suspense, lazy } from 'react';
-import { AnimatePresence } from 'motion/react';
+import { LazyMotion, domAnimation, MotionConfig, m } from 'motion/react';
 import Navbar from './components/Navbar';
-import HomePage from './components/HomePage';
 import HomePageResume from './components/HomePageResume';
 import HomePageTools from './components/HomePageTools';
+import CryptoPlayground from './components/crypto_playground/CryptoPlayground';
+import RegexPlayground from './components/regex_playground/RegexPlayground';
 
-const CryptoPlayground = lazy(() => import('./components/crypto_playground/CryptoPlayground'));
-const RegexPlayground = lazy(() => import('./components/regex_playground/RegexPlayground'));
 const SpriteDemo = lazy(() => import('./components/SpriteDemo'));
 
 const LoadingScreen = () => (
@@ -18,104 +17,101 @@ const LoadingScreen = () => (
     </div>
 );
 
-const Layout = ({ children }: { children: React.ReactNode }) => (
-    <>
-        <Navbar />
-        <main>{children}</main>
-    </>
+// Per-page enter transition. Opacity-only on purpose: a `transform` here would create a
+// containing block and break the cats' `position: fixed` tray/ghost (reducedMotion strips
+// transforms anyway). Enter-only — no exit, no AnimatePresence — so navigation is instant:
+// the new page mounts and is interactive immediately and just eases its opacity in. The keyed
+// <Routes> remounts it per navigation so the fade replays; Suspense sits inside so a lazy
+// chunk's fallback never blocks the mount.
+const PageTransition = ({ children }: { children: React.ReactNode }) => (
+    <m.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.12, ease: 'easeOut' }}
+    >
+        <Suspense fallback={<LoadingScreen />}>{children}</Suspense>
+    </m.div>
 );
 
 const AnimatedRoutes = () => {
     const location = useLocation();
 
     return (
-        <AnimatePresence mode="wait">
-            <Routes location={location} key={location.pathname}>
-                <Route
-                    path="/"
-                    element={
-                        <Layout>
-                            <HomePageTools />
-                        </Layout>
-                    }
-                />
-
-                <Route
-                    path="/resume"
-                    element={
-                        <Layout>
-                            <HomePageResume />
-                        </Layout>
-                    }
-                />
-
-                {/* Deprecated original homepage — kept for reference, not linked from nav. */}
-                <Route
-                    path="/legacy"
-                    element={
-                        <Layout>
-                            <HomePage />
-                        </Layout>
-                    }
-                />
-
-                <Route
-                    path="/crypto-playground"
-                    element={
-                        <Layout>
-                            <CryptoPlayground />
-                        </Layout>
-                    }
-                />
-
-                <Route
-                    path="/regex-playground"
-                    element={
-                        <Layout>
-                            <RegexPlayground />
-                        </Layout>
-                    }
-                />
-
-                {/* Unlinked sprite preview route — used to visually review new cat poses. */}
-                <Route
-                    path="/sprite-demo"
-                    element={
-                        <Layout>
-                            <SpriteDemo />
-                        </Layout>
-                    }
-                />
-
-                <Route
-                    path="*"
-                    element={
-                        <Layout>
-                            <div className="h-screen flex items-center justify-center">
-                                <div className="text-center">
-                                    <h1 className="text-4xl font-bold mb-4">
-                                        404 - Page Not Found
-                                    </h1>
-                                    <p className="text-base-content/60">
-                                        The page you're looking for doesn't exist.
-                                    </p>
-                                </div>
+        <Routes location={location} key={location.pathname}>
+            <Route
+                path="/"
+                element={
+                    <PageTransition>
+                        <HomePageTools />
+                    </PageTransition>
+                }
+            />
+            <Route
+                path="/resume"
+                element={
+                    <PageTransition>
+                        <HomePageResume />
+                    </PageTransition>
+                }
+            />
+            <Route
+                path="/crypto-playground"
+                element={
+                    <PageTransition>
+                        <CryptoPlayground />
+                    </PageTransition>
+                }
+            />
+            <Route
+                path="/regex-playground"
+                element={
+                    <PageTransition>
+                        <RegexPlayground />
+                    </PageTransition>
+                }
+            />
+            {/* Unlinked sprite preview route — used to visually review new cat poses. */}
+            <Route
+                path="/sprite-demo"
+                element={
+                    <PageTransition>
+                        <SpriteDemo />
+                    </PageTransition>
+                }
+            />
+            <Route
+                path="*"
+                element={
+                    <PageTransition>
+                        <div className="h-screen flex items-center justify-center">
+                            <div className="text-center">
+                                <h1 className="text-4xl font-bold mb-4">404 - Page Not Found</h1>
+                                <p className="text-base-content/60">
+                                    The page you're looking for doesn't exist.
+                                </p>
                             </div>
-                        </Layout>
-                    }
-                />
-            </Routes>
-        </AnimatePresence>
+                        </div>
+                    </PageTransition>
+                }
+            />
+        </Routes>
     );
 };
 
 function App() {
     return (
-        <HashRouter>
-            <Suspense fallback={<LoadingScreen />}>
-                <AnimatedRoutes />
-            </Suspense>
-        </HashRouter>
+        <LazyMotion features={domAnimation} strict>
+            <MotionConfig reducedMotion="user">
+                <HashRouter>
+                    {/* Navbar is persistent — outside the keyed Routes so it doesn't remount
+                        or fade on every navigation; only the page content transitions. */}
+                    <Navbar />
+                    <main>
+                        <AnimatedRoutes />
+                    </main>
+                </HashRouter>
+            </MotionConfig>
+        </LazyMotion>
     );
 }
 

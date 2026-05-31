@@ -1,6 +1,6 @@
 // src/components/regex_playground/WarningToast.tsx
 import { createPortal } from 'react-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { m, AnimatePresence } from 'motion/react';
 
 interface WarningToastProps {
     warnings: string[];
@@ -14,7 +14,7 @@ export default function WarningToast({ warnings, visible, onDismiss }: WarningTo
     return createPortal(
         <AnimatePresence>
             {visible && warnings.length > 0 && (
-                <motion.div
+                <m.div
                     initial={{ opacity: 0, x: 100 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 100 }}
@@ -66,7 +66,7 @@ export default function WarningToast({ warnings, visible, onDismiss }: WarningTo
                             </svg>
                         </button>
                     </div>
-                </motion.div>
+                </m.div>
             )}
         </AnimatePresence>,
         document.body

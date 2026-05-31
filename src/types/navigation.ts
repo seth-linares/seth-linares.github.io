@@ -71,7 +71,7 @@ export interface NavbarState {
     navigateToSection: (sectionId: string) => void;
     // Active section tracking
     activeSection: string | null;
-    scrollProgress: number;
+    scrollProgress: MotionValue<number>;
     // Hover states
     hoveredItem: string | null;
     setHoveredItem: (item: string | null) => void;

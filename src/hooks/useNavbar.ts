@@ -2,14 +2,20 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useScroll, useSpring, useTransform, useVelocity, useMotionValue } from 'motion/react';
+import {
+    useScroll,
+    useSpring,
+    useTransform,
+    useVelocity,
+    useMotionValue,
+    useMotionValueEvent,
+} from 'motion/react';
 import { NavbarState } from '@/types/navigation';
 
 // Configuration constants
 const NAVBAR_CONFIG = {
     SCROLL_THRESHOLD: 100,
     VELOCITY_THRESHOLD: 300,
-    DEBOUNCE_DELAY: 50,
     NAVBAR_OFFSET: 120,
     SECTIONS: ['about', 'tools', 'projects', 'contact'] as const,
 };
@@ -171,30 +177,13 @@ export function useNavbar(): NavbarState {
         }
     }, [isHomePage, location.state, navigateToSection]);
 
-    // Debounced scroll handler
-    const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-    useEffect(() => {
-        const handleScroll = () => {
-            if (scrollTimeoutRef.current) {
-                clearTimeout(scrollTimeoutRef.current);
-            }
-
-            scrollTimeoutRef.current = setTimeout(() => {
-                updateNavbarVisibility();
-                updateActiveSection();
-            }, NAVBAR_CONFIG.DEBOUNCE_DELAY);
-        };
-
-        window.addEventListener('scroll', handleScroll, { passive: true });
-
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-            if (scrollTimeoutRef.current) {
-                clearTimeout(scrollTimeoutRef.current);
-            }
-        };
-    }, [updateNavbarVisibility, updateActiveSection]);
+    // Reactive scroll handling — driven by Motion's scrollY (no manual listener or debounce
+    // timer). Velocity-gated show/hide and active-section detection run off the same
+    // frame-aligned event; setActiveSection bails out when the section is unchanged.
+    useMotionValueEvent(scrollY, 'change', () => {
+        updateNavbarVisibility();
+        updateActiveSection();
+    });
 
     if (prevPathname !== location.pathname) {
         setPrevPathname(location.pathname);
@@ -218,6 +207,6 @@ export function useNavbar(): NavbarState {
         setHoveredItem,
         setIsLogoHovered,
         setPullTabHintShown,
-        scrollProgress: smoothScrollProgress.get(),
+        scrollProgress: smoothScrollProgress,
     };
 }

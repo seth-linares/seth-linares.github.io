@@ -75,32 +75,3 @@ export interface ContactSection {
     linkedin: string;
     github: string;
 }
-
-// Project component props
-export interface CompactProjectCardProps {
-    project: ProjectSection;
-    index: number;
-    onOpenModal: (project: ProjectSection) => void;
-    onProjectLink: (url: string) => void;
-    getCategoryIcon: (category: string) => string;
-}
-
-export interface FeaturedProjectCardProps {
-    project: ProjectSection;
-    index: number;
-    onOpenModal: (project: ProjectSection) => void;
-    onProjectLink: (url: string) => void;
-    getCategoryIcon: (category: string) => string;
-}
-
-export interface ProjectModalProps {
-    project: ProjectSection | null;
-    isOpen: boolean;
-    onClose: () => void;
-}
-
-export interface UseProjectModalProps {
-    project: ProjectSection | null;
-    isOpen: boolean;
-    onClose: () => void;
-}
