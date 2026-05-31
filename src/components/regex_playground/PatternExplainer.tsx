@@ -1,6 +1,6 @@
 // src/components/regex_playground/PatternExplainer.tsx
 import type { PatternToken } from '@/types/regex';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { useState, useRef, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -126,7 +126,7 @@ export default function PatternExplainer({ pattern, tokens }: PatternExplainerPr
                 </div>
 
                 {showLegend && (
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
@@ -141,7 +141,7 @@ export default function PatternExplainer({ pattern, tokens }: PatternExplainerPr
                                 <code className="opacity-70">{item.example}</code>
                             </div>
                         ))}
-                    </motion.div>
+                    </m.div>
                 )}
 
                 <div className="text-xs opacity-70 -mt-1 mb-2">
@@ -187,7 +187,7 @@ export default function PatternExplainer({ pattern, tokens }: PatternExplainerPr
                     </button>
 
                     {showTokenList && (
-                        <motion.div
+                        <m.div
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             className="mt-2 space-y-2"
@@ -198,7 +198,7 @@ export default function PatternExplainer({ pattern, tokens }: PatternExplainerPr
                                 const tip = getDescriptionTip(token);
 
                                 return (
-                                    <motion.div
+                                    <m.div
                                         key={`list-${token.type}-${token.start}-${idx}`}
                                         initial={{ opacity: 0, x: -20 }}
                                         animate={{ opacity: 1, x: 0 }}
@@ -224,10 +224,10 @@ export default function PatternExplainer({ pattern, tokens }: PatternExplainerPr
                                                 Tip: {tip}
                                             </p>
                                         )}
-                                    </motion.div>
+                                    </m.div>
                                 );
                             })}
-                        </motion.div>
+                        </m.div>
                     )}
                 </div>
             </div>

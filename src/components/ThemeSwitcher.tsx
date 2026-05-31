@@ -2,7 +2,7 @@
 
 import React, { useCallback } from 'react';
 import { IoColorPaletteOutline } from 'react-icons/io5';
-import { motion, AnimatePresence } from 'motion/react';
+import { m, AnimatePresence } from 'motion/react';
 import useThemeSwitcher from '@/hooks/useThemeSwitcher';
 
 const THEMES = [
@@ -66,7 +66,7 @@ const ThemeSwitcher: React.FC = () => {
 
             <AnimatePresence>
                 {isOpen && (
-                    <motion.div
+                    <m.div
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
@@ -84,7 +84,7 @@ const ThemeSwitcher: React.FC = () => {
                                 </button>
                             ))}
                         </div>
-                    </motion.div>
+                    </m.div>
                 )}
             </AnimatePresence>
         </div>

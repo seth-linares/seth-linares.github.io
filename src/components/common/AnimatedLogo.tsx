@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { AnimatedLogoProps } from '@/types/components';
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 
 const AnimatedLogo: React.FC<AnimatedLogoProps> = ({
     isHovered,
@@ -11,7 +11,7 @@ const AnimatedLogo: React.FC<AnimatedLogoProps> = ({
     className = '',
 }) => {
     return (
-        <motion.div
+        <m.div
             className={`flex items-center gap-3 group ${className}`}
             onHoverStart={onHoverStart}
             onHoverEnd={onHoverEnd}
@@ -54,7 +54,7 @@ const AnimatedLogo: React.FC<AnimatedLogoProps> = ({
             >
                 Seth Linares
             </span>
-        </motion.div>
+        </m.div>
     );
 };
 

@@ -1,6 +1,6 @@
 // src/components/crypto_playground/EncryptionResult.tsx
 
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { FiClock, FiShield } from 'react-icons/fi';
 import { EncryptionView, TamperView } from '@/types/crypto';
 import CopyField from './CopyField';
@@ -17,7 +17,7 @@ function EncryptionResult({ view, tamper, onToggleByte, onResetTamper }: Encrypt
     const memoryMiB = Math.round(view.memoryKiB / 1024);
 
     return (
-        <motion.div
+        <m.div
             key="encryption-result"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -55,7 +55,7 @@ function EncryptionResult({ view, tamper, onToggleByte, onResetTamper }: Encrypt
                     onResetTamper={onResetTamper}
                 />
             </div>
-        </motion.div>
+        </m.div>
     );
 }
 

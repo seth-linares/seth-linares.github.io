@@ -4,7 +4,6 @@
 // memory-hard KDF (hash-wasm) feeding AES-256-GCM authenticated encryption (Web Crypto).
 // Everything here is pure and runs entirely client-side — no key or plaintext leaves the page.
 
-import { argon2id } from 'hash-wasm';
 import { Argon2Params, Bytes } from '@/types/crypto';
 import {
     KEY_LENGTH_BYTES,
@@ -27,6 +26,9 @@ export async function deriveKey(
     salt: Bytes,
     params: Argon2Params
 ): Promise<Bytes> {
+    // Dynamically imported so the Argon2 WASM (its own `crypto` chunk) only downloads on the
+    // first derive — i.e. on first encrypt/decrypt — not as part of the initial page load.
+    const { argon2id } = await import('hash-wasm');
     const hex = await argon2id({
         password,
         salt,

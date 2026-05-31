@@ -1,6 +1,6 @@
 // src/components/crypto_playground/CryptoPlayground.tsx
 
-import { motion, AnimatePresence } from 'motion/react';
+import { m, AnimatePresence } from 'motion/react';
 import { FiLock, FiInfo, FiRefreshCw } from 'react-icons/fi';
 import { siteData } from '@/personal-site-data';
 import useCryptoPlayground from '@/hooks/crypto_playground/useCryptoPlayground';
@@ -64,7 +64,7 @@ function CryptoPlayground() {
                     </span>
                 </div>
 
-                <motion.div
+                <m.div
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="card bg-base-200 shadow-xl"
@@ -144,7 +144,7 @@ function CryptoPlayground() {
                             )}
                         </div>
                     </div>
-                </motion.div>
+                </m.div>
 
                 <AnimatePresence>
                     {view && tamper && (

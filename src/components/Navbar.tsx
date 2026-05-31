@@ -1,14 +1,21 @@
 // src/components/Navbar.tsx
 
 import { useNavbar } from '@/hooks/useNavbar';
-import { motion, useTransform, AnimatePresence, useMotionValueEvent } from 'motion/react';
+import { m, useTransform, AnimatePresence, useMotionValueEvent } from 'motion/react';
 import React, { useState, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { HiOutlineMenuAlt3 } from 'react-icons/hi';
 import { IoChevronUpOutline } from 'react-icons/io5';
 import ThemeSwitcher from './ThemeSwitcher';
 import AnimatedLogo from './common/AnimatedLogo';
-import { ANIMATION_VARIANTS, ANIMATION_TIMING } from '@/utils/animations';
+import {
+    buttonHover,
+    buttonTap,
+    fadeUp,
+    mobileMenuItem,
+    scaleIn,
+    STAGGER,
+} from '@/utils/animations';
 import { NavButtonProps } from '@/types/navigation';
 
 const NavButton = React.memo(function NavButton({
@@ -20,15 +27,15 @@ const NavButton = React.memo(function NavButton({
     onHoverEnd,
 }: NavButtonProps) {
     return (
-        <motion.button
+        <m.button
             className="relative px-4 py-2 text-sm font-medium transition-colors duration-200"
             onClick={onClick}
             onHoverStart={onHoverStart}
             onHoverEnd={onHoverEnd}
-            whileHover={ANIMATION_VARIANTS.buttonHover}
-            whileTap={ANIMATION_VARIANTS.buttonTap}
+            whileHover={buttonHover}
+            whileTap={buttonTap}
         >
-            <motion.div
+            <m.div
                 className="absolute inset-0 rounded-lg"
                 initial={false}
                 animate={{
@@ -55,7 +62,7 @@ const NavButton = React.memo(function NavButton({
 
             <AnimatePresence>
                 {isActive && (
-                    <motion.div
+                    <m.div
                         className="absolute -bottom-1 left-1/2 w-1 h-1 bg-linear-to-r from-violet-500 to-blue-500 rounded-full"
                         initial={{ opacity: 0, scale: 0, x: '-50%' }}
                         animate={{ opacity: 1, scale: 1, x: '-50%' }}
@@ -64,7 +71,7 @@ const NavButton = React.memo(function NavButton({
                     />
                 )}
             </AnimatePresence>
-        </motion.button>
+        </m.button>
     );
 });
 
@@ -95,6 +102,10 @@ function Navbar() {
         setIsPullTabVisible(latest < 0.5);
     });
 
+    // Scroll-progress bar fill (scaleX) + fade — bound to the live MotionValue so it tracks
+    // scroll every frame instead of lagging behind React re-renders.
+    const progressOpacity = useTransform(scrollProgress, (p) => (p > 0.05 && p < 0.95 ? 0.7 : 0));
+
     const navigationItems = useMemo(
         () => [
             { id: 'about', label: 'About' },
@@ -121,7 +132,7 @@ function Navbar() {
 
     return (
         <>
-            <motion.header
+            <m.header
                 className="fixed top-0 left-0 right-0 z-50 bg-base-100/80 backdrop-blur-md shadow-sm"
                 style={{
                     height: navbarHeight,
@@ -130,14 +141,9 @@ function Navbar() {
                 }}
             >
                 {isHomePage && (
-                    <motion.div
-                        className="absolute bottom-0 left-0 h-0.5 bg-linear-to-r from-violet-500 to-blue-500"
-                        initial={{ width: 0 }}
-                        animate={{
-                            width: `${Math.min(scrollProgress * 100, 100)}%`,
-                            opacity: scrollProgress > 0.05 && scrollProgress < 0.95 ? 0.7 : 0,
-                        }}
-                        transition={{ duration: 0.1 }}
+                    <m.div
+                        className="absolute bottom-0 left-0 h-0.5 w-full origin-left bg-linear-to-r from-violet-500 to-blue-500"
+                        style={{ scaleX: scrollProgress, opacity: progressOpacity }}
                     />
                 )}
 
@@ -154,17 +160,14 @@ function Navbar() {
 
                     <div className="hidden md:flex flex-none gap-1 items-center">
                         {!isHomePage && (
-                            <motion.div
-                                whileHover={ANIMATION_VARIANTS.buttonHover}
-                                whileTap={ANIMATION_VARIANTS.buttonTap}
-                            >
+                            <m.div whileHover={buttonHover} whileTap={buttonTap}>
                                 <Link
                                     to="/"
                                     className="px-4 py-2 text-sm font-medium rounded-lg hover:bg-base-200 transition-colors"
                                 >
                                     Home
                                 </Link>
-                            </motion.div>
+                            </m.div>
                         )}
 
                         {navigationItems.map((item) => (
@@ -186,28 +189,28 @@ function Navbar() {
 
                     <div className="flex-none md:hidden gap-2">
                         <ThemeSwitcher />
-                        <motion.button
+                        <m.button
                             className="btn btn-square btn-ghost"
                             onClick={toggleMobileMenu}
-                            whileHover={ANIMATION_VARIANTS.buttonHover}
-                            whileTap={ANIMATION_VARIANTS.buttonTap}
+                            whileHover={buttonHover}
+                            whileTap={buttonTap}
                             aria-expanded={isMobileMenuOpen}
                             aria-label="Toggle navigation menu"
                         >
                             <HiOutlineMenuAlt3 className="w-5 h-5" />
-                        </motion.button>
+                        </m.button>
                     </div>
 
                     <AnimatePresence mode="wait">
                         {isMobileMenuOpen && (
-                            <motion.div
+                            <m.div
                                 className="md:hidden absolute top-full left-0 right-0 bg-base-100/95 backdrop-blur-md shadow-xl border-t border-base-300 overflow-hidden"
                                 initial={{ maxHeight: 0, opacity: 0 }}
                                 animate={{ maxHeight: 500, opacity: 1 }}
                                 exit={{ maxHeight: 0, opacity: 0 }}
                                 transition={{ duration: 0.3, ease: 'easeOut' }}
                             >
-                                <motion.div
+                                <m.div
                                     className="flex flex-col p-4 space-y-2"
                                     initial="closed"
                                     animate="open"
@@ -215,20 +218,20 @@ function Navbar() {
                                     variants={{
                                         open: {
                                             transition: {
-                                                staggerChildren: ANIMATION_TIMING.STAGGER_DELAY,
+                                                staggerChildren: STAGGER.normal,
                                                 delayChildren: 0.1,
                                             },
                                         },
                                         closed: {
                                             transition: {
-                                                staggerChildren: ANIMATION_TIMING.MICRO_DELAY,
+                                                staggerChildren: STAGGER.micro,
                                                 staggerDirection: -1,
                                             },
                                         },
                                     }}
                                 >
                                     {!isHomePage && (
-                                        <motion.div variants={ANIMATION_VARIANTS.fadeUpSubtle}>
+                                        <m.div variants={mobileMenuItem}>
                                             <Link
                                                 to="/"
                                                 className="block px-4 py-3 text-lg font-medium rounded-lg hover:bg-base-200 transition-colors"
@@ -236,15 +239,12 @@ function Navbar() {
                                             >
                                                 Home
                                             </Link>
-                                        </motion.div>
+                                        </m.div>
                                     )}
 
                                     {navigationItems.map((item) => (
-                                        <motion.div
-                                            key={item.id}
-                                            variants={ANIMATION_VARIANTS.fadeUpSubtle}
-                                        >
-                                            <motion.button
+                                        <m.div key={item.id} variants={mobileMenuItem}>
+                                            <m.button
                                                 className={`block w-full text-left px-4 py-3 text-lg font-medium rounded-lg transition-colors relative ${
                                                     activeSection === item.id
                                                         ? 'bg-primary/10 text-primary'
@@ -256,48 +256,48 @@ function Navbar() {
                                             >
                                                 {item.label}
                                                 {activeSection === item.id && (
-                                                    <motion.div
+                                                    <m.div
                                                         className="absolute left-0 top-1/2 w-1 h-8 bg-linear-to-b from-violet-500 to-blue-500 rounded-r-full"
                                                         initial={{ opacity: 0, scale: 0.5 }}
                                                         animate={{ opacity: 1, scale: 1 }}
                                                         style={{ y: '-50%' }}
                                                     />
                                                 )}
-                                            </motion.button>
-                                        </motion.div>
+                                            </m.button>
+                                        </m.div>
                                     ))}
-                                </motion.div>
-                            </motion.div>
+                                </m.div>
+                            </m.div>
                         )}
                     </AnimatePresence>
                 </nav>
-            </motion.header>
+            </m.header>
 
             <AnimatePresence>
                 {isPullTabVisible && (
-                    <motion.div
+                    <m.div
                         className="fixed top-0 left-1/2 -translate-x-1/2 z-50"
-                        variants={ANIMATION_VARIANTS.scaleIn}
+                        variants={scaleIn}
                         initial="initial"
                         animate="animate"
                         exit="initial"
                     >
-                        <motion.button
+                        <m.button
                             className="bg-base-100/95 backdrop-blur-md shadow-xl rounded-b-xl px-6 py-3 border border-base-300 group"
                             onClick={showNavbar}
                             onHoverStart={() => !pullTabHintShown && setPullTabHintShown(true)}
                             whileHover={{ scale: 1.05, y: 2 }}
-                            whileTap={ANIMATION_VARIANTS.buttonTap}
+                            whileTap={buttonTap}
                             aria-label="Show navigation bar"
                         >
-                            <motion.div
+                            <m.div
                                 className="absolute inset-0 bg-linear-to-r from-violet-500/10 to-blue-500/10 rounded-b-xl"
                                 initial={{ opacity: 0 }}
                                 whileHover={{ opacity: 1 }}
                                 transition={{ duration: 0.3 }}
                             />
 
-                            <motion.div
+                            <m.div
                                 animate={{ y: [0, -3, 0] }}
                                 transition={{
                                     duration: 2,
@@ -307,13 +307,13 @@ function Navbar() {
                                 }}
                             >
                                 <IoChevronUpOutline className="w-6 h-6 text-base-content/60 group-hover:text-primary transition-colors relative z-10" />
-                            </motion.div>
+                            </m.div>
 
                             <AnimatePresence>
                                 {!pullTabHintShown && (
-                                    <motion.div
+                                    <m.div
                                         className="absolute -top-12 left-1/2 -translate-x-1/2 bg-base-content text-base-100 text-xs px-3 py-2 rounded-lg whitespace-nowrap pointer-events-none"
-                                        variants={ANIMATION_VARIANTS.fadeUp}
+                                        variants={fadeUp}
                                         initial="initial"
                                         animate="animate"
                                         exit="initial"
@@ -321,11 +321,11 @@ function Navbar() {
                                     >
                                         Pull to show navigation
                                         <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-base-content" />
-                                    </motion.div>
+                                    </m.div>
                                 )}
                             </AnimatePresence>
-                        </motion.button>
-                    </motion.div>
+                        </m.button>
+                    </m.div>
                 )}
             </AnimatePresence>
         </>

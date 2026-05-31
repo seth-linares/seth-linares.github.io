@@ -2,7 +2,7 @@
 
 import { MatchVisualizerProps } from '@/types/regex';
 import React, { useRef, useEffect, useMemo } from 'react';
-import { motion } from 'motion/react';
+import { m as Motion } from 'motion/react';
 
 function MatchVisualizer({
     testStrings,
@@ -63,7 +63,7 @@ function MatchVisualizer({
                                 );
                             }
                             parts.push(
-                                <motion.span
+                                <Motion.span
                                     key={`m-${res.testStringIndex}-${idx}-${m.start}`}
                                     initial={{ opacity: 0, scale: 0.8 }}
                                     animate={{ opacity: 1, scale: 1 }}
@@ -77,7 +77,7 @@ function MatchVisualizer({
                                     }
                                 >
                                     {src.slice(m.start, m.end)}
-                                </motion.span>
+                                </Motion.span>
                             );
                             cursor = m.end;
                         });

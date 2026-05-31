@@ -1,7 +1,7 @@
 // src/components/common/CopyButton.tsx
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { ANIMATION_VARIANTS } from '@/utils/animations';
+import { m, AnimatePresence } from 'motion/react';
+import { buttonHover, buttonTap } from '@/utils/animations';
 
 interface CopyButtonProps {
     text: string;
@@ -25,15 +25,15 @@ export function CopyButton({ text, className = 'btn btn-sm', children, onCopy }:
     };
 
     return (
-        <motion.button
+        <m.button
             className={className}
             onClick={handleCopy}
-            whileHover={ANIMATION_VARIANTS.buttonHover}
-            whileTap={ANIMATION_VARIANTS.buttonTap}
+            whileHover={buttonHover}
+            whileTap={buttonTap}
         >
             <AnimatePresence mode="wait">
                 {copied ? (
-                    <motion.span
+                    <m.span
                         key="copied"
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -54,9 +54,9 @@ export function CopyButton({ text, className = 'btn btn-sm', children, onCopy }:
                             />
                         </svg>
                         Copied!
-                    </motion.span>
+                    </m.span>
                 ) : (
-                    <motion.span
+                    <m.span
                         key="copy"
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -77,10 +77,10 @@ export function CopyButton({ text, className = 'btn btn-sm', children, onCopy }:
                             />
                         </svg>
                         {children || 'Copy'}
-                    </motion.span>
+                    </m.span>
                 )}
             </AnimatePresence>
-        </motion.button>
+        </m.button>
     );
 }
 

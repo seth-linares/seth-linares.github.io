@@ -1,6 +1,6 @@
 // src/components/crypto_playground/Argon2Controls.tsx
 
-import { motion } from 'motion/react';
+import { m } from 'motion/react';
 import { FiSliders, FiClock } from 'react-icons/fi';
 import { Argon2Params } from '@/types/crypto';
 import { MEMORY_MIB, ITERATIONS } from '@/utils/crypto/constants';
@@ -112,7 +112,7 @@ function Argon2Controls({
                         — encrypt to measure
                     </span>
                 ) : (
-                    <motion.span
+                    <m.span
                         key={deriveSeq}
                         initial={{ scale: 0.6, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
@@ -121,7 +121,7 @@ function Argon2Controls({
                     >
                         <span className="text-3xl">{Math.round(derivationMs)}</span>
                         <span className="text-sm font-medium text-base-content/60"> ms</span>
-                    </motion.span>
+                    </m.span>
                 )}
             </div>
 

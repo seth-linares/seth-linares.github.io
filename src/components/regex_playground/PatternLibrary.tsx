@@ -1,7 +1,7 @@
 // src/components/regex_playground/PatternLibrary.tsx
 import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { ANIMATION_VARIANTS } from '@/utils/animations';
+import { m, AnimatePresence } from 'motion/react';
+import { buttonHover, buttonTap } from '@/utils/animations';
 import type { PatternLibraryProps, LibraryPattern } from '@/types/regex';
 
 const PATTERN_LIBRARY: LibraryPattern[] = [
@@ -363,13 +363,13 @@ function PatternLibrary({ onUsePattern, activePatternId }: PatternLibraryProps) 
                     ))}
                 </div>
 
-                <motion.div
+                <m.div
                     className="space-y-2 max-h-96 overflow-y-auto"
                     key={`${activeCategory}-${searchTerm}`}
                 >
                     <AnimatePresence initial={false}>
                         {filteredPatterns.map((pattern) => (
-                            <motion.div
+                            <m.div
                                 key={pattern.id}
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{
@@ -421,9 +421,9 @@ function PatternLibrary({ onUsePattern, activePatternId }: PatternLibraryProps) 
                                                 </div>
                                             )}
                                         </div>
-                                        <motion.button
-                                            whileHover={ANIMATION_VARIANTS.buttonHover}
-                                            whileTap={ANIMATION_VARIANTS.buttonTap}
+                                        <m.button
+                                            whileHover={buttonHover}
+                                            whileTap={buttonTap}
                                             className="btn btn-xs btn-primary shrink-0"
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -435,7 +435,7 @@ function PatternLibrary({ onUsePattern, activePatternId }: PatternLibraryProps) 
                                             }}
                                         >
                                             Use
-                                        </motion.button>
+                                        </m.button>
                                     </div>
 
                                     {pattern.examples && (
@@ -464,20 +464,20 @@ function PatternLibrary({ onUsePattern, activePatternId }: PatternLibraryProps) 
                                         </div>
                                     )}
                                 </div>
-                            </motion.div>
+                            </m.div>
                         ))}
                     </AnimatePresence>
 
                     {filteredPatterns.length === 0 && (
-                        <motion.div
+                        <m.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             className="text-center py-8 opacity-60"
                         >
                             No patterns found
-                        </motion.div>
+                        </m.div>
                     )}
-                </motion.div>
+                </m.div>
             </div>
         </div>
     );
